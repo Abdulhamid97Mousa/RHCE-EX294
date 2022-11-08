@@ -292,9 +292,9 @@ such as
 Because the RHCE EX294 exam is about Ansible Engine,
 you won’t find much information about Ansible Tower in
 this book.
-
 </details>
-<details><summary> Understanding the Ansible Way <\summary>
+
+<details><summary> Understanding the Ansible Way </summary>
 While working with Ansible, you need to make choices
 on how to approach specific tasks. In many cases, many
 solutions are available. If, however, you choose to work
@@ -314,7 +314,7 @@ ensure that nobody understands what you were
 trying to do. That approach doesn’t make sense. You
 should keep it readable, and that starts with your
 development of Ansible playbooks.
-- ** Use a declarative approach:** In Ansible, it’s all
+- **Use a declarative approach:** In Ansible, it’s all
 about the desired state. The purpose of Ansible is to
 bring managed assets in the desired state,
 regardless of the current state, and make only the
@@ -322,7 +322,7 @@ modifications that are necessary. The desired state
 is implemented in playbooks, and using playbooks
 to make the current state match the desired state is
 what is known as the declarative approach.
-- ** Use specific solutions:** On many occasions, you’ll
+- **Use specific solutions:** On many occasions, you’ll
 find that multiple solutions are available to reach a
 specific desired state. For instance, you can use the
 command module to run arbitrary commands,
@@ -342,7 +342,7 @@ configuration management and beyond. Here are some
 common use cases.
 
 <details><summary>Using Ansible for Configuration
-Management<\summary>
+Management</summary>
 Many people know Ansible only as a configuration
 management solution, and there’s a reason for that.
 Ansible started as a solution for configuration
@@ -351,9 +351,9 @@ cases. In configuration management, Ansible is used to
 manage configuration files, install software, create users,
 and perform similar tasks to guarantee that the managed
 systems all are in the desired state.
-<\details>
+</details>
 
-<details><summary>Using Ansible for Provisioning<\summary>
+<details><summary>Using Ansible for Provisioning</summary>
 Another common scenario for use of Ansible is for
 deploying and installing systems (provisioning).
 Provisioning is particularly common in virtual and cloud
@@ -366,8 +366,8 @@ solutions that can take care of that as well. While
 exploring the different modules that are available, you’ll
 notice that a wide range of modules is provided to work
 with Ansible in different cloud environments.
-<\details>
-<details><summary>Using Ansible for Provisioning<\summary>
+</details>
+<details><summary>Using Ansible for Provisioning</summary>
 Another common scenario for use of Ansible is for
 deploying and installing systems (provisioning).
 Provisioning is particularly common in virtual and cloud
@@ -380,9 +380,9 @@ solutions that can take care of that as well. While
 exploring the different modules that are available, you’ll
 notice that a wide range of modules is provided to work
 with Ansible in different cloud environments.
-<\details>
+</details>
 
-<details><summary>Using Ansible for Continuous Delivery<\summary>
+<details><summary>Using Ansible for Continuous Delivery</summary>
 Continuous integration/continuous delivery (CI/CD)
 makes sure that source code can easily be developed and
 updated, and the results are easily provisioned as a new
@@ -390,4 +390,4 @@ version of an application. Ansible cannot take care of the
 entire CI/CD procedure itself, but Ansible playbooks can
 play an important role in the CD part of the CI/CD
 pipeline.
-<\details>
+</details>
