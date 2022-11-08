@@ -1,394 +1,189 @@
-# RHCE_EX294 
-This repository is built to help you as beginner to Understand Ansible, And
-help you through setting up a lab to practice for the RHCE EX294 exam.
-Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/wiki/Linux-Administration-with-Ansible-Getting-Started-with-Ansible-Automation#lab-systems)
+# Linux Administration with Ansible Getting Started with Ansible Automation
 
-# FOUNDATION TOPICS
-## UNDERSTANDING AUTOMATION
-Ansible is often referred to as a configuration
-management solution. That description doesn't do
-justice to all that Ansible can do. Ansible is more a
-solution for automation, allowing system administrators
-to take care of multiple systems in an efficient way. In
-This section you learn about all that Ansible can do as an
-automation tool. We also take a quick look at other
-automation solutions.
+## Managing growing linux systems
 
+### Course Overview:
+- Installing Ansible and run Ad-Hoc commands
+   - 1.1 Installing Ansible-Across many systems
+   - 1.2 Understanding Ansible Components
+   - 1.3 Configuration of Ansible inventory
+ 
+### Module Overview:
+-  Managing systems
+-  Scripting Solution
+-  Building Lab System
 
-<details><summary>What Is Automation?</summary>
+## Lab Systems:
+We're going to use the Virtual Systems:
+- Red Hat Enterprise Linux 8.6
+- Ubuntu 20.04
+- CentOS Stream
 
-## What Is Automation?
-In the years of the system administrator, companies used
-servers. These servers performed a wide range of
-different tasks, and to ensure that every server was doing
-what it needed to be doing, a system administrator was
-needed. System administrators typically had advanced
-skills in managing different parts of the operating system
-that ran on their servers.
+> please take a look at the diagram below:
 
-Even though the years of the system administrator were
-glorious, and many gurus worked in IT departments,
-from a company perspective, this scenario was not ideal.
-First, because system administrator skills are specific to
-that person, if that person goes away, forgets about
-brilliant solutions applied earlier, or just has a bad day,
-things might go wrong.
+```mermaid
+flowchart TD;
+    A[Fire Up 3 VMs] --> B(#A RHEL 8.6 Controller Node);
+    B -- Controlled By Node #A --> C[#B Ubuntu 20.04];
+    B -- Controlled By Node #A --> D[#C CentOS Stream];
+```
 
-Another part that was not ideal was that the system
-administrator typically took care of individual servers,
-and with the development of IT in recent years,
-companies have gone from a handful of servers to data
-centers and cloud environments with hundreds if not
-thousands of servers. So a more efficient approach was
-needed.
+## SETTING UP OUR LAB:
+<details><summary>SETTING UP OUR LAB</summary>
 
-A first attempt in many sites was the use of shell scripts.
-Based on the deep knowledge of many system
-administrators, shell scripts can be used in a flexible way
-to automate a wide range of tasks on many servers. Using
-shell scripts, however, does come with some
-disadvantages:
-- **Shell scripts cannot be used on a wide range of
-different devices that need management.**
-- **It is difficult to write shell scripts in a way that will
-always produce the same result in every situation.**
+### Installing the necessary software
+In order to be able to follow along you need to install the following software, remember software version is important. therefore, go to the following websites
+and install the specified software only and in the same order.
+   
+> The **VirtualBox and Extension Pack** need to be downloaded with the same version, for example if you decided to install virtualbox 6.1 then the extension pack also need to be 6.1 version as well to avoid bugs or download failer.
+   
+1. Install the latest VirtualBox, Virtualization technology has many flavors, you can decide whether to use VMware Workstation, Oracle VirtualBox, and virtmanager.
+   and for this course i recommend that you use VirtualBox, Please install VirtualBox and VirtualBox Extension Pack.
+   
+   - How to instal VirtualBox, please go to the following links to install VirtualBox and Extension Pack or you can follow the image links, starting by installing `Virtualbox graphical User Interface Version 6.1.36`, and if you're using windows make sure to choose Windows, or select MacOs if you're using MacOS, for windows users, please install [VirtualBox 6.1 (active maintenance)](https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-Win.exe) or you can go to [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/) and install newer versions at your peril.
+   
 
-Because of these differences, and also because of changes
-in the way companies consume IT, a new approach was
-needed.
+   - How to instal VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
+   
+> After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and how to do it ? well, you need to follow the next bullet point, open it and follow along.
+
+<details><summary>How to add the extension pack to VirtualBox</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200651756-036369ef-0a33-401d-9c12-f401b2470522.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651793-a756c55f-66ea-428d-b705-0f85b0cfef02.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651827-9c41590b-e72a-4781-a33b-afd1e42af6ea.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651872-032531a9-4744-47df-b480-82ef233f8c30.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200652048-b9e47e2c-e6ac-4c60-a9d0-a4aba0a5875a.png)
+
 </details>
 
-<details><summary>Understanding the DevOps Way of Working?</summary>
 
+2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
+   - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
+   
+<details><summary>How to Install Vagrant</summary>
 
-## Understanding the DevOps Way of Working?
-Throughout the years the way IT is consumed has
-changed. In the past, IT was used to provide great
-services to end users who just had to deal with them.
-Now the landscape has changed to an environment in
-which IT is everywhere, and multiple applications can provide a solution to the same IT problem. The years of
-the system administrator slowly came to an end, and the
-system administrator’s role needed to come closer to that
-of the developers.
+![image](https://user-images.githubusercontent.com/80536675/200653238-a6f6f187-9017-4b2b-b4b5-8c97daea58a5.png)
 
-In this new way of working, the developers take care of
-building applications, and system administrators take
-care of implementing the code as a working application.
-Because this change required a deep cooperation
-between the developer and the system administrator, a
-new role was created: the role of the DevOps. The term
-DevOps is a contraction of developer and operator. In
-this role, tasks performed by the developer and the
-system administrator come together. A common
-definition of DevOps is **“a set of practices intended to
-reduce the time between committing a change to a
-system and the change being placed into normal
-production, while ensuring high quality”** (Len Bass, Ingo
-Weber, and Liming Zhu, **DevOps: A Software Architect’s
-Perspective**, Boston, MA: Addison-Wesley Professional,
-2015).
-
-With this new role, the “DevOps way of working” was
-introduced. The exact definition is not always the same,
-but in general, it comes down to managing the entire
-application life cycle, which consists of the following
-elements:
-- **Coding:** Developing and reviewing application
-source code
-- **Building:** Using continuous integration to include
-changes in the source code and convert to a working
-application
-- **Testing:** Using a toolchain that takes care of testing
-the application and making sure that feedback is
-provided on business risks, if there are any
-- **Packaging:** Delivering the code to its end users by
-bundling it into packages and offering these
-packages in a repository
-- **Releasing:** Approving, managing, and automating
-new software releases
-- **Configuring:** Managing the infrastructure to
-support the new code
-- **Monitoring:** Keeping an eye on application
-performance and the way it is experienced by the
-end users
-
-To manage these different elements in the application
-life cycle, new tools were introduced. Ansible is one of
-these tools, with a strong focus on managing the
-configuration of the managed environment according to
-the infrastructure as code approach.
-
-Some categories in the DevOps approach are more
-important than others. The most important elements are
-continuous integration, with solutions such as Jenkins
-and GitLab, but also OpenShift and even Ansible. The
-other main component is infrastructure as code, where
-Ansible, Puppet, and Terraform are important solutions.
 </details>
 
-<details><summary>What is Infrastructure as Code?</summary>
-The essence in infrastructure as code is that machinereadable
-code (the automation language) is used to
-describe the state the managed IT infrastructure needs to
-be in. This is referred to as the desired state. This code is
-next applied to the infrastructure to ensure that it
-actually is in that state.
 
-In this approach, the machine-readable code files, which
-basically are simple text files, should be managed like
-software code, using a version control system, or
-Concurrent Version System (CVS). That means the tools
-that are common to the developer are implemented to manage
-the infrastructure as code. Commonly, Git
-repositories are used for this purpose.
+### Create the required directories in the Host OS
+in order to create following directories, you need to create the following directories in the Path specified bellow.
+1. Go to `C:/Users/user-name/vagrant` you need to create a directory called `vagrant` and Under the vagrant Directory create another sub-directory called `ansible`, your directory tree should be: `C:/Users/user-name/vagrant/ansible/`
+2. Inside your `C:/Users/user-name/vagrant/ansible/` directory you need to install or write your own `Vagrantfile`
+   - to install the Vagrantfile go to this link: [Vagrantfile](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/blob/main/Linux%20Administration%20with%20Ansible%20Getting%20Started%20with%20Ansible%20Automation/Demo_1/Vagrantfile)
 
-Putting these files in a CVS makes managing it easy. This
-approach provides some benefits, such as easy
-management of change history, upgrades, and rollback.
-Infrastructure as code is the place where the developer
-meets the operator in DevOps. Developers can easily
-review changes, and operators can ensure that the
-systems are in the state that developers expect.
+3. if you are facing trouble with these two bullet points, i've got images that could help you in creating these directories in the correct places.
+
+<details><summary>How does Vagrantfile look like</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200665970-9024fc15-f871-4c14-a468-74484e829035.png)
+
 </details>
 
-<details><summary>Are there other Automation Solutions</summary>
-To provide automation of configuration management,
-Ansible is one of the most common solutions. Even if it
-seems to be currently the most-used configuration
-management solution, it’s not the only one. Other
-common solutions include Puppet, Chef, and SaltStack.
+<details><summary>How to Install Vagrantfile</summary>
 
-Like Ansible, Puppet is one of the most important
-automation solutions. There are a few reasons why
-Ansible is taking over market share from Puppet though.
-One of the reasons is YAML. Ansible configurations are
-written in YAML, which is an easy-to-use and easy-tounderstand
-language. Puppet uses its own language,
-which is just not as easy. Another major difference is that
-Ansible uses a push approach, where configurations are
-sent from the controller node to the managed nodes.
-Puppet uses a pull approach as its main strategy, where
-managed nodes use an agent to connect to the Puppet
-master to fetch their desired state.
+![image](https://user-images.githubusercontent.com/80536675/200666495-6293ef9b-182e-4739-8b69-0b864620a229.png)
+![image](https://user-images.githubusercontent.com/80536675/200666520-a2d0961e-a9d1-460f-8f76-1a68ccfa991b.png)
 
-Chef is built as a client/server solution, where the server
-parts run on the master machine and the client parts are
-implemented as an agent on the managed machines.
-Chef provides its configuration in Ruby DSL, whereas
-Ansible uses playbooks written in YAML. As a result,
-Ansible is easier to learn because YAML is a much more
-accessible data format.
-
-SaltStack is another important alternative to Ansible.
-The main difference between Ansible and SaltStack is the
-performance. SaltStack uses the ZeroMQ message queue
-to realize communication between the SaltStack minions
-and the master, and that seems to be faster. SaltStack
-uses configurations that are written in Jinja2 and use an
-agent, which makes the learning curve to get started with
-SaltStack also more complex.
 </details>
 
-## UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS
-Now that you know a bit about Ansible and how it works,
-let’s look at the different components used in Ansible. In
-this section you learn about the role of Python, the
-Ansible architecture, the Ansible Tower management
-platform, and how to manage systems the Ansible way.
-<br>
 
-<details><summary>Ansible Is Python</summary>
-There are many programming and scripting languages in
-use in IT. In open source, the last few decades have seen
-the rise of the Python scripting language. Python has
-become the foundation of different solutions, such as
-Ansible and OpenStack. The reason is that Python is
-relatively easy to learn. The focus in Python is on
-readability of code, while at the same time Python makes
-it possible to do things in an easy way.
+4. After installing `Vagrantfile` please place it under the ansible directory.
 
-Ansible is written in Python, and most components that
-are used in Ansible are written in Python as well. The
-default Ansible version that is installed on Red Hat
-Enterprise Linux 7 is based on Python 2.7; the Ansible
-release that is used in RHEL 8 is based on Python 3.6.
-There is no direct relation between an Ansible version
-and a Python version. Recent versions of Ansible can call
-either Python 2.x or Python 3.x scripts, but Python 3.x is
-the better option nowadays because Python 2 is past its
-end of support life.
+<details><summary>Where to place the Vagrantfile</summary>
 
-The fact that Ansible is written in Python makes it easier
-to integrate Ansible with custom scripts because Python
-is a very common and widely known scripting language.
-This doesn’t mean you have to know Python to work with
-Ansible though. It’s true that if you understand the
-workings of Python it’s easier to explain specific behavior
-in Ansible, but it’s perfectly possible to be an expert in
-Ansible without even knowing how to write a Hello
-World script in Python.
+![image](https://user-images.githubusercontent.com/80536675/200659505-1f4ca412-efdf-4fd5-912c-26898ccd8a41.png)
+
 </details>
 
-<details><summary>Ansible Architecture</summary>
-There are two main node roles in Ansible. The controller
-node is the node that runs the Ansible software and from
-which the operator issues Ansible commands. The
-controller node can be a server running Linux, an
-operator laptop, or a system running Ansible Tower. The
-only requirement is that the controller node needs to be
-Linux.
-
-From the controller node, the managed nodes are
-addressed. On the controller node, an inventory is
-maintained to know which managed nodes are available.
-Ansible doesn’t require the use of any agents. That
-means it can reach out to managed nodes without a need
-to install anything. To do so, Ansible uses native remote
-access solutions that are provided by the managed node.
-On Linux, remote access is realized by using SSH; on
-Windows, it is realized by using Windows Remote
-Management (WinRM); and on network devices, it can
-be provided by using SSH or API access.
-
-To configure the managed nodes, Ansible uses
-playbooks. A playbook is written in YAML and contains
-one or more plays. Each play consists of one or more
-tasks that are executed on the managed nodes.
-
-To implement the tasks, Ansible uses modules. Modules
-are the pieces of code that do the actual work on the
-managed nodes, and many modules are available—more than 3,000 already,
-and the number is increasing.
-Ansible also provides plug-ins. Ansible plug-ins are used
-to extend Ansible functionality with additional features.
-
-Ansible playbooks should be developed to be
-idempotent. That means a playbook will always produce
-the same results, even if it is started multiple times on
-the same node. As a part of the idempotency, playbooks
-should also be self-containing and not depend on any
-other playbooks to be successful.
-</details>
-<details><summary>Understanding Ansible Tower</summary>
-Ansible can be used in two different ways: Ansible
-Engine or Ansible Tower. Ansible Engine is the
-command-line version of Ansible, where modules and
-plug-ins are used to offer Ansible functionality. Ansible
-Engine is the solution of choice for people who like to
-work from the command line in a medium- to mid-sized
-environment.
-
-Apart from Ansible Engine, there is Ansible Tower,
-which is based on the AWX open-source solution. It
-provides a web-based interface to manage Ansible.
-Ansible Tower adds different features to Ansible Engine,
-such as
-
-- **Web management interface**
-- **Role-based access control**
-- **Job scheduling**
-- **Enhanced security**
-- **Centralized logging**
-
-Because the RHCE EX294 exam is about Ansible Engine,
-you won’t find much information about Ansible Tower in
-this book.
 </details>
 
-<details><summary> Understanding the Ansible Way </summary>
-While working with Ansible, you need to make choices
-on how to approach specific tasks. In many cases, many
-solutions are available. If, however, you choose to work
-the Ansible way, making the right solution becomes a lot
-easier. The Ansible way is focused around the following
-rules:
 
-- **Keep it simple:** At its launch, Ansible was
-positioned as a solution that is simpler than the
-others. That goes for the playbooks and other
-solutions you’ll develop as well. Keep it simple, and
-it will be easier for others to understand what you
-had in mind.
-- **Make it readable:** As with anything in IT, you can
-make it very complex and use compact structures to
-ensure that nobody understands what you were
-trying to do. That approach doesn’t make sense. You
-should keep it readable, and that starts with your
-development of Ansible playbooks.
-- **Use a declarative approach:** In Ansible, it’s all
-about the desired state. The purpose of Ansible is to
-bring managed assets in the desired state,
-regardless of the current state, and make only the
-modifications that are necessary. The desired state
-is implemented in playbooks, and using playbooks
-to make the current state match the desired state is
-what is known as the declarative approach.
-- **Use specific solutions:** On many occasions, you’ll
-find that multiple solutions are available to reach a
-specific desired state. For instance, you can use the
-command module to run arbitrary commands,
-making it possible to accomplish almost anything.
-You shouldn’t, though. To make sure that you get
-the desired result, use the most specific solution. So
-if, for instance, a user module allows you to create
-users, use that module and don’t use the Linux
-useradd command with the command module.
+## Running Vagrant and fire up our VMS:
+<details><summary>Running Vagrant and fire up our VMS</summary>
+
+In this section, we are going to use the `Powershell` or optionally use `SecureCRT 8.7` to run our script, our script is going to create VMs for us,
+the VMs are being mentioned earlier in the diagram, and At this moment we don't have any VMs currently running.
+
 </details>
 
-## UNDERSTANDING ANSIBLE USE CASES
-The core of Ansible is configuration management. The
-Ansible modules and plug-ins cover a wide range of
-functions, which means that Ansible can be used for
-configuration management and beyond. Here are some
-common use cases.
+<details><summary>Refer to these image for assistance:</summary>
 
-<details><summary>Using Ansible for Configuration
-Management</summary>
-Many people know Ansible only as a configuration
-management solution, and there’s a reason for that.
-Ansible started as a solution for configuration
-management, and that is what it still is used for in most
-cases. In configuration management, Ansible is used to
-manage configuration files, install software, create users,
-and perform similar tasks to guarantee that the managed
-systems all are in the desired state.
+![image](https://user-images.githubusercontent.com/80536675/200663239-1725be30-25d2-42b9-8624-9be6c1d5d118.png)
+![image](https://user-images.githubusercontent.com/80536675/200661448-401aa05d-49e8-48db-9a4a-e07f6b81e6e3.png)
+![image](https://user-images.githubusercontent.com/80536675/200661637-b97ea383-3402-4de1-bc59-408ececd4c82.png)
+
 </details>
 
-<details><summary>Using Ansible for Provisioning</summary>
-Another common scenario for use of Ansible is for
-deploying and installing systems (provisioning).
-Provisioning is particularly common in virtual and cloud
-environments, where in the end a new machine is just a
-configuration file that needs to be pushed to the
-managed machine and started from there. Ansible does
-not offer the functionality to PXE-boot and kickstart a
-bare-metal server but is used in combination with
-solutions that can take care of that as well. While
-exploring the different modules that are available, you’ll
-notice that a wide range of modules is provided to work
-with Ansible in different cloud environments.
-</details>
-<details><summary>Using Ansible for Provisioning</summary>
-Another common scenario for use of Ansible is for
-deploying and installing systems (provisioning).
-Provisioning is particularly common in virtual and cloud
-environments, where in the end a new machine is just a
-configuration file that needs to be pushed to the
-managed machine and started from there. Ansible does
-not offer the functionality to PXE-boot and kickstart a
-bare-metal server but is used in combination with
-solutions that can take care of that as well. While
-exploring the different modules that are available, you’ll
-notice that a wide range of modules is provided to work
-with Ansible in different cloud environments.
+> Here we can see that we're being placed at the directory `C:\Users\pc` if you run `Powershell` as administrator, then you will be placed at this directory `C:\Windows\systems32`, being and administrator or not, it doesn't matter.
+
+> Next, in order to run your script Vagrant file you need change your current directory `C:\Windows\systems32` to `C:\Users\user-name\vagrant\ansible\`, to do that you need to enter the following Command:
+```
+cd C:\Users\user-name\vagrant\ansible
+```
+<details><summary>Refer to this image:</summary>
+ 
+![image](https://user-images.githubusercontent.com/80536675/200673183-437389d5-1b63-4b3a-9de2-c21d0815dbd5.png)
+
+
 </details>
 
-<details><summary>Using Ansible for Continuous Delivery</summary>
-Continuous integration/continuous delivery (CI/CD)
-makes sure that source code can easily be developed and
-updated, and the results are easily provisioned as a new
-version of an application. Ansible cannot take care of the
-entire CI/CD procedure itself, but Ansible playbooks can
-play an important role in the CD part of the CI/CD
-pipeline.
+> to create and fire-up our VMs we just need enter the command:
+```
+vagrant up
+```
+
+<details><summary>Refer to this image:</summary> 
+
+![image](https://user-images.githubusercontent.com/80536675/200664725-68905011-143e-4d05-ad13-00e948a1dc35.png)
+![image](https://user-images.githubusercontent.com/80536675/200664930-b17a10c3-4765-4b2c-a9ad-81297140c56f.png)
+
+</details>
+
+## Registering our RedHat Enterprise Linux:
+
+<details><summary>Registering our RedHat Enterprise Linux</summary>
+In this section i'm going to use another software instead of `Powershell` called `SecureCRT`, Why would i do that?
+well, working with Powershell is good but some commands won't be accessible to you and the interface is rigid in my opinion. therefore, i recommend that you install SecureCRT 8.7, to install SecureCRT 8.7 go to this link: [VanDyke_SecureCRT_and_SecureFX_8.7.2_Build_2214.rar](https://getintopc.com/softwares/file-sharing/vandyke-securecrt-and-securefx-free-download/)
+> Working with Powershell or SecureCRT is almost the same.
+
+</details>
+
+<details><summary>After installing SecureCRT 8.7 version, open it and make sure you have an interface similar to mine</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200668826-c367c8ea-3a0b-488b-a0f9-35143e8029e9.png)
+
+</details>
+
+- Next, you need to connect to your local shell.
+
+<details><summary>Please refer to the following images for assistance</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200668878-4c228deb-c689-4a56-a507-cddce932817e.png)
+![image](https://user-images.githubusercontent.com/80536675/200669073-c7061f0c-69cf-4899-8cb4-ff8d97631c50.png)
+
+</details>
+
+- Go to `C:/Users/user-name/vagrant/ansible/` and enter the command: `vagrant ssh rhel8` to ssh to each of your VMs, remember VMs names are `rhel8`,`ubuntu` and `stream`, open another window and do the same for ubuntu and CentOS stream:
+```
+cd C:\Users\user-name\vagrant\ansible
+vagrant ssh rhel8
+```
+
+<details><summary>Refer to the following images for assistance:</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200670128-125e327b-83cc-4fc1-8e71-933031b65782.png)
+![image](https://user-images.githubusercontent.com/80536675/200670681-a211ef91-1bd6-4b39-8bfd-ec0c9045808c.png)
+![image](https://user-images.githubusercontent.com/80536675/200670882-0d42ffb5-af92-4441-9314-0930a8cb6701.png)
+
+</details>
+
+
+
 </details>
