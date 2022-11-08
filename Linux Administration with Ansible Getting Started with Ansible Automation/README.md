@@ -28,6 +28,7 @@ flowchart TD;
     B -- Controlled By Node #A --> D[#C CentOS Stream];
 ```
 
+## SETTING UP OUR LAB:
 <details><summary>SETTING UP OUR LAB</summary>
 
 ## SETTING UP OUR LAB:
