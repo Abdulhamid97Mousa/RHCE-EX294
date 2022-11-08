@@ -75,9 +75,9 @@ and install the specified software only and in the same order.
 
 ### Create the required directories in the Host OS
 in order to create following directories, you need to create the following directories in the Path specified bellow.
-1. Go to **C:/Users/ <user-name> /_______** you need to create a directory called **vagrant**
-in order  you're following along, you need Windows OS or MacOS
-List of required files are:
-- Create or install
+1. Go to `C:/Users/user-name/vagrant` you need to create a directory called `vagrant` and Under the vagrant Directory create another sub-directory called `ansible`, your directory tree should be: `C:/Users/user-name/vagrant/ansible/`
+2. Inside your `C:/Users/user-name/vagrant/ansible/` directory you need to install or write your own `Vagrantfile`
+   - to install the Vagrantfile go to this link: [Vagrantfile](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/blob/main/Linux%20Administration%20with%20Ansible%20Getting%20Started%20with%20Ansible%20Automation/Demo_1/Vagrantfile)
+
 
 </details>
