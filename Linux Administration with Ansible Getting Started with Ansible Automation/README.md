@@ -62,7 +62,6 @@ and install the specified software only and in the same order.
 
 </details>
 
-
 2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
    - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
    
@@ -79,5 +78,18 @@ in order to create following directories, you need to create the following direc
 2. Inside your `C:/Users/user-name/vagrant/ansible/` directory you need to install or write your own `Vagrantfile`
    - to install the Vagrantfile go to this link: [Vagrantfile](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/blob/main/Linux%20Administration%20with%20Ansible%20Getting%20Started%20with%20Ansible%20Automation/Demo_1/Vagrantfile)
 
+3. if you are facing trouble with these two bullet points, i've got images that could help you in creating these directories in the correct places.
+
+<details><summary>How to Install Vagrantfile</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200659164-e6ab1138-dc4c-4082-ac5a-32cc5860756d.png)
+![image](https://user-images.githubusercontent.com/80536675/200658392-4b132d08-ead3-4aa4-a0bb-3e1aeceec707.png)
+</details>
+
+
+4. After installing `Vagrantfile` please place it under the ansible directory.
+<details><summary>Where to place the Vagrantfile</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200659505-1f4ca412-efdf-4fd5-912c-26898ccd8a41.png)
 
 </details>
