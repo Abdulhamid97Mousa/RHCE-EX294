@@ -28,6 +28,7 @@ flowchart TD;
     B -- Controlled By Node #A --> D[#C CentOS Stream];
 ```
 
+## SETTING UP OUR LAB:
 <details><summary>SETTING UP OUR LAB</summary>
 
 ## SETTING UP OUR LAB:
@@ -42,11 +43,14 @@ and install the specified software only and in the same order.
    
    - How to instal VirtualBox, please go to the following links to install VirtualBox and Extension Pack or you can follow the image links, starting by installing `Virtualbox graphical User Interface Version 6.1.36`, and if you're using windows make sure to choose Windows, or select MacOs if you're using MacOS, for windows users, please install [VirtualBox 6.1 (active maintenance)](https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-Win.exe) or you can go to [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/) and install newer versions at your peril.
    
+
    - How to instal VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
    
    - After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and
-    how to do it ? well, i've decided to add the images here 
+    how to do it ? well, you need to follow the next bullet point, open it and follow along.
    
+   - <details>![image_3](./imgs/Image3.png)</details>
+   - <details>![](https://user-images.githubusercontent.com/80536675/200644444-d19f6a72-21f6-4310-b4df-cd2bb8febeea.png)</details>
 
 2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
    - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
