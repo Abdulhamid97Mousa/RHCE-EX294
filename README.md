@@ -1,6 +1,7 @@
 # RHCE_EX294 
 This repository is built to help you as beginner to Understand Ansible, And
 help you through setting up a lab to practice for the RHCE EX294 exam.
+Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/wiki/Linux-Administration-with-Ansible-Getting-Started-with-Ansible-Automation#lab-systems)
 
 # FOUNDATION TOPICS
 ## UNDERSTANDING AUTOMATION
