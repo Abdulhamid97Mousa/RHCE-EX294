@@ -45,8 +45,12 @@ and install the specified software only and in the same order.
    - How to instal VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
    
    - After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and
-    how to do it ? well, i've decided to add the images here 
+    how to do it ? well, you need to follow the next bullet point, open it and follow along.
    
+   - <details>
+   https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/blob/main/Linux%20Administration%20with%20Ansible%20Getting%20Started%20with%20Ansible%20Automation/imgs/Image3.png
+   
+   </details>
 
 2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
    - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
