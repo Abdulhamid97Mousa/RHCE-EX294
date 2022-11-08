@@ -49,9 +49,8 @@ and install the specified software only and in the same order.
    - After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and
     how to do it ? well, you need to follow the next bullet point, open it and follow along.
    
-   - <details>![image](https://user-images.githubusercontent.com/80536675/200644329-181356ae-4245-4b7e-a3bc-e0c1e4b25db0.png)</details>
-   - <details>![Image4](https://user-images.githubusercontent.com/80536675/200645346-da1a1131-bf21-42d6-af19-71a47b7e6145.png)</details>
-   - <details>![image](https://user-images.githubusercontent.com/80536675/200644444-d19f6a72-21f6-4310-b4df-cd2bb8febeea.png)</details>
+   - <details>![image_3](./imgs/Image3.png)</details>
+   - <details>![](https://user-images.githubusercontent.com/80536675/200644444-d19f6a72-21f6-4310-b4df-cd2bb8febeea.png)</details>
 
 2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
    - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
