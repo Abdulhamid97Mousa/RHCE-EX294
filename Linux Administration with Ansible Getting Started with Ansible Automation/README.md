@@ -46,18 +46,36 @@ and install the specified software only and in the same order.
 
    - How to instal VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
    
-   - After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and
-    how to do it ? well, you need to follow the next bullet point, open it and follow along.
-   
-   - <details>![image_3](./imgs/Image3.png)</details>
-   - <details>![](https://user-images.githubusercontent.com/80536675/200644444-d19f6a72-21f6-4310-b4df-cd2bb8febeea.png)</details>
+> After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and how to do it ? well, you need to follow the next bullet point, open it and follow along.
+
+<details><summary>How to add the extension pack to VirtualBox</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200651756-036369ef-0a33-401d-9c12-f401b2470522.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651793-a756c55f-66ea-428d-b705-0f85b0cfef02.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651827-9c41590b-e72a-4781-a33b-afd1e42af6ea.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200651872-032531a9-4744-47df-b480-82ef233f8c30.png)
+
+![image](https://user-images.githubusercontent.com/80536675/200652048-b9e47e2c-e6ac-4c60-a9d0-a4aba0a5875a.png)
+
+</details>
+
 
 2. Install Latest version of Vagrant, Vagrant enables users to create and configure lightweight, reproducible, and portable development environments.
    - To install vagrant please go to this website https://www.vagrantup.com/downloads.html, select Windows and 64-bit or 32-bit depends on your OS
+   
+<details><summary>How to Install Vagrant</summary>
+
+![image](https://user-images.githubusercontent.com/80536675/200653238-a6f6f187-9017-4b2b-b4b5-8c97daea58a5.png)
+
+</details>
+
 
 ### Create the required directories in the Host OS
 in order to create following directories, you need to create the following directories in the Path specified bellow.
-1. Go to **C:/Users/<user-name>/_______** you need to create a directory called vagrant
+1. Go to **C:/Users/ <user-name> /_______** you need to create a directory called **vagrant**
 in order  you're following along, you need Windows OS or MacOS
 List of required files are:
 - Create or install
