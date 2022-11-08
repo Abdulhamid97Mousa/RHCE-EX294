@@ -3,7 +3,7 @@
 ## Managing growing linux systems
 
 ### Course Overview:
-- 1. Installing Ansible and run Ad-Hoc commands
+- Installing Ansible and run Ad-Hoc commands
    - 1.1 Installing Ansible-Across many systems
    - 1.2 Understanding Ansible Components
    - 1.3 Configuration of Ansible inventory
