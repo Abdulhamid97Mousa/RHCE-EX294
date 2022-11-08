@@ -188,3 +188,206 @@ agent, which makes the learning curve to get started with
 SaltStack also more complex.
 </details>
 
+## UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS
+Now that you know a bit about Ansible and how it works,
+let’s look at the different components used in Ansible. In
+this section you learn about the role of Python, the
+Ansible architecture, the Ansible Tower management
+platform, and how to manage systems the Ansible way.
+<br>
+
+<details><summary>Ansible Is Python</summary>
+There are many programming and scripting languages in
+use in IT. In open source, the last few decades have seen
+the rise of the Python scripting language. Python has
+become the foundation of different solutions, such as
+Ansible and OpenStack. The reason is that Python is
+relatively easy to learn. The focus in Python is on
+readability of code, while at the same time Python makes
+it possible to do things in an easy way.
+
+Ansible is written in Python, and most components that
+are used in Ansible are written in Python as well. The
+default Ansible version that is installed on Red Hat
+Enterprise Linux 7 is based on Python 2.7; the Ansible
+release that is used in RHEL 8 is based on Python 3.6.
+There is no direct relation between an Ansible version
+and a Python version. Recent versions of Ansible can call
+either Python 2.x or Python 3.x scripts, but Python 3.x is
+the better option nowadays because Python 2 is past its
+end of support life.
+
+The fact that Ansible is written in Python makes it easier
+to integrate Ansible with custom scripts because Python
+is a very common and widely known scripting language.
+This doesn’t mean you have to know Python to work with
+Ansible though. It’s true that if you understand the
+workings of Python it’s easier to explain specific behavior
+in Ansible, but it’s perfectly possible to be an expert in
+Ansible without even knowing how to write a Hello
+World script in Python.
+</details>
+
+<details><summary>Ansible Architecture</summary>
+There are two main node roles in Ansible. The controller
+node is the node that runs the Ansible software and from
+which the operator issues Ansible commands. The
+controller node can be a server running Linux, an
+operator laptop, or a system running Ansible Tower. The
+only requirement is that the controller node needs to be
+Linux.
+
+From the controller node, the managed nodes are
+addressed. On the controller node, an inventory is
+maintained to know which managed nodes are available.
+Ansible doesn’t require the use of any agents. That
+means it can reach out to managed nodes without a need
+to install anything. To do so, Ansible uses native remote
+access solutions that are provided by the managed node.
+On Linux, remote access is realized by using SSH; on
+Windows, it is realized by using Windows Remote
+Management (WinRM); and on network devices, it can
+be provided by using SSH or API access.
+
+To configure the managed nodes, Ansible uses
+playbooks. A playbook is written in YAML and contains
+one or more plays. Each play consists of one or more
+tasks that are executed on the managed nodes.
+
+To implement the tasks, Ansible uses modules. Modules
+are the pieces of code that do the actual work on the
+managed nodes, and many modules are available—more than 3,000 already,
+and the number is increasing.
+Ansible also provides plug-ins. Ansible plug-ins are used
+to extend Ansible functionality with additional features.
+
+Ansible playbooks should be developed to be
+idempotent. That means a playbook will always produce
+the same results, even if it is started multiple times on
+the same node. As a part of the idempotency, playbooks
+should also be self-containing and not depend on any
+other playbooks to be successful.
+</details>
+<details><summary>Understanding Ansible Tower</summary>
+Ansible can be used in two different ways: Ansible
+Engine or Ansible Tower. Ansible Engine is the
+command-line version of Ansible, where modules and
+plug-ins are used to offer Ansible functionality. Ansible
+Engine is the solution of choice for people who like to
+work from the command line in a medium- to mid-sized
+environment.
+
+Apart from Ansible Engine, there is Ansible Tower,
+which is based on the AWX open-source solution. It
+provides a web-based interface to manage Ansible.
+Ansible Tower adds different features to Ansible Engine,
+such as
+
+- **Web management interface**
+- **Role-based access control**
+- **Job scheduling**
+- **Enhanced security**
+- **Centralized logging**
+
+Because the RHCE EX294 exam is about Ansible Engine,
+you won’t find much information about Ansible Tower in
+this book.
+
+</details>
+<details><summary> Understanding the Ansible Way <\summary>
+While working with Ansible, you need to make choices
+on how to approach specific tasks. In many cases, many
+solutions are available. If, however, you choose to work
+the Ansible way, making the right solution becomes a lot
+easier. The Ansible way is focused around the following
+rules:
+
+- **Keep it simple:** At its launch, Ansible was
+positioned as a solution that is simpler than the
+others. That goes for the playbooks and other
+solutions you’ll develop as well. Keep it simple, and
+it will be easier for others to understand what you
+had in mind.
+- **Make it readable:** As with anything in IT, you can
+make it very complex and use compact structures to
+ensure that nobody understands what you were
+trying to do. That approach doesn’t make sense. You
+should keep it readable, and that starts with your
+development of Ansible playbooks.
+- ** Use a declarative approach:** In Ansible, it’s all
+about the desired state. The purpose of Ansible is to
+bring managed assets in the desired state,
+regardless of the current state, and make only the
+modifications that are necessary. The desired state
+is implemented in playbooks, and using playbooks
+to make the current state match the desired state is
+what is known as the declarative approach.
+- ** Use specific solutions:** On many occasions, you’ll
+find that multiple solutions are available to reach a
+specific desired state. For instance, you can use the
+command module to run arbitrary commands,
+making it possible to accomplish almost anything.
+You shouldn’t, though. To make sure that you get
+the desired result, use the most specific solution. So
+if, for instance, a user module allows you to create
+users, use that module and don’t use the Linux
+useradd command with the command module.
+</details>
+
+## UNDERSTANDING ANSIBLE USE CASES
+The core of Ansible is configuration management. The
+Ansible modules and plug-ins cover a wide range of
+functions, which means that Ansible can be used for
+configuration management and beyond. Here are some
+common use cases.
+
+<details><summary>Using Ansible for Configuration
+Management<\summary>
+Many people know Ansible only as a configuration
+management solution, and there’s a reason for that.
+Ansible started as a solution for configuration
+management, and that is what it still is used for in most
+cases. In configuration management, Ansible is used to
+manage configuration files, install software, create users,
+and perform similar tasks to guarantee that the managed
+systems all are in the desired state.
+<\details>
+
+<details><summary>Using Ansible for Provisioning<\summary>
+Another common scenario for use of Ansible is for
+deploying and installing systems (provisioning).
+Provisioning is particularly common in virtual and cloud
+environments, where in the end a new machine is just a
+configuration file that needs to be pushed to the
+managed machine and started from there. Ansible does
+not offer the functionality to PXE-boot and kickstart a
+bare-metal server but is used in combination with
+solutions that can take care of that as well. While
+exploring the different modules that are available, you’ll
+notice that a wide range of modules is provided to work
+with Ansible in different cloud environments.
+<\details>
+<details><summary>Using Ansible for Provisioning<\summary>
+Another common scenario for use of Ansible is for
+deploying and installing systems (provisioning).
+Provisioning is particularly common in virtual and cloud
+environments, where in the end a new machine is just a
+configuration file that needs to be pushed to the
+managed machine and started from there. Ansible does
+not offer the functionality to PXE-boot and kickstart a
+bare-metal server but is used in combination with
+solutions that can take care of that as well. While
+exploring the different modules that are available, you’ll
+notice that a wide range of modules is provided to work
+with Ansible in different cloud environments.
+<\details>
+
+<details><summary>Using Ansible for Continuous Delivery<\summary>
+Continuous integration/continuous delivery (CI/CD)
+makes sure that source code can easily be developed and
+updated, and the results are easily provisioned as a new
+version of an application. Ansible cannot take care of the
+entire CI/CD procedure itself, but Ansible playbooks can
+play an important role in the CD part of the CI/CD
+pipeline.
+<\details>
