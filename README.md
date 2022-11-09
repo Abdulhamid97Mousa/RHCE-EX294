@@ -1,7 +1,7 @@
 # RHCE_EX294 
 This repository is built to help you as beginner to Understand Ansible, And
 walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
-Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/wiki/Linux-Administration-with-Ansible-Getting-Started-with-Ansible-Automation#lab-systems)
+Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible-Getting-Started-with-Ansible-Automation#setting-up-our-lab)
 
 # FOUNDATION TOPICS
 ## UNDERSTANDING AUTOMATION
@@ -55,6 +55,7 @@ always produce the same result in every situation.**
 Because of these differences, and also because of changes
 in the way companies consume IT, a new approach was
 needed.
+
 </details>
 
 <details><summary>Understanding the DevOps Way of Working?</summary>
