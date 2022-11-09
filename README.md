@@ -17,7 +17,6 @@ automation solutions.
 
 <details><summary>What Is Automation?</summary>
 
-## What Is Automation?
 In the years of the system administrator, companies used
 servers. These servers performed a wide range of
 different tasks, and to ensure that every server was doing
@@ -60,8 +59,6 @@ needed.
 
 <details><summary>Understanding the DevOps Way of Working?</summary>
 
-
-## Understanding the DevOps Way of Working?
 Throughout the years the way IT is consumed has
 changed. In the past, IT was used to provide great
 services to end users who just had to deal with them.
@@ -128,7 +125,6 @@ Ansible, Puppet, and Terraform are important solutions.
 
 <details><summary>What is Infrastructure as Code?</summary>
   
-## Understanding Infrastructure as Code
 The essence in infrastructure as code is that machinereadable
 code (the automation language) is used to
 describe the state the managed IT infrastructure needs to
