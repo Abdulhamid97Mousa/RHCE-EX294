@@ -1,6 +1,7 @@
 # RHCE_EX294 
 This repository is built to help you as beginner to Understand Ansible, And
-help you through setting up a lab to practice for the RHCE EX294 exam.
+walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
+Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible-Getting-Started-with-Ansible-Automation#setting-up-our-lab)
 
 # FOUNDATION TOPICS
 ## UNDERSTANDING AUTOMATION
@@ -16,7 +17,6 @@ automation solutions.
 
 <details><summary>What Is Automation?</summary>
 
-## What Is Automation?
 In the years of the system administrator, companies used
 servers. These servers performed a wide range of
 different tasks, and to ensure that every server was doing
@@ -55,12 +55,11 @@ always produce the same result in every situation.**
 Because of these differences, and also because of changes
 in the way companies consume IT, a new approach was
 needed.
+
 </details>
 
 <details><summary>Understanding the DevOps Way of Working?</summary>
 
-
-## Understanding the DevOps Way of Working?
 Throughout the years the way IT is consumed has
 changed. In the past, IT was used to provide great
 services to end users who just had to deal with them.
@@ -126,6 +125,7 @@ Ansible, Puppet, and Terraform are important solutions.
 </details>
 
 <details><summary>What is Infrastructure as Code?</summary>
+  
 The essence in infrastructure as code is that machinereadable
 code (the automation language) is used to
 describe the state the managed IT infrastructure needs to
@@ -391,3 +391,4 @@ entire CI/CD procedure itself, but Ansible playbooks can
 play an important role in the CD part of the CI/CD
 pipeline.
 </details>
+
