@@ -127,6 +127,7 @@ Ansible, Puppet, and Terraform are important solutions.
 </details>
 
 <details><summary>What is Infrastructure as Code?</summary>
+  
 ## Understanding Infrastructure as Code
 The essence in infrastructure as code is that machinereadable
 code (the automation language) is used to
