@@ -1,25 +1,25 @@
-# Linux Administration with Ansible Getting Started with Ansible Automation
+# Linux Administration with Ansible: Getting Started with Ansible Automation
 
-## Managing growing linux systems
+###  Managing Growing Linux systems
 
-### Course Overview:
+#### Course Overview:
 - Installing Ansible and run Ad-Hoc commands
    - 1.1 Installing Ansible-Across many systems
    - 1.2 Understanding Ansible Components
    - 1.3 Configuration of Ansible inventory
  
-### Module Overview:
+#### Module Overview:
 -  Managing systems
 -  Scripting Solution
 -  Building Lab System
 
-## Lab Systems:
+### Lab Systems:
 We're going to use the Virtual Systems:
 - Red Hat Enterprise Linux 8.6
 - Ubuntu 20.04
 - CentOS Stream
 
-> please take a look at the diagram below:
+> Please take a look at the diagram below:
 
 ```mermaid
 flowchart TD;
@@ -28,22 +28,23 @@ flowchart TD;
     B -- Controlled By Node #A --> D[#C CentOS Stream];
 ```
 
-## SETTING UP OUR LAB:
-<details><summary>SETTING UP OUR LAB</summary>
+## Managing Large Number of Linux Virtual Machines
 
-### Installing the necessary software
-In order to be able to follow along you need to install the following software, remember software version is important. therefore, go to the following websites
-and install the specified software only and in the same order.
+<details><summary>Building Our Vagrant Lab</summary>
+
+### Building Our Vagrant Lab:
+
+#### Installing the necessary software
+In order to be able to follow along you need to install the following software, remember software version is important. therefore, go to the following websites and install the specified software only and in the same order.
    
-> The **VirtualBox and Extension Pack** need to be downloaded with the same version, for example if you decided to install virtualbox 6.1 then the extension pack also need to be 6.1 version as well to avoid bugs or download failer.
+> The **VirtualBox and Extension Pack** need to be downloaded with the same version. for example, if you decided to install VirtualBox 6.1 and your Extension Pack has the 5.0 build/version you'll probably run through a compatibility issues, you must then download VirtualBox and the extension pack with the same version, the recommended version for both should be 6.1 version to avoid bugs or download failure.
    
-1. Install the latest VirtualBox, Virtualization technology has many flavors, you can decide whether to use VMware Workstation, Oracle VirtualBox, and virtmanager.
-   and for this course i recommend that you use VirtualBox, Please install VirtualBox and VirtualBox Extension Pack.
+1. Install the latest VirtualBox, Virtualization technology has many flavors, you can decide whether to use VMware Workstation, Oracle VirtualBox, and Virtmanager. and for this course it's recommended that you use VirtualBox, Please install VirtualBox and VirtualBox Extension Pack.
    
-   - How to instal VirtualBox, please go to the following links to install VirtualBox and Extension Pack or you can follow the image links, starting by installing `Virtualbox graphical User Interface Version 6.1.36`, and if you're using windows make sure to choose Windows, or select MacOs if you're using MacOS, for windows users, please install [VirtualBox 6.1 (active maintenance)](https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-Win.exe) or you can go to [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/) and install newer versions at your peril.
+   - How to install VirtualBox, please go to the following links to install VirtualBox and Extension Pack or you can follow the image links, starting by installing `VirtualBox graphical User Interface Version 6.1.36`, and if you're using windows make sure to choose Windows, or select MacOS if you're using MacOS, for windows users, please install [VirtualBox 6.1 (active maintenance)](https://download.virtualbox.org/virtualbox/6.1.40/VirtualBox-6.1.40-154048-Win.exe) or you can go to [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/) and install newer versions at your peril.
    
 
-   - How to instal VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
+   - How to install VirtualBox Extension Pack, go to this link for installation [Oracle_VM_VirtualBox_Extension_Pack-6.1.36.vbox-extpack](https://download.virtualbox.org/virtualbox/6.1.36/Oracle_VM_VirtualBox_Extension_Pack-6.1.36-152435.vbox-extpack)
    
 > After you've installed VirtualBox and Extension Pack Successfully, you need to add the Extension Pack to VirtualBox, and how to do it ? well, you need to follow the next bullet point, open it and follow along.
 
@@ -72,13 +73,13 @@ and install the specified software only and in the same order.
 </details>
 
 
-### Create the required directories in the Host OS
-in order to create following directories, you need to create the following directories in the Path specified bellow.
-1. Go to `C:/Users/user-name/vagrant` you need to create a directory called `vagrant` and Under the vagrant Directory create another sub-directory called `ansible`, your directory tree should be: `C:/Users/user-name/vagrant/ansible/`
+#### Create The Required Directories In The Host OS
+In order to create following directories correctly, make sure to follow the next steps.
+1. Go to `C:/Users/user-name/vagrant` on your Host OS, you need to create a directory called `vagrant` and Under the vagrant Directory create another sub-directory called `ansible`, your directory tree should be: `C:/Users/user-name/vagrant/ansible/`
 2. Inside your `C:/Users/user-name/vagrant/ansible/` directory you need to install or write your own `Vagrantfile`
    - To install the Vagrantfile go to this link: [Vagrantfile](https://github.com/Abdulhamid97Mousa/RHCE_EX294_ExamPrep/blob/main/Linux%20Administration%20with%20Ansible%20Getting%20Started%20with%20Ansible%20Automation/Demo_1/Vagrantfile)
 
-3. if you are facing trouble with these two bullet points, i've got images that could help you in creating these directories in the correct places.
+3. if you are facing trouble with these two bullet points, I've got images that could help you in creating these directories in the correct places.
 
 <details><summary>How does Vagrantfile look like</summary>
 
@@ -102,16 +103,11 @@ in order to create following directories, you need to create the following direc
 
 </details>
 
-</details>
 
+### Running Vagrant And Fire Up Our VMS:
 
-## Running Vagrant and fire up our VMS:
-<details><summary>Running Vagrant and fire up our VMS</summary>
-
-In this section, we are going to use the `Powershell` or optionally use `SecureCRT 8.7` to run our script, our script is going to create VMs for us,
+In this section, we are going to use the `PowerShell` or optionally use `SecureCRT 8.7` to run our script, our script is going to create VMs for us,
 the VMs are being mentioned earlier in the diagram, and At this moment we don't have any VMs currently running.
-
-
 
 <details><summary>Refer to these image for assistance:</summary>
 
@@ -121,7 +117,7 @@ the VMs are being mentioned earlier in the diagram, and At this moment we don't 
 
 </details>
 
-> Here we can see that we're being placed at the directory `C:\Users\pc` if you run `Powershell` as administrator, then you will be placed at this directory `C:\Windows\systems32`, being and administrator or not, it doesn't matter.
+> Here we can see that we're being placed at the directory `C:\Users\pc` if you run `PowerShell` as administrator, then you will be placed at this directory `C:\Windows\systems32`, being and administrator or not, it doesn't matter.
 
 > Next, in order to run your script Vagrant file you need change your current directory `C:\Windows\systems32` to `C:\Users\user-name\vagrant\ansible\`, to do that you need to enter the following Command:
 ```
@@ -144,13 +140,10 @@ vagrant up
 ![image](https://user-images.githubusercontent.com/80536675/200664725-68905011-143e-4d05-ad13-00e948a1dc35.png)
 ![image](https://user-images.githubusercontent.com/80536675/200664930-b17a10c3-4765-4b2c-a9ad-81297140c56f.png)
 
-</details>
 
 </details>
 
-## Verifying and Connecting to our VMs:
-
-<details><summary>Verifying and Connecting to our VMs</summary>
+### Verifying and Connectivity to Our VMs:
 
 In this section I'm going to use another software instead of `PowerShell` called `SecureCRT`, Why would i do that?
 well, working with PowerShell is good but some commands won't be accessible to you and the interface is rigid in my opinion. therefore, i recommend that you install SecureCRT 8.7, to install SecureCRT 8.7 go to this link: [VanDyke_SecureCRT_and_SecureFX_8.7.2_Build_2214.rar](https://getintopc.com/softwares/file-sharing/vandyke-securecrt-and-securefx-free-download/)
@@ -186,14 +179,14 @@ vagrant ssh rhel8
 ![image](https://user-images.githubusercontent.com/80536675/200670882-0d42ffb5-af92-4441-9314-0930a8cb6701.png)
 
 </details>
+
 </details>
-</details>
 
 
 
-## Registering our Controller Node RHEL8:
-<details><summary>Registering our Controller Node RHEL8</summary>
+### Registering our Controller Node RHEL8:
 
+<details><summary>The RHEL Subscription </summary>
 
 Once we're connected to our rhel8 VM, we need to Subscribe to Red hat developer portal, to get more information about [No-cost Red Hat Enterprise Linux Individual Developer Subscription:](https://developers.redhat.com/articles/faqs-no-cost-red-hat-enterprise-linux#)
 
@@ -238,14 +231,15 @@ sudo subscription-manager status
 
 </details>
 
-## Not All OS are the same:
+### Not All OS Are The Same:
 
 <details><summary>Not All OS are the same</summary>
 
 ## Managing Systems:
-- you can manage system in the following ways
 
-1. Server by server
+you can manage systems in the following ways:
+
+1. Server by Server
    - connecting to each and every single server
    - execute different command while using different linux distributions
 
@@ -255,7 +249,7 @@ sudo subscription-manager status
 3. Different Systems
    - Whilst our discreet commands or scripts can manage our systems
    - We're still facing the complexity of managing many and different Linux distributions at once,
-since we use different commands while using different linux distributions it's difficult to remember each command or how to create a shell script that can work on many distros, and ansible can solve this problem and it is the ultimate solution against varying linux distribuitions, we are going to see the agnostic nature of Ansible, in this course.
+since we use different commands while using different Linux distributions it's difficult to remember each command or how to create a shell script that can work on many distros, and ansible can solve this problem and it is the ultimate solution against varying Linux distributions, we are going to see the agnostic nature of Ansible, in this course.
 
 For example, let's say that we want to install a package, any package, the command on rhel8 is not going to be the same as ubuntu.
 - Software packaging:
@@ -278,15 +272,19 @@ For example, let's say that we want to install a package, any package, the comma
 
 </details>
 
-## Ansible is free Open-Source Python-Based Configuration Management System:
+</details>
 
-<details><summary>Ansible is free Open-Source Python-Based Configuration Management System</summary>
+## Installing Ansible
+
+<details><summary>Installing Ansible</summary>
+
+### Ansible is free Open-Source Python-Based Configuration Management System:
 
 ### Installing Ansible on Rhel8
 - Even though we only need to install ansible on the controller node `Single node`, we'll learn the installation on all the three systems.
   - Install Ansible on Rhel8 `Controller Node`
   - Install Ansible on CentOS
-  - Install Ansible on Ubuntu 20.04: Using Ubunto PPA
+  - Install Ansible on Ubuntu 20.04: Using Ubuntu PPA
 
 > Note: It doesn't matter which OS that you're using, you still have to configure local repository or install software from repo on the internet.
 
@@ -360,5 +358,14 @@ sudo apt install ansible                                                        
 
 </details>
 
+</details>
+
+### Versioning Ansible
+
+<details><summary>Versioning Ansible</summary>
+
+What is Ansible ?
+The word "Ansible" was first used by Ursula Le Guin in the 1966 novel, Rocannon's World. Ansible being a contraction of the word "answerable" and
+referencing a device to message over interstellar distances. For us, **Ansible is a Python script used to manage remote nodes**
 
 </details>
