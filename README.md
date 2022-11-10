@@ -1,11 +1,9 @@
-# RHCE_EX294 
+# RHCE_EX294 Study Guide & Exam Prep
 This repository is built to help you as beginner to Understand Ansible, And
 walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
 Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Guide/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#lab-systems)
 
 # Part I: Introduction to Ansible
-
-## Understanding Configuration Management
 
 <details><summary>Understanding Configuration Management</summary>
 
@@ -15,9 +13,7 @@ Please go to this link to set up your [Lab environment](https://github.com/Abdul
   
 </details>
 
-## Installing Ansible
-
-<details><summary>Understanding Configuration Management</summary>
+<details><summary>Installing Ansible</summary>
 
 - [UNDERSTANDING AN ANSIBLE ENVIRONMENT]()
 - [UNDERSTANDING CONTROLLER HOST REQUIREMENTS]()
