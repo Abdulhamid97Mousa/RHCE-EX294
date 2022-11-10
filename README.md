@@ -3,8 +3,31 @@ This repository is built to help you as beginner to Understand Ansible, And
 walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
 Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Guide/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#lab-systems)
 
-# FOUNDATION TOPICS
-## UNDERSTANDING AUTOMATION
+# Part I: Introduction to Ansible
+
+## Understanding Configuration Management
+
+<details><summary>Understanding Configuration Management</summary>
+
+- [UNDERSTANDING AUTOMATION]()
+- [UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS]()
+- [UNDERSTANDING ANSIBLE USE CASES]()
+  
+</details>
+
+## Installing Ansible
+
+<details><summary>Understanding Configuration Management</summary>
+
+- [UNDERSTANDING AN ANSIBLE ENVIRONMENT]()
+- [UNDERSTANDING CONTROLLER HOST REQUIREMENTS]()
+- [UNDERSTANDING INSTALLATION METHODS]()
+- [CONFIGURING MANAGED HOSTS]()
+- [CONFIGURE THE ANSIBLE USERS]()
+  
+</details>
+
+### UNDERSTANDING AUTOMATION
 Ansible is often referred to as a configuration
 management solution. That description doesn't do
 justice to all that Ansible can do. Ansible is more a
@@ -188,7 +211,7 @@ agent, which makes the learning curve to get started with
 SaltStack also more complex.
 </details>
 
-## UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS
+### UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS
 Now that you know a bit about Ansible and how it works,
 let’s look at the different components used in Ansible. In
 this section you learn about the role of Python, the
@@ -334,7 +357,7 @@ users, use that module and don’t use the Linux
 useradd command with the command module.
 </details>
 
-## UNDERSTANDING ANSIBLE USE CASES
+### UNDERSTANDING ANSIBLE USE CASES
 The core of Ansible is configuration management. The
 Ansible modules and plug-ins cover a wide range of
 functions, which means that Ansible can be used for
