@@ -1,5 +1,7 @@
 # Getting Started with Ansible Automation Overview:
 
+## Course Overview
+
 <details><summary> Managing Growing Number of Linux VMs</summary>
 
 - [Managing Entire Computer Estates](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#managing-entire-computer-estates)
@@ -16,9 +18,30 @@
 -  [Installing Ansible](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#installing-ansible-1)
 -  [Versioning Ansible](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#versioning-ansible)
 -  [investigating Ansible from CLI](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#investigating-ansible-from-the-cli)
--  [Configuring Managed Hosts](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#configuring-managed-hosts)
--  [Configuring The Ansible Users](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#configuring-the-ansible-users)
--  [Setting Up SSH For Ansible Users](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#setting-up-ssh-for-ansible-users)
+
+</details>
+
+<details><summary>Ansible Components</summary>
+
+- [Ansible Ad-Hoc Commands vs Ansible-playbook]()
+- [Ansible Facts and Variables]()
+- [The agnostic nature of Ansible]()
+- [YAML and Jinja]()
+- [Ansible Configuration]()
+- [Host inventory and Node Groups]()
+
+
+</details>
+
+<details><summary>Ansible Configuration and Inventory</summary>
+
+-  [Adding Repositories To Our Linux Distros To Install Ansible](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#adding-repositories-to-our-linux-distros-to-install-ansible)
+
+</details>
+
+<details><summary>Executing Ad-Hoc Commands</summary>
+
+-  [Adding Repositories To Our Linux Distros To Install Ansible](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Group/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#adding-repositories-to-our-linux-distros-to-install-ansible)
 
 </details>
 
@@ -714,3 +737,70 @@ as well. For that reason, on the RHCE exam, you don’t have to secure SSH setup
 4. Verify that the passphrase-less private key has been correctly configured by using ssh ansible-strean@192.168.33.12. You should get access to a prompt on ansible-stream without having to enter a password or anything.
 
 </details>
+
+## Understanding Ansible Components
+
+### Module Overview:
+-  [Ansible Ad-Hoc Commands vs Ansible-playbook]() 
+-  [Ansible facts and variables]()
+-  [The agnostic nature of Ansible]()
+-  [YAML and Jinja]()
+-  [Ansible Configuration]()
+-  [Host inventory and node groups]()
+
+### Ansible Ad-Hoc Commands vs Ansible-playbook
+
+<details><summary>Ansible Ad-Hoc Commands vs Ansible-playbook</summary>
+
+When we use `ansible` command from the command line interface, we're issuing what Ansible describe as *Ad-Hoc Commands*, Ad hoc
+commands are easy to use and they are fast, and for that reason, they are commonly used.
+
+#### What are Ad-Hoc Commands ?
+An ad hoc command is an Ansible task that you can run against managed hosts without the need to use any playbook files or other script-like solutions.
+
+#### What are Ad-Hoc Commands used for ?
+- Setup tasks that bring nodes to a desired state
+- Quick tests to verify that a playbook was indeed successful
+- Quick discovery tasks to verify that a node meets certain criteria
+
+#### How does the command look like ?
+
+![image](https://user-images.githubusercontent.com/80536675/202600386-ada72cb4-84d5-4907-9cb5-1dfa72eeeb88.png)
+
+![image](https://user-images.githubusercontent.com/80536675/202602682-d87c59d4-82eb-440b-8ad8-fcb8873d3074.png)
+
+This command contains a few ingredients. To start with, there is the `ansible` command, which is the command
+for running ad hoc commands. Next, you need to specify on which hosts you want to target to run the ad hoc commands against,
+which is accomplished by the `all` or you can specify `localhost`, localhost is implicitly defined and doesn't necessarily need to exist in an inventory, we'll get to see what're inventory later in the course. The third element refers to the module that you want to
+run. A module is a script that is executed by Ansible to perform a specific task. In the sample command shown,
+the -m option is used to call the module, and the specific module in this example is user. Finally, you need to
+provide arguments to the module by using the -a option. In an ad hoc command, all arguments are provided
+between double quotes. In this case there is just one argument, but if there are many arguments, all of them
+need to be included between double quotes. Table 4-2 summarizes all these components of the ad hoc command.
+
+When running an ad hoc command, you must be using your Ansible user account is (not root), and you must be in
+a project directory where the **inventory** file and the **ansible.cfg** file can be found. Next, you run the command
+ansible all -m user -a “name=lisa”, which reaches out to all hosts in inventory to ensure that user lisa
+exists.
+
+While doing so, Ansible compares the desired state (which is what you just specified in the ad hoc command)
+with the current state of the managed machine, and if so required, it applies changes to the managed machine. you can see what the output of the command
+looks like. Notice the listing executed the command on ungrouped, which refers to all hosts that are not a part of any specific group.
+
+![image](https://user-images.githubusercontent.com/80536675/202603133-73fe7d54-735d-480b-b55c-1e48bf71ed8a.png)
+
+shows the output of the ad hoc command. You can see that the first line shows ansible2 | SUCCESS.
+This line indicates that host ansible2 already meets the desired state, and as a result, no changes had to be
+applied. For host ansible1, you can see ansible1 CHANGED, which indicates that host ansible1 did not
+meet the desired state yet, and changes had to be applied.
+This is how each Ansible command works. 
+Ansible commands are **idempotent**, **idempotent means that regardless of the current condition, Ansible brings the managed
+host to the desired state. No matter how often you run the command, it always results in the same desired state.**
+This is what is referred to as the idempotent behavior of Ansible commands: even if you run a command multiple times, the result is always the same.
+
+> **Note:** In this and the following exercises, you need to execute tasks as a non-root user account. To do so, according to the setup instructions in Chapter 2, “Installing Ansible,” you have created a user with the name ansible. If you have created a user with a different name, make sure that the name of that specific user is used instead of “user ansible”.
+
+</details>
+
+</details>
+
