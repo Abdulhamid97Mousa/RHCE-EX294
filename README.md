@@ -3,6 +3,14 @@ This repository is built to help you as beginner to Understand Ansible, And
 walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
 Please go to this link to set up your [Lab environment](https://github.com/Abdulhamid97Mousa/RHCE_EX294_Study_Guide/wiki/Linux-Administration-with-Ansible:-Getting-Started-with-Ansible-Automation#lab-systems)
 
+Repository contains Study-Guide and exercises preparing for EX294 exam. the readers need to keep in mind that none of them was taken from the actual test. They were created based on the study point available at RedHat's website.
+
+## Inspiration
+Content present in the repository is inspierd by other people' sample exams, redhat training exercises and my own invention. Use links below to check them out
+ - [Redhat Certified Engineer Exam Objectives](https://www.redhat.com/en/services/training/ex294-red-hat-certified-engineer-rhce-exam-red-hat-enterprise-linux-8?section=Objectives)
+ - [Andrew Mallett Courses on Plural-Sight](https://app.pluralsight.com/paths/certificate/rhce-red-hat-certified-engineer-ex294)
+ - [Sander van Vugt Detailed book and lab-exercises](https://www.amazon.com/RHCE-EX294-Cert-Guide-Certification/dp/0136872433)
+
 # Part I: Introduction to Ansible
 
 <details><summary>Understanding Configuration Management</summary>
