@@ -798,7 +798,6 @@ Ansible commands are **idempotent**, **idempotent means that regardless of the c
 host to the desired state. No matter how often you run the command, it always results in the same desired state.**
 This is what is referred to as the idempotent behavior of Ansible commands: even if you run a command multiple times, the result is always the same.
 
-> **Note:** In this and the following exercises, you need to execute tasks as a non-root user account. To do so, according to the setup instructions in Chapter 2, “Installing Ansible,” you have created a user with the name ansible. If you have created a user with a different name, make sure that the name of that specific user is used instead of “user ansible”.
 
 </details>
 
