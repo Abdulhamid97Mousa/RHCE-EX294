@@ -11,10 +11,6 @@ Content present in the repository is inspierd by other people' sample exams, red
  - [Andrew Mallett Courses on Plural-Sight](https://app.pluralsight.com/paths/certificate/rhce-red-hat-certified-engineer-ex294)
  - [Sander van Vugt Detailed book and lab-exercises](https://www.amazon.com/RHCE-EX294-Cert-Guide-Certification/dp/0136872433)
 
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide.svg)](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide)
-
 # Part I: Introduction to Ansible
 
 <details><summary>Understanding Configuration Management</summary>
