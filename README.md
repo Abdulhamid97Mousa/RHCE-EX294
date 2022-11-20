@@ -13,7 +13,7 @@ Content present in the repository is inspierd by other people' sample exams, red
 
 ## Stargazers over time
 
-## [![Stargazers over time](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide.svg)](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide)
+[![Stargazers over time](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide.svg)](https://starchart.cc/Abdulhamid97Mousa/RHCE_EX294_Study_Guide)
 
 # Part I: Introduction to Ansible
 
