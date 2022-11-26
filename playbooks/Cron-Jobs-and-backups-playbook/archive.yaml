@@ -1,0 +1,8 @@
+- name: "Backup and schedule backups"
+  hosts: 'all'
+  become: true
+  gather_facts: true
+  tasks:
+  - include_tasks: backup.yaml
+  - include_tasks: schedule.yaml
+

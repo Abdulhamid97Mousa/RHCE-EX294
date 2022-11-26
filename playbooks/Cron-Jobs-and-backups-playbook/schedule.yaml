@@ -1,0 +1,10 @@
+- name: 'Schedule backup of /etc'
+  ansible.builtin.cron:
+    name: "Backup /etc"
+    weekday: "5"
+    hour: '2'
+    minute: "0"
+    user: 'root'
+    job: "tar -cvzf /tmp/etc-{{ ansible_hostname }}.tgz /etc"
+    cron_file: etc_backup
+
