@@ -13,15 +13,15 @@ Content present in the repository is inspierd by other people' sample exams, red
 
 # Part I: Introduction to Ansible
 
-<details><summary>Understanding Configuration Management</summary>
+## Understanding Configuration Management
 
 - [UNDERSTANDING AUTOMATION]()
 - [UNDERSTANDING ANSIBLE ESSENTIAL COMPONENTS]()
 - [UNDERSTANDING ANSIBLE USE CASES]()
   
-</details>
 
-<details><summary>Installing Ansible</summary>
+
+## Installing Ansible
 
 - [UNDERSTANDING AN ANSIBLE ENVIRONMENT]()
 - [UNDERSTANDING CONTROLLER HOST REQUIREMENTS]()
@@ -29,7 +29,7 @@ Content present in the repository is inspierd by other people' sample exams, red
 - [CONFIGURING MANAGED HOSTS]()
 - [CONFIGURE THE ANSIBLE USERS]()
   
-</details>
+
 
 ### UNDERSTANDING AUTOMATION
 Ansible is often referred to as a configuration
