@@ -1,0 +1,12 @@
+- hosts: test
+  tasks:
+    - name: Template Loop Example
+      template:
+        src: Templates/magic.j2
+        dest: /tmp/magic-conf.txt
+
+
+
+
+
+
