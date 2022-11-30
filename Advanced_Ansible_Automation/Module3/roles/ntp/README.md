@@ -1,7 +1,7 @@
-Role Name
+Role Name: NTP
 =========
 
-A brief description of the role goes here.
+A simple NTP role, in this ntp role directory, you're going to find all 8 standard directories, we just modified tasks and template, so we made sure that chrony service is installed and running, and we've decided to customize the ntp configuration through a template "chrony.j2" file
 
 Requirements
 ------------
