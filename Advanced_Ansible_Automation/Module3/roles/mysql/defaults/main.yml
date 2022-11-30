@@ -1,0 +1,7 @@
+---
+# defaults file for mysql
+mysql_db_name: demo
+mysql_db_user: demo
+mysql_db_user_pass: demo
+mysql_db_user_priv: '*.*:ALL'
+mysql_db_allowed_hosts: '%'
