@@ -1,0 +1,9 @@
+- name: Create a simple database mydb
+  postgresql_db:
+    name: mydb
+
+- name: Drop the database with force
+  postgresql_db:
+    name: mydb
+    state: absent
+    force: true

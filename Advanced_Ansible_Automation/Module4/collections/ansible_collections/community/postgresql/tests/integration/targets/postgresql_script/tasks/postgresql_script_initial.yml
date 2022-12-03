@@ -1,0 +1,311 @@
+- vars:
+    task_parameters: &task_parameters
+      become_user: '{{ pg_user }}'
+      become: true
+      register: result
+    pg_parameters: &pg_parameters
+      login_user: '{{ pg_user }}'
+      login_db: '{{ db_default }}'
+  block:
+  - name: Drop test table if exists
+    <<: *task_parameters
+    shell: psql postgres -U "{{ pg_user }}" -t -c "DROP TABLE IF EXISTS test_table;"
+    ignore_errors: true
+
+  - name: Create test table called test_table
+    <<: *task_parameters
+    shell: psql postgres -U "{{ pg_user }}" -t -c "CREATE TABLE test_table (id int, story text);"
+    ignore_errors: true
+
+  - name: Insert some data into test_table
+    <<: *task_parameters
+    shell: psql postgres -U "{{ pg_user }}" -t -c "INSERT INTO test_table (id, story) VALUES (1, 'first'), (2, 'second'), (3, 'third');"
+    ignore_errors: true
+
+  - name: Copy script files
+    become: true
+    copy:
+      src: '{{ item }}'
+      dest: '~{{ pg_user }}/{{ item }}'
+      owner: '{{ pg_user }}'
+      force: true
+    loop:
+    - test0.sql
+    - test1.sql
+    - test2.sql
+    - test3.sql
+    - test4.sql
+    - test5.sql
+    - test6.sql
+    - test7.sql
+    - test8.sql
+    - test9.sql
+    - test10.sql
+    - test11.sql
+    - test12.sql
+
+  - name: Analyze test_table
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: '~{{ pg_user }}/test2.sql'
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == 'ANALYZE test_table\n'
+      - result.rowcount != 0
+      - result.statusmessage == 'ANALYZE'
+      - result.query_result == {}
+
+  - name: Run queries from SQL script using positional_args
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test0.sql
+      positional_args:
+      - 1
+      encoding: UTF-8
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "SELECT version();\n\nSELECT story FROM test_table\n  WHERE id = 1 OR story = 'Данные';\n"
+      - result.query_result[0].story == 'first'
+      - result.rowcount == 1
+      - result.statusmessage == 'SELECT 1' or result.statusmessage == 'SELECT'
+
+  - name: Run queries from SQL script using named_args
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test3.sql
+      named_args:
+        item: 1
+      encoding: UTF-8
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "SELECT version();\n\nSELECT story FROM test_table\n  WHERE id = 1 OR story = 'Данные';\n"
+      - result.query_result[0].story == 'first'
+      - result.rowcount == 1
+      - result.statusmessage == 'SELECT 1' or result.statusmessage == 'SELECT'
+
+  - name: Create test table for issue 59955
+    <<: *task_parameters
+    postgresql_table:
+      <<: *pg_parameters
+      name: test_array_table
+      columns:
+      - arr_col int[]
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - set_fact:
+      my_list:
+      - 1
+      - 2
+      - 3
+      my_arr: '{1, 2, 3}'
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - name: Insert array into test table by positional args
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test4.sql
+      positional_args:
+      - '{{ my_list }}'
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "INSERT INTO test_array_table (arr_col) VALUES ('{1, 2, 3}')\n"
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - name: Select array from test table by passing positional_args
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test5.sql
+      positional_args:
+      - '{{ my_list }}'
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "SELECT * FROM test_array_table WHERE arr_col = '{1, 2, 3}'\n"
+      - result.rowcount == 1
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - name: Select array from test table by passing named_args
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test6.sql
+      named_args:
+        arr_val:
+        - '{{ my_list }}'
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "SELECT * FROM test_array_table WHERE arr_col = '{1, 2, 3}';\n"
+      - result.rowcount == 1
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - name: Select array from test table by passing positional_args as a string
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test5.sql
+      positional_args:
+      - '{{ my_arr|string }}'
+      trust_input: true
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - assert:
+      that:
+      - result is changed
+      - result.query == "SELECT * FROM test_array_table WHERE arr_col = '{1, 2, 3}'\n"
+      - result.rowcount == 1
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  - name: Test trust_input parameter
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      session_role: 'curious.anonymous"; SELECT * FROM information_schema.tables; --'
+      path: ~{{ pg_user }}/test5.sql
+      trust_input: false
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg is search('is potentially dangerous')
+
+  - name: Clean up
+    <<: *task_parameters
+    postgresql_table:
+      <<: *pg_parameters
+      name: test_array_table
+      state: absent
+    when: postgres_version_resp.stdout is version('9.4', '>=')
+
+  #############################
+  # Check search_path parameter
+
+  - name: Create test schemas
+    <<: *task_parameters
+    postgresql_schema:
+      <<: *pg_parameters
+      name: '{{ item }}'
+    loop:
+    - query_test1
+    - query_test2
+
+  - name: Create test tables
+    <<: *task_parameters
+    postgresql_table:
+      <<: *pg_parameters
+      name: '{{ item }}'
+      columns:
+      - id int
+    loop:
+    - 'query_test1.test1'
+    - 'query_test2.test2'
+
+  - name: Insert data
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/{{ item }}.sql
+      search_path:
+      - query_test1
+      - query_test2
+    loop:
+    - test7
+    - test12
+
+  - name: Get data
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test8.sql
+      search_path:
+      - query_test1
+      - query_test2
+
+  - assert:
+      that:
+      - result.rowcount == 1
+
+  - name: Get data, must fail as we don't specify search_path
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test8.sql
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+
+  #############################################################################
+  # Issue https://github.com/ansible-collections/community.postgresql/issues/45
+  - name: Create table containing a decimal value
+    <<: *task_parameters
+    postgresql_table:
+      <<: *pg_parameters
+      name: blabla
+      columns:
+      - id int
+      - num decimal
+
+  - name: Insert data
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: INSERT INTO blabla (id, num) VALUES (1, 1::decimal)
+
+  - name: Get data
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test9.sql
+
+  - assert:
+      that:
+      - result.rowcount == 1
+
+  #############################################################################
+  # Issue https://github.com/ansible-collections/community.postgresql/issues/47
+  - name: Get datetime.timedelta value
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test10.sql
+    when: postgres_version_resp.stdout is version('10', '>=')
+
+  - assert:
+      that:
+      - result.rowcount == 1
+      - result.query_result[0]["extract"] == 3 or result.query_result[0]["extract"] == 3.0
+    when: postgres_version_resp.stdout is version('10', '>=')
+
+  - name: Get interval value
+    <<: *task_parameters
+    postgresql_script:
+      <<: *pg_parameters
+      path: ~{{ pg_user }}/test11.sql
+    when: postgres_version_resp.stdout is version('10', '>=')
+
+  - assert:
+      that:
+      - result.rowcount == 1
+      - result.query_result[0]["make_interval"] == "0:00:03"
+    when: postgres_version_resp.stdout is version('10', '>=')

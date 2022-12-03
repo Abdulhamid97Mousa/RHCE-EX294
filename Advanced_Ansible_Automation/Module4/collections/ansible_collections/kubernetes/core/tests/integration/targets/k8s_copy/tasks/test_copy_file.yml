@@ -1,0 +1,199 @@
+---
+- block:
+  # Text file
+  - name: copy text file into remote pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp
+      local_path: files/simple_file.txt
+      state: to_pod
+
+  - name: Compare files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_file.txt
+      content: "{{ lookup('file', 'simple_file.txt')}}"
+
+  - name: Copy simple text file from Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_file.txt
+      local_path: /tmp/copy_from_pod.txt
+      state: from_pod
+
+  - name: Compare files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_file.txt
+      local_path: /tmp/copy_from_pod.txt
+
+  # Binary file
+
+  - name: Create temp binary file
+    tempfile:
+      state: file
+    register: binfile
+
+  - name: Generate random binary content
+    command: dd if=/dev/urandom of={{ binfile.path }} bs=1M count=1
+
+  - name: Copy executable into Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/hello.exe
+      local_path: "{{ binfile.path }}"
+      state: to_pod
+
+  - name: Get remote hash
+    kubernetes.core.k8s_exec:
+      namespace: "{{ copy_namespace }}"
+      pod: "{{ pod_with_one_container.name }}"
+      command: sha256sum -b /tmp/hello.exe
+    register: remote_hash
+
+  - name: Get local hash
+    command: sha256sum -b {{ binfile.path }}
+    register: local_hash
+
+  - assert:
+      that:
+      - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
+
+  - name: Generate tempfile
+    tempfile:
+      state: file
+    register: binfile
+
+  - name: Copy executable from Pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/hello.exe
+      local_path: "{{ binfile.path }}"
+      state: from_pod
+
+  - name: Get remote hash
+    kubernetes.core.k8s_exec:
+      namespace: "{{ copy_namespace }}"
+      pod: "{{ pod_with_one_container.name }}"
+      command: sha256sum -b /tmp/hello.exe
+    register: remote_hash
+
+  - name: Get local hash
+    command: sha256sum -b {{ binfile.path }}
+    register: local_hash
+
+  - assert:
+      that:
+      - remote_hash.stdout.split()[0] == local_hash.stdout.split()[0]
+
+  # zip files
+  - name: copy zip file into remote pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp
+      local_path: files/simple_zip_file.txt.gz
+      state: to_pod
+
+  - name: compare zip files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_zip_file.txt.gz
+      local_path: '{{ role_path }}/files/simple_zip_file.txt.gz'
+
+  - name: copy zip file from pod into local filesystem
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_zip_file.txt.gz
+      local_path: /tmp/copied_from_pod.txt.gz
+      state: from_pod
+
+  - name: compare zip files
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/simple_zip_file.txt.gz
+      local_path: /tmp/copied_from_pod.txt.gz
+
+  # tar files
+  - name: copy archive into remote pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp
+      local_path: files/archive.tar
+      state: to_pod
+
+  - name: compare archive
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/archive.tar
+      local_path: '{{ role_path }}/files/archive.tar'
+
+  - name: copy archive from remote pod into local filesystem
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/archive.tar
+      local_path: /tmp/local_archive.tar
+      state: from_pod
+
+  - name: compare archive
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /tmp/archive.tar
+      local_path: /tmp/local_archive.tar
+
+  # Copy into Pod using content option
+  - name: set content to be copied into Pod
+    set_fact:
+      pod_content: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits,punctuation length=128') }}"
+
+  - name: copy archive into remote pod
+    k8s_cp:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /this_content.txt
+      content: '{{ pod_content }}'
+      state: to_pod
+
+  - name: Assert that content is as expected into Pod
+    kubectl_file_compare:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      remote_path: /this_content.txt
+      content: '{{ pod_content }}'
+
+  always:
+  - name: Delete file created on Pod
+    k8s_exec:
+      namespace: '{{ copy_namespace }}'
+      pod: '{{ pod_with_one_container.name }}'
+      command: 'rm {{ item }}'
+    ignore_errors: true
+    with_items:
+    - /tmp/simple_file.txt
+    - /tmp/hello.exe
+    - /tmp/simple_zip_file.txt.gz
+    - /tmp/archive.tar
+    - /this_content.txt
+
+  - name: Delete file created locally
+    file:
+      path: '{{ item }}'
+      state: absent
+    with_items:
+    - /tmp/copy_from_pod.txt
+    - /tmp/hello
+    - /tmp/copied_from_pod.txt.gz
+    - /tmp/local_archive.tar

@@ -1,0 +1,89 @@
+---
+- name: set fact tls_enabled
+  command: "{{ mysql_command }} \"-e SHOW VARIABLES LIKE 'have_ssl';\""
+  register: result
+- set_fact:
+    tls_enabled: "{{ 'YES' in result.stdout | bool | default('false', true) }}"
+
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+  when: tls_enabled
+  block:
+
+    # ============================================================
+    - name: get server certificate
+      copy:
+        content: "{{ lookup('pipe', \"openssl s_client -starttls mysql -connect localhost:3307 -showcerts 2>/dev/null </dev/null |  sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'\") }}"
+        dest: /tmp/cert.pem
+      delegate_to: localhost
+
+    - name: Drop mysql user if exists
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_1 }}'
+        state: absent
+      ignore_errors: yes
+
+    - name: create user with ssl requirement
+      mysql_user:
+        <<: *mysql_params
+        name: "{{ user_name_1 }}"
+        password: "{{ user_password_1 }}"
+        priv: '*.*:ALL,GRANT'
+        tls_requires:
+          SSL:
+
+    - name: attempt connection with newly created user (expect failure)
+      mysql_user:
+        name: "{{ user_name_2 }}"
+        password: "{{ user_password_2 }}"
+        host: 127.0.0.1
+        login_user: '{{ user_name_1 }}'
+        login_password: '{{ user_password_1 }}'
+        login_host: 127.0.0.1
+        login_port: '{{ mysql_primary_port }}'
+        ca_cert: /tmp/cert.pem
+      register: result
+      ignore_errors: yes
+
+    - assert:
+        that:
+          - result is failed
+      when: connector_name is search('pymysql')
+
+    - assert:
+        that:
+          - result is succeeded
+      when: connector_name is not search('pymysql')
+
+    - name: attempt connection with newly created user ignoring hostname
+      mysql_user:
+        name: "{{ user_name_2 }}"
+        password: "{{ user_password_2 }}"
+        host: 127.0.0.1
+        login_user: '{{ user_name_1 }}'
+        login_password: '{{ user_password_1 }}'
+        login_host: 127.0.0.1
+        login_port: '{{ mysql_primary_port }}'
+        ca_cert: /tmp/cert.pem
+        check_hostname: no
+      register: result
+      ignore_errors: yes
+
+    - assert:
+        that:
+          - result is succeeded or 'pymysql >= 0.7.11 is required' in result.msg
+
+    - name: Drop mysql user
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ item }}'
+        host: 127.0.0.1
+        state: absent
+      with_items:
+        - "{{ user_name_1 }}"
+        - "{{ user_name_2 }}"

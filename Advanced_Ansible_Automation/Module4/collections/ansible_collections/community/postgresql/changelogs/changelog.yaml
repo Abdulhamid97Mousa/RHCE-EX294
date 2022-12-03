@@ -1,0 +1,423 @@
+ancestor: null
+releases:
+  0.1.0:
+    changes:
+      bugfixes:
+      - postgresql_ext - fix the module crashes when available ext versions cannot
+        be compared with current version (https://github.com/ansible-collections/community.general/issues/1095).
+      - postgresql_ext - fix version selection when ``version=latest`` (https://github.com/ansible-collections/community.general/pull/1078).
+      - postgresql_privs - fix module fails when ``type`` group and passing ``objs``
+        value containing hyphens (https://github.com/ansible-collections/community.general/issues/1058).
+      minor_changes:
+      - postgresql_info - add ``in_recovery`` return value to show if a service in
+        recovery mode or not (https://github.com/ansible-collections/community.general/issues/1068).
+      - postgresql_privs - add ``procedure`` type support (https://github.com/ansible-collections/community.general/issues/1002).
+      - postgresql_query - add ``query_list`` and ``query_all_results`` return values
+        (https://github.com/ansible-collections/community.general/issues/838).
+      release_summary: 'The ``community.postgresql`` continues the work on the Ansible
+        PostgreSQL
+
+        modules from their state in ``community.general`` 1.2.0.
+
+        The changes listed here are thus relative to the modules ``community.general.postgresql_*``.
+
+        '
+    fragments:
+    - 0.1.0.yml
+    - 1048-postgresql_privs_add_procedure_type.yml
+    - 1059-postgresql_privs_fix_failings_when_using_roles_with_hyphen.yml
+    - 1078-postgresql_ext_fix_version_selection_when_version_is_latest.yml
+    - 1091-postgresql_info_add_in_recovery_ret_val.yml
+    - 1099-postgresql_ext_fix_failing_when_version_cannot_be_compared.yml
+    - 886-postgresql_query_add_ret_vals.yml
+    release_date: '2020-10-29'
+  1.0.0:
+    changes:
+      release_summary: 'This is the first proper release of the ``community.postgresql``
+        collection which is needed to include the collection in Ansible.
+
+        This changelog does not contain any changes because there are no changes made
+        since release 0.1.0.
+
+        '
+    fragments:
+    - 1.0.0.yml
+    release_date: '2020-11-17'
+  1.1.0:
+    changes:
+      bugfixes:
+      - postgresql_info - fix crash caused by wrong PgSQL version parsing (https://github.com/ansible-collections/community.postgresql/issues/40).
+      - postgresql_ping - fix crash caused by wrong PgSQL version parsing (https://github.com/ansible-collections/community.postgresql/issues/40).
+      - postgresql_set - return a message instead of traceback when a passed parameter
+        has not been found (https://github.com/ansible-collections/community.postgresql/issues/41).
+      minor_changes:
+      - postgresql_query - add ``as_single_query`` option to execute a script content
+        as a single query to avoid semicolon related errors (https://github.com/ansible-collections/community.postgresql/pull/37).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.0.0.'
+    fragments:
+    - 1.1.0.yml
+    - 37-postgresql_query_add_single_query_opt.yml
+    - 42-postgresql_set_add_message_when_parameter_not_found.yml
+    - 43-modules_fix_version_parsing.yml
+    release_date: '2021-01-18'
+  1.1.1:
+    changes:
+      bugfixes:
+      - postgresql_query - add a warning to set ``as_single_query`` option explicitly
+        (https://github.com/ansible-collections/community.postgresql/pull/54).
+      - postgresql_query - fix datetime.timedelta type handling (https://github.com/ansible-collections/community.postgresql/issues/47).
+      - postgresql_query - fix decimal handling (https://github.com/ansible-collections/community.postgresql/issues/45).
+      - postgresql_set - fails in check_mode on non-numeric values containing `B`
+        (https://github.com/ansible-collections/community.postgresql/issues/48).
+      release_summary: 'This is the patch release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.1.0.'
+    fragments:
+    - 1.1.1.yml
+    - 46-postgresql_query_fix_decimal_handling.yml
+    - 51-postgresql_query_fix_datetime_timedelta_type_handling.yml
+    - 52-postgresql_set_fix_b_values_handling.yml
+    - 54-postgresql_query_add_warning_as_single_query.yml
+    release_date: '2021-02-09'
+  1.2.0:
+    changes:
+      minor_changes:
+      - postgresql_info - add the ``patch``, ``full``, and ``raw`` values of the ``version``
+        return value (https://github.com/ansible-collections/community.postgresql/pull/68).
+      - postgresql_ping - add the ``patch``, ``full``, and ``raw`` values of the ``server_version``
+        return value (https://github.com/ansible-collections/community.postgresql/pull/70).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.1.1.'
+    fragments:
+    - 1.2.0.yml
+    - 68-postgresql_info_add_ret_values.yml
+    - 70-postgresql_ping_add_ret_values.yml
+    release_date: '2021-03-30'
+  1.3.0:
+    changes:
+      bugfixes:
+      - postgresql_privs - fix ``fail_on_role`` check (https://github.com/ansible-collections/community.postgresql/pull/82).
+      major_changes:
+      - postgresql_query - the default value of the ``as_single_query`` option will
+        be changed to ``yes`` in community.postgresql 2.0.0 (https://github.com/ansible-collections/community.postgresql/issues/85).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.2.0.'
+    fragments:
+    - 1.3.0.yml
+    - 82-fix-fail-on-role.yml
+    - 87-postgresql_query_add_warn_announcement.yml
+    release_date: '2021-05-03'
+  1.4.0:
+    changes:
+      minor_changes:
+      - postgresql_db - add support for the ``directory`` format when the ``state``
+        option is ``dump`` or ``restore`` (https://github.com/ansible-collections/community.postgresql/pull/108).
+      - postgresql_db - add the ``rename`` value to the ``state`` option (https://github.com/ansible-collections/community.postgresql/pull/107).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.3.0.'
+    fragments:
+    - 1.4.0.yml
+    - 107-postgresql_db_add_rename_state_value.yml
+    - 108-postgresql_db_directory_format.yml
+    release_date: '2021-07-13'
+  1.5.0:
+    changes:
+      bugfixes:
+      - postgresql_ext - Fix extension version handling when it has 0 value (https://github.com/ansible-collections/community.postgresql/issues/136).
+      - postgresql_info - Fix extension version handling when it has 0 value (https://github.com/ansible-collections/community.postgresql/issues/137).
+      - postgresql_set - Fix wrong numerical value conversion (https://github.com/ansible-collections/community.postgresql/issues/110).
+      - postgresql_slot - Correct the server_version check for PG 9.6 (https://github.com/ansible-collections/community.postgresql/issue/120)
+      minor_changes:
+      - postgresql_db - Add the ``force`` boolean option to drop active connections
+        first and then remove the database (https://github.com/ansible-collections/community.postgresql/issues/109).
+      - postgresql_info - Add the ``raw`` return value for extension version (https://github.com/ansible-collections/community.postgresql/pull/138).
+      - postgresql_pg_hba - Add the parameters ``keep_comments_at_rules`` and ``comment``
+        (https://github.com/ansible-collections/community.postgresql/issues/134).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.4.0.'
+    fragments:
+    - 1.5.0.yml
+    - 120-postgresql_correct_server_version_check.yml
+    - 134-postgresql_pg_hba-rule-specific-comments.yml
+    - 138-postgresql_info_fix_ver_handling.yml
+    - 145-postgresql_set_fix_wrong_value_conversion.yml
+    - drop_db_with_force.yml
+    release_date: '2021-09-30'
+  1.6.0:
+    changes:
+      bugfixes:
+      - postgresql_ext - Handle postgresql extension updates through path validation
+        instead of version comparison (https://github.com/ansible-collections/community.postgresql/issues/129).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.5.0.'
+    fragments:
+    - 1.6.0.yml
+    - 163-better_handling_of_postgresql_extensions.yml
+    release_date: '2021-11-24'
+  1.6.1:
+    changes:
+      bugfixes:
+      - Collection core functions - use vendored version of ``distutils.version``
+        instead of the deprecated Python standard library ``distutils`` (https://github.com/ansible-collections/community.postgresql/pull/179).
+      - postgres_info - It now works on AWS RDS Postgres.
+      - postgres_info - Specific info (namespaces, extensions, languages) of each
+        database was not being shown properly. Instead, the info from the DB that
+        was connected was always being shown (https://github.com/ansible-collections/community.postgresql/issues/172).
+      release_summary: 'This is the bugfix release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.6.1.'
+    fragments:
+    - 1.6.1.yml
+    - 171-postgres_info__was_not_working_on_aws_rds_postgres.yml
+    - 173-postgres_info_now_shows_the_info_of_each_specific_database.yml
+    - 178-prepare_for_distutils_be_removed.yml
+    release_date: '2022-01-17'
+  2.0.0:
+    changes:
+      major_changes:
+      - postgresql_query - the default value of the ``as_single_query`` option changes
+        to ``yes``. If the related behavior of your tasks where the module is involved
+        changes, please adjust the parameter's value correspondingly (https://github.com/ansible-collections/community.postgresql/issues/85).
+      release_summary: 'This is the major release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 1.7.0.'
+    fragments:
+    - 185-postgresql_query_as_single_query_true.yml
+    - 2.0.0.yml
+    release_date: '2022-02-10'
+  2.1.0:
+    changes:
+      major_changes:
+      - postgresql_query - the ``path_to_script`` and ``as_single_query`` options
+        as well as the ``query_list`` and ``query_all_results`` return values have
+        been deprecated and will be removed in ``community.postgresql 3.0.0``. Please
+        use the ``community.postgresql.postgresql_script`` module to execute statements
+        from scripts (https://github.com/ansible-collections/community.postgresql/issues/189).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.0.0.'
+    fragments:
+    - 0_deprecation_announcement.yml
+    - 2.1.0.yml
+    modules:
+    - description: Run PostgreSQL statements from a file
+      name: postgresql_script
+      namespace: ''
+    release_date: '2022-02-17'
+  2.1.1:
+    changes:
+      bugfixes:
+      - module core functions - get rid of the deprecated psycopg2 connection alias
+        ``database`` in favor of ``dbname`` when psycopg2 is 2.7+ (https://github.com/ansible-collections/community.postgresql/pull/196).
+      - postgresql_query - cannot handle .sql file with \\n at end of file (https://github.com/ansible-collections/community.postgresql/issues/180).
+      release_summary: 'This is the bugfix release of the community.postgresql collection.
+
+        This changelog contains all changes to the modules in this collection that
+        have been added after the release of community.postgresql 2.1.0.'
+    fragments:
+    - 0-postgresql_query_fix.yml
+    - 1-postgresq_connection_fix.yml
+    - 2.1.1.yml
+    release_date: '2022-02-28'
+  2.1.2:
+    changes:
+      major_changes:
+      - postgresql_privs - the ``usage_on_types`` feature have been deprecated and
+        will be removed in ``community.postgresql 3.0.0``. Please use the ``type``
+        option with the ``type`` value to explicitly grant/revoke privileges on types
+        (https://github.com/ansible-collections/community.postgresql/issues/207).
+      release_summary: This is the patch release of the `community.postgresql` collection.
+        This changelog contains all changes to the modules in this collection that
+        have been added after the release of `community.postgresql` 2.1.1.
+    fragments:
+    - 0_deprecation_announcement.yml
+    - 2.1.2.yml
+    release_date: '2022-03-16'
+  2.1.3:
+    changes:
+      bugfixes:
+      - postgresql_db - get rid of the deprecated psycopg2 connection alias ``database``
+        in favor of ``dbname`` when psycopg2 is 2.7+ is used (https://github.com/ansible-collections/community.postgresql/issues/194,
+        https://github.com/ansible-collections/community.postgresql/pull/196).
+      major_changes:
+      - postgresql_user - the ``priv`` argument has been deprecated and will be removed
+        in ``community.postgresql 3.0.0``. Please use the ``postgresql_privs`` module
+        to grant/revoke privileges instead (https://github.com/ansible-collections/community.postgresql/issues/212).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.1.2.'
+    fragments:
+    - 0-postgresql_db_deprecated_alias.yml
+    - 0-postgresql_user_depraction_of_privs.yml
+    - 2.1.3.yml
+    release_date: '2022-04-12'
+  2.1.4:
+    changes:
+      major_changes:
+      - The community.postgresql collection no longer supports ``Ansible 2.9`` and
+        ``ansible-base 2.10``. While we take no active measures to prevent usage and
+        there are no plans to introduce incompatible code to the modules, we will
+        stop testing against ``Ansible 2.9`` and ``ansible-base 2.10``. Both will
+        very soon be End of Life and if you are still using them, you should consider
+        upgrading to the ``latest Ansible / ansible-core 2.11 or later`` as soon as
+        possible (https://github.com/ansible-collections/community.postgresql/pull/245).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.1.3.'
+    fragments:
+    - 2.1.4.yml
+    - remove-2.9-2.10-compatability.yml
+    release_date: '2022-04-28'
+  2.1.5:
+    changes:
+      bugfixes:
+      - Include ``PSF-license.txt`` file for ``plugins/module_utils/_version.py``.
+      - collection core functions - fix attribute error `nonetype` by always calling
+        `ensure_required_libs` (https://github.com/ansible-collections/community.postgresql/issues/252).
+      release_summary: 'This is the bugfix release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.1.4'
+    fragments:
+    - 2.1.5.yml
+    - 252-fix-none-attribute-error.yml
+    - psf-license.yml
+    release_date: '2022-05-16'
+  2.2.0:
+    changes:
+      bugfixes:
+      - Include ``simplified_bsd.txt`` license file for various module utils.
+      - postgresql_info - fix pg version parsing (https://github.com/ansible-collections/community.postgresql/issues/315).
+      - postgresql_ping - fix pg version parsing (https://github.com/ansible-collections/community.postgresql/issues/315).
+      - postgresql_privs.py - add functionality when the PostgreSQL version is 9.0.0
+        or greater to incorporate ``ALL x IN SCHEMA`` syntax (https://github.com/ansible-collections/community.postgresql/pull/282).
+        Please see the official documentation for details regarding grants (https://www.postgresql.org/docs/9.0/sql-grant.html).
+      - postgresql_subscription - fix idempotence by casting the ``connparams`` dict
+        variable (https://github.com/ansible-collections/community.postgresql/issues/280).
+      - postgresql_user - add ``alter user``-statements in the return value ``queries``
+        (https://github.com/ansible-collections/community.postgresql/issues/307).
+      major_changes:
+      - postgresql_user - the ``groups`` argument has been deprecated and will be
+        removed in ``community.postgresql 3.0.0``. Please use the ``postgresql_membership``
+        module to specify group/role memberships instead (https://github.com/ansible-collections/community.postgresql/issues/277).
+      minor_changes:
+      - postgresql_membership - add the ``exact`` state value to be able to specify
+        a list of only groups a user must be a member of (https://github.com/ansible-collections/community.postgresql/issues/277).
+      - 'postgresql_pg_hba - add argument ``overwrite`` (bool, default: false) to
+        remove unmanaged rules (https://github.com/ansible-collections/community.postgresql/issues/297).'
+      - 'postgresql_pg_hba - add argument ``rules_behavior`` (choices: conflict (default),
+        combine) to fail when ``rules`` and normal rule-specific arguments are given
+        or, when ``combine``, use them as defaults for the ``rules`` items (https://github.com/ansible-collections/community.postgresql/issues/297).'
+      - postgresql_pg_hba - add argument ``rules`` to specify a list of rules using
+        the normal rule-specific argument in each item (https://github.com/ansible-collections/community.postgresql/issues/297).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.1.5.'
+    fragments:
+    - 0-postgresql_user-deprecate-privs-manipulation.yml
+    - 2.2.0.yml
+    - 285-postgresql_subscription_fix_idempontece.yml
+    - 293-postgresql_membership_exact_value.yml
+    - 303-postgresql_pg_hba_add_bulk_rule_arguments.yml
+    - 308-postgresql_user_alter_statements_return.yml
+    - 316-postgresql_ping_fix_pg_version_parsing.yml
+    - all_in_schema.yml
+    - simplified-bsd-license.yml
+    release_date: '2022-07-27'
+  2.3.0:
+    changes:
+      bugfixes:
+      - postgresql_info - make arguments passed to SHOW command properly quoted to
+        prevent the interpreter evaluating them (https://github.com/ansible-collections/community.postgresql/issues/314).
+      - postgresql_pg_hba - support the connection types ``hostgssenc`` and ``hostnogssenc``
+        (https://github.com/ansible-collections/community.postgresql/pull/351).
+      - postgresql_privs - add support for alter default privileges grant usage on
+        schemas (https://github.com/ansible-collections/community.postgresql/issues/332).
+      - postgresql_privs - cannot grant select on objects in all schemas; add the
+        ``not-specified`` value to the ``schema`` parameter to make this possible
+        (https://github.com/ansible-collections/community.postgresql/issues/332).
+      - postgresql_set - avoid postgres puts extra quotes when passing values containing
+        commas (https://github.com/ansible-collections/community.postgresql/issues/78).
+      - postgresql_user - make the module idempotent when password is scram hashed
+        (https://github.com/ansible-collections/community.postgresql/issues/301).
+      minor_changes:
+      - postgresql_* - add the ``connect_params`` parameter dict to allow any additional
+        ``libpg`` connection parameters (https://github.com/ansible-collections/community.postgresql/pull/329).
+      release_summary: 'This is the minor release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after the release of ``community.postgresql`` 2.2.0.'
+    fragments:
+    - 0-postgresql_set_avoid_quoting.yml
+    - 2.3.0.yml
+    - 301-postgresql_user_idempotent_scram.yml
+    - 314-postgresql_info-quote-show-args.yml
+    - 329-postgresql_add_connect_params_field.yml
+    - 332-postgresql_privs_def_privs_schemas.yml
+    - 351-postgresql_pg_hba-add-connection-types.yml
+    release_date: '2022-11-04'
+  2.3.1:
+    changes:
+      bugfixes:
+      - postgresql_privs - fails with ``type=default_privs``, ``privs=ALL``, ``objs=ALL_DEFAULT``
+        (https://github.com/ansible-collections/community.postgresql/issues/373).
+      release_summary: 'This is the bugfix release of the ``community.postgresql``
+        collection.
+
+        This changelog contains all changes to the modules in this collection that
+
+        have been added after release 2.3.0.'
+    fragments:
+    - 0-postgresql_privs.yml
+    - 2.3.1.yml
+    release_date: '2022-11-25'

@@ -1,0 +1,116 @@
+- name: set test variables
+  set_fact:
+    pghba_defaults: &pghba_defaults
+      create: true
+      dest: "/tmp/pg_hba_bulk_test.conf"
+    test_rule0: &test_rule0
+      contype: host
+      databases: "db0"
+      users: "user0"
+      address: "2001:db8::0/128"
+      method: pam
+    test_rule1: &test_rule1
+      contype: host
+      databases: "db1"
+      users: "user1"
+      address: "2001:db8::1/128"
+      method: pam
+    test_rule2: &test_rule2
+      contype: host
+      databases: "db2"
+      users: "user2"
+      address: "2001:db8::2/128"
+      method: pam
+
+- name: create one rule to clear
+  community.postgresql.postgresql_pg_hba:
+    <<: *pghba_defaults
+    state: "present"
+    <<: *test_rule0
+- name: overwrite with one normal rule
+  community.postgresql.postgresql_pg_hba:
+    <<: *pghba_defaults
+    overwrite: true
+    <<: *test_rule1
+  register: result
+- assert:
+    that:
+      - "result.pg_hba|length == 1"
+      - "result.pg_hba[0].db == test_rule1.databases"
+      - "result.pg_hba[0].src == test_rule1.address"
+      - "result.pg_hba[0].usr == test_rule1.users"
+      - "result.pg_hba[0].type == test_rule1.contype"
+- name: overwrite with one bulk rule
+  community.postgresql.postgresql_pg_hba:
+    <<: *pghba_defaults
+    overwrite: true
+    rules:
+      - "{{ test_rule2 }}"
+  register: result
+- assert:
+    that:
+      - "result.pg_hba|length == 1"
+      - "result.pg_hba[0].db == test_rule2.databases"
+      - "result.pg_hba[0].src == test_rule2.address"
+      - "result.pg_hba[0].usr == test_rule2.users"
+      - "result.pg_hba[0].type == test_rule2.contype"
+
+- name: test rules_behavior conflict
+  community.postgresql.postgresql_pg_hba: "{{ pghba_defaults|combine(item)|combine({'rules': [test_rule2]}) }}"
+  loop:
+    - address: 2001:db8::a/128
+    - comment: 'testcomment'
+    - contype: hostssl
+    - databases: db_a
+    - method: cert
+    - netmask: 255.255.255.0
+      # address: 192.0.2.0
+    - options: "clientcert=verify-full"
+    - state: absent
+    - users: testuser
+  register: result
+  ignore_errors: true
+- name: get jinja2 version
+  shell: '/usr/bin/pip --disable-pip-version-check --no-cache-dir show Jinja2 2>/dev/null | grep -oPm 1 "(?<=^Version: )\d+\.\d+"'
+  register: jinja2_version
+  ignore_errors: true
+- assert:
+    that:
+      - result.failed
+      - not result.changed
+      - "result.results|selectattr('changed')|length == 0"
+      - "result.results|rejectattr('failed')|length == 0"
+      # the 'in' test was added in jinja 2.10
+      - "jinja2_version.rc == 0 and jinja2_version.stdout|trim is version('2.10', '<') or result.results|selectattr('msg', 'in', 'conflict')|length == 0"
+
+- name: test rules with module defaults
+  community.postgresql.postgresql_pg_hba:
+    <<: *pghba_defaults
+    rules:
+      - contype: hostssl
+  register: result
+- assert:
+    that:
+      - result.changed
+      # assert that module defaults are used
+      - "{'db': 'all', 'method': 'md5', 'src': 'samehost', 'type': 'hostssl', 'usr': 'all'} in result.pg_hba"
+
+- name: test rules with custom defaults
+  community.postgresql.postgresql_pg_hba:
+    <<: *pghba_defaults
+    rules_behavior: combine
+    <<: *test_rule1
+    rules:
+      - {} # complete fallback to custom defaults
+      - databases: other_db # partial fallback to custom defaults
+      # no fallback
+      - <<: *test_rule2
+        state: absent
+  register: result
+- assert:
+    that:
+      - result.changed
+      - "{'db': 'all', 'method': 'md5', 'src': 'samehost', 'type': 'hostssl', 'usr': 'all'} in result.pg_hba" # unchanged preexisting from previous task
+      - "{'db': test_rule1.databases, 'method': test_rule1.method, 'src': test_rule1.address, 'type': test_rule1.contype, 'usr': test_rule1.users} in result.pg_hba"
+      - "{'db': test_rule2.databases, 'method': test_rule2.method, 'src': test_rule2.address, 'type': test_rule2.contype, 'usr': test_rule2.users} not in result.pg_hba"
+      - "{'db': 'other_db', 'method': test_rule1.method, 'src': test_rule1.address, 'type': test_rule1.contype, 'usr': test_rule1.users} in result.pg_hba"

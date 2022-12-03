@@ -1,0 +1,103 @@
+# Test code for the postgresql_ping module
+# Copyright: (c) 2019, Andrew Klychkov (@Andersson007) <aaklychkov@mail.ru>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: postgresql_ping - test return values
+  become_user: "{{ pg_user }}"
+  become: true
+  postgresql_ping:
+    db: "{{ db_default }}"
+    login_user: "{{ pg_user }}"
+  register: result
+  ignore_errors: true
+
+- assert:
+    that:
+      - result.is_available == true
+      - result.server_version != {}
+      - result.server_version.raw is search('PostgreSQL')
+      - result.server_version.major != ''
+      - result.server_version.minor != ''
+      - result is not changed
+
+- assert:
+    that:
+    - result.server_version.patch != {}
+    - result.server_version.full == '{{ result.server_version.major }}.{{ result.server_version.minor }}.{{ result.server_version.patch }}'
+  when: result.server_version.major == 9
+
+- assert:
+    that:
+    - result.server_version.full == '{{ result.server_version.major }}.{{ result.server_version.minor }}'
+  when: result.server_version.major >= 10
+
+- name: postgresql_ping - check ping of non-existing database doesn't return anything
+  become_user: "{{ pg_user }}"
+  become: true
+  postgresql_ping:
+    db: "{{ db_name_nonexist }}"
+    login_user: "{{ pg_user }}"
+  register: result
+  ignore_errors: true
+
+- assert:
+    that:
+      - result.is_available == false
+      - result.server_version == {}
+      - result is not changed
+
+- name: postgresql_ping - ping DB with SSL
+  become_user: "{{ pg_user }}"
+  become: true
+  postgresql_ping:
+    db: "{{ ssl_db }}"
+    login_user: "{{ ssl_user }}"
+    login_password: "{{ ssl_pass }}"
+    login_host: 127.0.0.1
+    login_port: 5432
+    ssl_mode: require
+    ca_cert: '{{ ssl_rootcert }}'
+    trust_input: true
+  register: result
+  when:
+  - ansible_os_family == 'Debian'
+  - postgres_version_resp.stdout is version('9.4', '>=')
+
+- assert:
+    that: 
+    - result.is_available == true
+    - result.conn_err_msg == ''
+  when:
+  - ansible_os_family == 'Debian'
+  - postgres_version_resp.stdout is version('9.4', '>=')
+
+- name: postgresql_ping - check trust_input
+  become_user: "{{ pg_user }}"
+  become: true
+  postgresql_ping:
+    db: "{{ db_default }}"
+    login_user: "{{ pg_user }}"
+    trust_input: false
+    session_role: 'curious.anonymous"; SELECT * FROM information_schema.tables; --'
+  register: result
+  ignore_errors: true
+
+- assert:
+    that:
+    - result is failed
+    - result.msg is search('is potentially dangerous')
+
+# Check conn_err_msg return value
+- name: Try to connect to non-existent DB
+  become_user: "{{ pg_user }}"
+  become: true
+  postgresql_ping:
+    db: blahblah
+    login_user: "{{ pg_user }}"
+  register: result
+
+- name: Check conn_err_msg return value
+  assert:
+    that:
+    - result is succeeded
+    - result.conn_err_msg is search("database \"blahblah\" does not exist")

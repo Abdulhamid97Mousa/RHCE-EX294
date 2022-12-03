@@ -1,0 +1,20 @@
+---
+extends: default
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  document-start: disable
+  line-length: disable
+  truthy: disable
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+ignore: |
+  .cache
+  .tox
+  tests/output

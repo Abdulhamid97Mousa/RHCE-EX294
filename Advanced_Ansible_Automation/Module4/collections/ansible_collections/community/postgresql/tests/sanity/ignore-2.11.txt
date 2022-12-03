@@ -1,0 +1,6 @@
+tests/utils/shippable/check_matrix.py replace-urlopen
+tests/utils/shippable/timing.py shebang
+plugins/modules/postgresql_db.py use-argspec-type-path
+plugins/modules/postgresql_db.py validate-modules:use-run-command-not-popen
+plugins/modules/postgresql_privs.py validate-modules:parameter-documented-multiple-times
+plugins/modules/postgresql_tablespace.py validate-modules:mutually_exclusive-unknown

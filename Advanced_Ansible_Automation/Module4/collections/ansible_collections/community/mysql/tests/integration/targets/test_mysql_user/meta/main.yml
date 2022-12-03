@@ -1,0 +1,3 @@
+dependencies:
+  - setup_mysql
+  - setup_remote_tmp_dir

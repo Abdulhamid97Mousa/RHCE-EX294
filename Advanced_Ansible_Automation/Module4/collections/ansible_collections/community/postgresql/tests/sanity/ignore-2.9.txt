@@ -1,0 +1,8 @@
+tests/utils/shippable/check_matrix.py replace-urlopen
+tests/utils/shippable/timing.py shebang
+plugins/modules/postgresql_db.py use-argspec-type-path
+plugins/modules/postgresql_db.py validate-modules:parameter-type-not-in-doc
+plugins/modules/postgresql_db.py validate-modules:use-run-command-not-popen
+plugins/modules/postgresql_ext.py validate-modules:parameter-type-not-in-doc
+plugins/modules/postgresql_schema.py validate-modules:parameter-type-not-in-doc
+plugins/modules/postgresql_user.py validate-modules:parameter-type-not-in-doc

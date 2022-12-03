@@ -1,0 +1,86 @@
+---
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+  block:
+
+    - name: Issue test setup - drop database
+      mysql_db:
+        <<: *mysql_params
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - foo
+        - bar
+
+    - name: Issue test setup - create database
+      mysql_db:
+        <<: *mysql_params
+        name: "{{ item }}"
+        state: present
+      loop:
+        - foo
+        - bar
+
+    - name: Copy SQL scripts to remote
+      copy:
+        src: "{{ item }}"
+        dest: "{{ remote_tmp_dir }}/{{ item | basename }}"
+      with_items:
+        - create-function.sql
+        - create-procedure.sql
+
+    - name: Create function for test
+      shell: "{{ mysql_command }} < {{ remote_tmp_dir }}/create-function.sql"
+
+    - name: Create procedure for test
+      shell: "{{ mysql_command }} < {{ remote_tmp_dir }}/create-procedure.sql"
+
+    - name: Create user with FUNCTION and PROCEDURE privileges
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_2 }}'
+        password: '{{ user_password_2 }}'
+        state: present
+        priv: 'FUNCTION foo.function:EXECUTE/foo.*:SELECT/PROCEDURE bar.procedure:EXECUTE'
+      register: result
+
+    - name: Assert Create user with FUNCTION and PROCEDURE privileges
+      assert:
+        that:
+          - result is success
+          - result is changed
+
+    - name: Create user with FUNCTION and PROCEDURE privileges - Idempotent check
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_2 }}'
+        password: '{{ user_password_2 }}'
+        state: present
+        priv: 'FUNCTION foo.function:EXECUTE/foo.*:SELECT/PROCEDURE bar.procedure:EXECUTE'
+      register: result
+
+    - name: Assert Create user with FUNCTION and PROCEDURE privileges
+      assert:
+        that:
+          - result is success
+          - result is not changed
+
+    - name: Remove user
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_2 }}'
+        state: absent
+
+    - name: Issue test teardown - cleanup databases
+      mysql_db:
+        <<: *mysql_params
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - foo
+        - bar

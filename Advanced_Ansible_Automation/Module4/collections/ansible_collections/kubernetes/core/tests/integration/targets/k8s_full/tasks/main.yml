@@ -1,0 +1,509 @@
+---
+- block:
+    - name: Create a namespace
+      k8s:
+        name: testing
+        kind: Namespace
+      register: output
+
+    - name: Show output
+      debug:
+        var: output
+
+    - name: Setting validate_certs to true causes a failure
+      k8s:
+        name: testing
+        kind: Namespace
+        validate_certs: yes
+        ca_cert: /dev/null  # invalid CA certificate
+      ignore_errors: yes
+      register: output
+
+    - name: assert that validate_certs caused a failure (and therefore was correctly translated to verify_ssl)
+      assert:
+        that:
+          - output is failed
+
+    - block:
+        - name: Copy default kubeconfig
+          copy:
+            remote_src: yes
+            src: ~/.kube/config
+            dest: ~/.kube/customconfig
+
+        - name: Delete default kubeconfig
+          file:
+            path: ~/.kube/config
+            state: absent
+
+        - name: Try to create namespace without default kube config
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+          ignore_errors: true
+          register: result
+
+        - name: No default kube config should fail
+          assert:
+            that: result is not successful
+
+        - name: Using custom config location should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+            kubeconfig: ~/.kube/customconfig
+
+        - name: Using an env var to set config location should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+          environment:
+            K8S_AUTH_KUBECONFIG: ~/.kube/customconfig
+
+        - name: Get currently installed version of kubernetes
+          ansible.builtin.command: python -c "import kubernetes; print(kubernetes.__version__)"
+          register: kubernetes_version
+
+        - name: Using in-memory kubeconfig should succeed
+          kubernetes.core.k8s:
+            name: testing
+            kind: Namespace
+            kubeconfig: "{{ lookup('file', '~/.kube/customconfig') | from_yaml }}"
+          when: kubernetes_version.stdout is version("17.17.0", ">=")
+
+      always:
+        - name: Return kubeconfig
+          copy:
+            remote_src: yes
+            src: ~/.kube/customconfig
+            dest: ~/.kube/config
+          ignore_errors: yes
+
+        - name: Delete custom config
+          file:
+            path: ~/.kube/customconfig
+            state: absent
+          ignore_errors: yes
+
+    - name: Ensure k8s_info works with empty resources
+      k8s_info:
+        kind: Deployment
+        namespace: testing
+        api_version: apps/v1
+      register: k8s_info
+
+    - name: Assert that k8s_info is in correct format
+      assert:
+        that:
+          - "'resources' in k8s_info"
+          - not k8s_info.resources
+
+    - name: Create a service
+      k8s:
+        state: present
+        resource_definition: &svc
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: web
+            namespace: testing
+            labels:
+              app: galaxy
+              service: web
+          spec:
+            selector:
+              app: galaxy
+              service: web
+            ports:
+              - protocol: TCP
+                targetPort: 8000
+                name: port-8000-tcp
+                port: 8000
+      register: output
+
+    - name: Show output
+      debug:
+        var: output
+
+    - name: Create the service again
+      k8s:
+        state: present
+        resource_definition: *svc
+      register: output
+
+    - name: Service creation should be idempotent
+      assert:
+        that: not output.changed
+
+    - name: Create a ConfigMap
+      k8s:
+        kind: ConfigMap
+        name: test-force-update
+        namespace: testing
+        definition:
+          data:
+            key: value
+
+    - name: Force update ConfigMap
+      k8s:
+        kind: ConfigMap
+        name: test-force-update
+        namespace: testing
+        definition:
+          data:
+            key: newvalue
+        force: yes
+
+    - name: Create PVC
+      k8s:
+        state: present
+        inline: &pvc
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: elastic-volume
+            namespace: testing
+          spec:
+            resources:
+              requests:
+                storage: 5Gi
+            accessModes:
+              - ReadWriteOnce
+
+    - name: Show output
+      debug:
+        var: output
+
+    - name: Create the PVC again
+      k8s:
+        state: present
+        inline: *pvc
+
+    - name: Ensure PVC creation is idempotent
+      assert:
+        that: not output.changed
+
+    - name: Create deployment
+      k8s:
+        state: present
+        inline: &deployment
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: elastic
+            labels:
+              app: galaxy
+              service: elastic
+            namespace: testing
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: galaxy
+                service: elastic
+            template:
+              metadata:
+                labels:
+                  app: galaxy
+                  service: elastic
+              spec:
+                containers:
+                  - name: elastic
+                    volumeMounts:
+                      - mountPath: /usr/share/elasticsearch/data
+                        name: elastic-volume
+                    command: ['elasticsearch']
+                    image: 'ansible/galaxy-elasticsearch:2.4.6'
+                volumes:
+                  - name: elastic-volume
+                    persistentVolumeClaim:
+                      claimName: elastic-volume
+            strategy:
+              type: RollingUpdate
+      register: output
+
+    - name: Show output
+      debug:
+        var: output
+
+    - name: Create deployment again
+      k8s:
+        state: present
+        inline: *deployment
+      register: output
+
+    - name: Ensure Deployment creation is idempotent
+      assert:
+        that: not output.changed
+
+    ### Type tests
+    - name: Create a namespace from a string
+      k8s:
+        definition: |+
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing1
+
+    ### https://github.com/ansible-collections/community.kubernetes/issues/111
+    - set_fact:
+        api_groups: "{{ lookup('kubernetes.core.k8s', cluster_info='api_groups') }}"
+
+    - debug:
+        var: api_groups
+
+    - name: Namespace should exist
+      k8s_info:
+        kind: Namespace
+        api_version: v1
+        name: testing1
+      register: k8s_info_testing1
+      failed_when: not k8s_info_testing1.resources or k8s_info_testing1.resources[0].status.phase != "Active"
+
+    - name: Create resources from a multidocument yaml string
+      k8s:
+        definition: |+
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing2
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing3
+
+    - name: Lookup namespaces
+      k8s_info:
+        api_version: v1
+        kind: Namespace
+        name: "{{ item }}"
+      loop:
+        - testing2
+        - testing3
+      register: k8s_namespaces
+
+    - name: Resources should exist
+      assert:
+        that: item.resources[0].status.phase == 'Active'
+      loop: "{{ k8s_namespaces.results }}"
+
+    - name: Delete resources from a multidocument yaml string
+      k8s:
+        state: absent
+        definition: |+
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing2
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing3
+
+    - name: Lookup namespaces
+      k8s_info:
+        api_version: v1
+        kind: Namespace
+        name: "{{ item }}"
+      loop:
+        - testing2
+        - testing3
+      register: k8s_namespaces
+
+    - name: Resources should not exist
+      assert:
+        that:
+          - not item.resources or item.resources[0].status.phase == "Terminating"
+      loop: "{{ k8s_namespaces.results }}"
+
+    - name: Create resources from a list
+      k8s:
+        definition:
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing4
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing5
+
+    - name: Lookup namespaces
+      k8s_info:
+        api_version: v1
+        kind: Namespace
+        name: "{{ item }}"
+      loop:
+        - testing4
+        - testing5
+      register: k8s_namespaces
+
+    - name: Resources should exist
+      assert:
+        that: item.resources[0].status.phase == 'Active'
+      loop: "{{ k8s_namespaces.results }}"
+
+    - name: Delete resources from a list
+      k8s:
+        state: absent
+        definition:
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing4
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing5
+
+    - name: Get info about terminating resources
+      k8s_info:
+        api_version: v1
+        kind: Namespace
+        name: "{{ item }}"
+      loop:
+        - testing4
+        - testing5
+      register: k8s_info
+
+    - name: Ensure resources are terminating if still in results
+      assert:
+        that: not item.resources or item.resources[0].status.phase == "Terminating"
+      loop: "{{ k8s_info.results }}"
+
+    - name: Create resources from a yaml string ending with ---
+      k8s:
+        definition: |+
+          ---
+          kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: testing6
+          ---
+
+    - name: Namespace should exist
+      k8s_info:
+        kind: Namespace
+        api_version: v1
+        name: testing6
+      register: k8s_info_testing6
+      failed_when: not k8s_info_testing6.resources or k8s_info_testing6.resources[0].status.phase != "Active"
+
+    - name: Create large configmap data
+      command: dd if=/dev/urandom bs=500K count=1
+      register: cmap_data
+
+    - name: Create configmap with large value
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: testmap
+            namespace: testing
+          data:
+            testkey: "{{ cmap_data.stdout | b64encode }}"
+        wait: true
+      register: result
+
+    - assert:
+        that:
+          - result is changed
+
+    - name: Retrieve configmap
+      k8s_info:
+        kind: ConfigMap
+        namespace: testing
+        name: testmap
+      register: result
+
+    - assert:
+        that:
+          - result.resources[0].data.testkey == "{{ cmap_data.stdout | b64encode }}"
+
+    # test setting module defaults for kubernetes.core.k8s_info
+    - block:
+        - name: Create a namespace
+          kubernetes.core.k8s:
+            name: test-namespace-module-defaults
+            kind: Namespace
+          register: output
+
+        - name: Create a ConfigMap
+          kubernetes.core.k8s:
+            kind: ConfigMap
+            name: test-configmap-1
+            definition:
+              data:
+                key1: value1
+
+        - name: Create another ConfigMap
+          kubernetes.core.k8s:
+            kind: ConfigMap
+            name: test-configmap-2
+            definition:
+              data:
+                key2: value2
+
+        - name: Get list of all ConfigMaps in namespace specified in module_defaults
+          kubernetes.core.k8s_info:
+            kind: ConfigMap
+          register: configmap_info
+
+        - name: assert that the ConfigMaps are created in and info is retrieved for namespace specified in module_defaults
+          assert:
+            that:
+              - configmap_info.resources[1].metadata.name == "test-configmap-1"
+              - configmap_info.resources[1].metadata.namespace == "test-namespace-module-defaults"
+              - configmap_info.resources[2].metadata.name == "test-configmap-2"
+              - configmap_info.resources[2].metadata.namespace == "test-namespace-module-defaults"
+
+      module_defaults:
+        group/kubernetes.core.k8s:
+          namespace: test-namespace-module-defaults
+
+      when: ansible_version.full is version("2.12", ">=")
+
+  always:
+    - name: Delete all namespaces
+      k8s:
+        state: absent
+        definition:
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing1
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing2
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing3
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing4
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing5
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: testing6
+          - kind: Namespace
+            apiVersion: v1
+            metadata:
+              name: test-namespace-module-defaults
+      ignore_errors: yes

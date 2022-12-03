@@ -1,0 +1,90 @@
+---
+- name: "{{ role_name }} | install | add apt signing key for percona"
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 4D1BB29D63D98E422B2113B19334A25F8507EFA5
+    state: present
+  when: install_type == 'mysql'
+
+- name: "{{ role_name }} | install | add percona repositories"
+  apt_repository:
+    repo: deb http://repo.percona.com/percona/apt {{ ansible_lsb.codename }} main
+    state: present
+  when: install_type == 'mysql'
+
+- name: "{{ role_name }} | install | add apt signing key for mariadb"
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: F1656F24C74CD1D8
+    state: present
+  when: install_type == 'mariadb'
+
+- name: "{{ role_name }} | install | add mariadb repositories"
+  apt_repository:
+    repo: "deb [arch=amd64,arm64] https://downloads.mariadb.com/MariaDB/mariadb-{{ mysql_major_version }}/repo/ubuntu {{ ansible_lsb.codename }} main"
+    state: present
+  when: install_type == 'mariadb'
+
+- name: "{{ role_name }} | install | install packages required by percona"
+  apt:
+    name: "{{ percona_mysql_packages }}"
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: "{{ role_name }} | install | install packages required by mysql connector"
+  apt:
+    name: "{{ install_python_prereqs }}"
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: "{{ role_name }} | install | install python packages"
+  pip:
+    name: "{{ python_packages }}"
+  register: connector
+
+- name: Extract connector.name.0 content
+  set_fact:
+    connector_name: "{{ connector.name.0 }}"
+
+- name: Debug connector_name content
+  debug:
+    msg: '{{ connector_name }}'
+
+- name: Extract connector version
+  set_fact:
+    connector_ver: "{{ connector_name.split('=')[2].strip() }}"
+
+- name: Debug connector_ver var content
+  debug:
+    msg: '{{ connector_ver }}'
+
+- name: "{{ role_name }} | install | install packages required by mysql"
+  apt:
+    name: "{{ install_prereqs }}"
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: "{{ role_name }} | install | download and unpack dbdeployer"
+  unarchive:
+    remote_src: true
+    src: "{{ dbdeployer_src }}"
+    dest: "{{ dbdeployer_install_dir }}"
+    creates: "{{ dbdeployer_installed_file }}"
+  register: dbdeployer_tarball_install
+  notify:
+    - create zookeeper installed file
+  until: dbdeployer_tarball_install is not failed
+  retries: 6
+  delay: 5
+
+- name: "{{ role_name }} | install | create symlink"
+  file:
+    src: "{{ dbdeployer_install_dir }}/dbdeployer-{{ dbdeployer_version }}.linux"
+    dest: /usr/local/bin/dbdeployer
+    follow: false
+    state: link
+
+- meta: flush_handlers

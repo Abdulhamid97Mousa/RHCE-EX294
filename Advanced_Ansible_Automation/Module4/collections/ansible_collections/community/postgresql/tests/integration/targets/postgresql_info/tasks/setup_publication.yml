@@ -1,0 +1,64 @@
+# Copyright: (c) 2019, Andrew Klychkov (@Andersson007) <aaklychkov@mail.ru>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# Preparation for further tests of postgresql_subscription module.
+
+- vars:
+    task_parameters: &task_parameters
+      become_user: '{{ pg_user }}'
+      become: true
+      register: result
+    pg_parameters: &pg_parameters
+      login_user: '{{ pg_user }}'
+      login_db: '{{ test_db }}'
+      connect_params:
+        connect_timeout: 30
+
+  block:
+  - name: Create test db
+    <<: *task_parameters
+    postgresql_db:
+      login_user: '{{ pg_user }}'
+      login_port: '{{ item }}'
+      maintenance_db: '{{ db_default }}'
+      name: '{{ test_db }}'
+    loop:
+    - '{{ primary_port }}'
+    - '{{ replica_port }}'
+
+  - name: Create test role
+    <<: *task_parameters
+    postgresql_user:
+      <<: *pg_parameters
+      login_port: '{{ item }}'
+      name: '{{ replication_role }}'
+      password: '{{ replication_pass }}'
+      role_attr_flags: LOGIN,REPLICATION
+    loop:
+    - '{{ primary_port }}'
+    - '{{ replica_port }}'
+
+  - name: Create test table
+    <<: *task_parameters
+    postgresql_table:
+      <<: *pg_parameters
+      login_port: '{{ item }}'
+      name: '{{ test_table1 }}'
+      columns:
+      - id int
+    loop:
+    - '{{ primary_port }}'
+    - '{{ replica_port }}'
+
+  - name: Create publication
+    <<: *task_parameters
+    postgresql_publication: 
+      <<: *pg_parameters
+      login_port: '{{ primary_port }}'
+      name: '{{ test_pub }}'
+
+  - name: Create publication
+    <<: *task_parameters
+    postgresql_publication: 
+      <<: *pg_parameters
+      login_port: '{{ primary_port }}'
+      name: '{{ test_pub2 }}'

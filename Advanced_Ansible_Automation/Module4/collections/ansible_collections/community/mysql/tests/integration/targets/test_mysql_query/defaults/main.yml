@@ -1,0 +1,14 @@
+mysql_user: root
+mysql_password: msandbox
+mysql_primary_port: 3307
+
+db_name: data
+test_db: testdb
+test_table1: test1
+test_table2: test2
+test_table3: test3
+test_table4: test4
+test_script_path: /tmp/test.sql
+
+user_name_1: 'db_user1'
+user_password_1: 'gadfFDSdtTU^Sdfuj'

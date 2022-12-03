@@ -1,0 +1,261 @@
+# 0. Check necessary options.
+# 1. When both databases do not exists, it must fail.
+# 2. When both databases exist, it must fail.
+# 3. When the source database exists and the target does not, rename it.
+# 4. When the source database doesn't exist and the target does, do nothing.
+# 5. Check mode
+
+- become_user: '{{ pg_user }}'
+  become: true
+  vars:
+    db_source_name: acme
+    db_target_name: acme1
+
+    task_parameters: &task_parameters
+      register: result
+
+    pg_parameters: &pg_parameters
+      login_user: '{{ pg_user }}'
+
+  block:
+  # 0. Check necessary options.
+  - name: Miss target option, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'The "target" option must be defined when the "rename" option is used.'
+
+  - name: Target and name options are the same, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_source_name }}'
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'The "name/db" option and the "target" option cannot be the same.'
+
+  - name: Maintenance_db and name options are the same, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: postgres
+      state: rename
+      target: '{{ db_source_name }}'
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'The "maintenance_db" option and the "name/db" option cannot be the same.'
+
+  # 1. When both databases do not exists, it must fail.
+  - name: Try to rename when both do not exist, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'The source and the target databases do not exist.'
+
+  - name: Try to rename when both do not exist, must fail, check_mode
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+    ignore_errors: true
+    check_mode: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'The source and the target databases do not exist.'
+
+  # 2. When both databases exist, it must fail.
+  - name: Create test DBs
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ item }}'
+      state: present
+    loop:
+    - '{{ db_source_name }}'
+    - '{{ db_target_name }}'
+
+  - name: Try to rename when both exist, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'Both the source and the target databases exist.'
+
+  - name: Try to rename when both exist, must fail
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+    ignore_errors: true
+
+  - assert:
+      that:
+      - result is failed
+      - result.msg == 'Both the source and the target databases exist.'
+
+  # 3. When the source database exists and the target does not, rename it.
+  # 4. When the source database doesn't exist and the target does, do nothing.
+  - name: Drop the target DB
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_target_name }}'
+      state: absent
+
+  - name: Rename DB in check mode
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name }}'
+    check_mode: true
+
+  - assert:
+      that:
+      - result is succeeded
+      - result.executed_commands == []
+
+  - name: Check that nothing really happened
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_source_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 1
+
+  - name: Check that nothing really happened
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_target_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 0
+
+  - name: Rename DB in actual mode
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+
+  - assert:
+      that:
+      - result is changed
+      - result.executed_commands == ['ALTER DATABASE "{{ db_source_name }}" RENAME TO "{{ db_target_name}}"']
+
+  - name: Check the changes have been made
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_source_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 0
+
+  - name: Check the changes have been made
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_target_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 1
+
+  - name: Try to rename same DBs again in check mode
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+    check_mode: true
+
+  - assert:
+      that:
+      - result is not changed
+      - result.executed_commands == []
+
+  - name: Try to rename same DBs again in actual mode
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_source_name }}'
+      state: rename
+      target: '{{ db_target_name}}'
+
+  - assert:
+      that:
+      - result is not changed
+      - result.executed_commands == []
+
+  - name: Check the state is the same
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_source_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 0
+
+  - name: Check the state is the same
+    <<: *task_parameters
+    postgresql_query:
+      <<: *pg_parameters
+      query: "SELECT * FROM pg_database WHERE datname = '{{ db_target_name }}'"
+
+  - assert:
+      that:
+      - result.rowcount == 1
+
+  # Clean up
+  - name: Remove test DB
+    <<: *task_parameters
+    postgresql_db:
+      <<: *pg_parameters
+      name: '{{ db_target_name }}'
+      state: absent

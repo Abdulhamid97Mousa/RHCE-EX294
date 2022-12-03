@@ -1,0 +1,26 @@
+---
+# defaults file for test_mysql_user
+mysql_user: root
+mysql_password: msandbox
+mysql_host: 127.0.0.1
+mysql_primary_port: 3307
+
+db_name: 'data'
+user_name_1: 'db_user1'
+user_name_2: 'db_user2'
+user_name_3: 'db_user3'
+user_name_4: 'db_user4'
+
+user_password_1: 'gadfFDSdtTU^Sdfuj'
+user_password_2: 'jkFKUdfhdso78yi&td'
+user_password_3: 'jkFKUdfhdso78yi&tk'
+user_password_4: 's2R#7pLV31!ZJrXPa3'
+
+root_password: 'zevuR6oPh7'
+
+db_names:
+    - clientdb
+    - employeedb
+    - providerdb
+
+tmp_dir: '/tmp'

@@ -1,0 +1,17 @@
+mysql_user: root
+mysql_password: msandbox
+mysql_host: 127.0.0.1
+mysql_primary_port: 3307
+mysql_replica1_port: 3308
+mysql_replica2_port: 3309
+
+test_db: test_db
+test_table: test_table
+test_primary_delay: 60
+replication_user: replication_user
+replication_pass: replication_pass
+dump_path: /tmp/dump.sql
+test_channel: test_channel-1
+
+user_name_1: 'db_user1'
+user_password_1: 'gadfFDSdtTU^Sdfuj'

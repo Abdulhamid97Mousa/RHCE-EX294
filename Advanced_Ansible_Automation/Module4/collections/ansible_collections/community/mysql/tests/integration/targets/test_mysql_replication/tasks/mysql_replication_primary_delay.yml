@@ -1,0 +1,45 @@
+# Copyright: (c) 2019, Andrew Klychkov (@Andersson007) <aaklychkov@mail.ru>
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- vars:
+    mysql_params: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+
+  block:
+
+    # Test primary_delay mode:
+    - name: Run replication
+      mysql_replication:
+        <<: *mysql_params
+        login_port: '{{ mysql_replica1_port }}'
+        mode: changeprimary
+        primary_delay: '{{ test_primary_delay }}'
+      register: result
+
+    - assert:
+        that:
+        - result is changed
+        - result.queries == ["CHANGE MASTER TO MASTER_DELAY=60"]
+
+    # Auxiliary step:
+    - name: Start replica
+      mysql_replication:
+        <<: *mysql_params
+        login_port: '{{ mysql_replica1_port }}'
+        mode: startreplica
+      register: result
+
+    # Check primary_delay:
+    - name: Get standby status
+      mysql_replication:
+        <<: *mysql_params
+        login_port: '{{ mysql_replica1_port }}'
+        mode: getreplica
+      register: replica_status
+
+    - assert:
+        that:
+        - replica_status.SQL_Delay == {{ test_primary_delay }}
+        - replica_status is not changed

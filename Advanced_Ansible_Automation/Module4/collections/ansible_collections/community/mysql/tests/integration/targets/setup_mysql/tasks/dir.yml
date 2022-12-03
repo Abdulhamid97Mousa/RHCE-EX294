@@ -1,0 +1,11 @@
+---
+- name: "{{ role_name }} | dir | create dbdeployer directories"
+  file:
+    state: directory
+    path: "{{ item }}"
+  loop:
+    - "{{ dbdeployer_home_dir }}"
+    - "{{ dbdeployer_install_dir }}"
+    - "{{ dbdeployer_sandbox_download_dir }}"
+    - "{{ dbdeployer_sandbox_binary_dir }}"
+    - "{{ dbdeployer_sandbox_home_dir }}"

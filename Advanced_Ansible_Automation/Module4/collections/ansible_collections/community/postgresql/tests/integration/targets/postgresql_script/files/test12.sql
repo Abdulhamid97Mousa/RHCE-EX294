@@ -1,0 +1,1 @@
+INSERT INTO test2 (id) VALUES (1)

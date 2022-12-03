@@ -1,0 +1,211 @@
+name: Plugins CI
+on:
+  push:
+    paths:
+      - 'plugins/**'
+      - 'tests/**'
+      - '.github/workflows/ansible-test-plugins.yml'
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - 'tests/**'
+      - '.github/workflows/ansible-test-plugins.yml'
+  schedule:
+    - cron: '0 6 * * *'
+
+
+env:
+  mysql_version_file: "./ansible_collections/community/mysql/tests/integration/targets/setup_mysql/defaults/main.yml"
+  connector_version_file: "./ansible_collections/community/mysql/tests/integration/targets/setup_mysql/vars/main.yml"
+
+jobs:
+  sanity:
+    name: "Sanity (Python: ${{ matrix.python }}, Ansible: ${{ matrix.ansible }})"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ansible:
+          - stable-2.11
+          - stable-2.12
+          - stable-2.13
+          - devel
+        python:
+          - 3.8
+          - 3.9
+        exclude:
+          - python: 3.8
+            ansible: stable-2.13
+          - python: 3.8
+            ansible: devel
+          - python: 3.9
+            ansible: stable-2.11
+          - python: 3.9
+            ansible: stable-2.12
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/community/mysql
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Run sanity tests
+        run: ansible-test sanity --docker -v --color
+        working-directory: ./ansible_collections/community/mysql
+
+  integration:
+    name: "Integration (Python: ${{ matrix.python }}, Ansible: ${{ matrix.ansible }}, MySQL: ${{ matrix.db_engine_version }}, Connector: ${{ matrix.connector }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db_engine_version:
+          - mysql_5.7.31
+          - mysql_8.0.22
+          - mariadb_10.3.34
+          # When adding later versions below,
+          # also change the "Set MariaDB URL sub dir" task
+          - mariadb_10.8.3
+        ansible:
+          - stable-2.11
+          - stable-2.12
+          - stable-2.13
+          - devel
+        python:
+          - 3.6
+          - 3.8
+          - 3.9
+        connector:
+          - pymysql==0.7.10
+          - pymysql==0.9.3
+          - mysqlclient==2.0.1
+        exclude:
+          - db_engine_version: mysql_8.0.22
+            connector: pymysql==0.7.10
+          - db_engine_version: mariadb_10.8.3
+            connector: pymysql==0.7.10
+          - python: 3.6
+            ansible: stable-2.12
+          - python: 3.6
+            ansible: stable-2.13
+          - python: 3.6
+            ansible: devel
+          - python: 3.8
+            ansible: stable-2.11
+          - python: 3.8
+            ansible: stable-2.13
+          - python: 3.8
+            ansible: devel
+          - python: 3.9
+            ansible: stable-2.11
+          - python: 3.9
+            ansible: stable-2.12
+
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/community/mysql
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-base (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Set MySQL version (${{ matrix.db_engine_version }})
+        run: |
+          export DB_VERSION=$(echo "${{ matrix.db_engine_version }}" | awk -F_ '{print $2}')
+          sed -i "s/^mysql_version:.*/mysql_version: $DB_VERSION/g" ${{ env.mysql_version_file }}
+        if: ${{ startsWith(matrix.db_engine_version, 'mysql') }}
+
+      - name: Set MariaDB version (${{ matrix.db_engine_version }})
+        run: |
+          export DB_VERSION=$(echo "${{ matrix.db_engine_version }}" | awk -F_ '{print $2}')
+          sed -i -e "s/^mariadb_version:.*/mariadb_version: $DB_VERSION/g" -e 's/^mariadb_install: false/mariadb_install: true/g' ${{ env.mysql_version_file }}
+        if: ${{ startsWith(matrix.db_engine_version, 'mariadb') }}
+
+      - name: Set MariaDB URL sub dir
+        run: |
+          sed -i -e "s/^mariadb_url_subdir:.*/mariadb_url_subdir: linux-systemd/g" ${{ env.connector_version_file }}
+        if: matrix.db_engine_version == 'mariadb_10.8.3'
+
+      - name: Set Connector version (${{ matrix.connector }})
+        run: "sed -i 's/^python_packages:.*/python_packages: [${{ matrix.connector }}]/' ${{ env.connector_version_file }}"
+
+      - name: Run integration tests
+        run: ansible-test integration --docker -v --color --retry-on-error --continue-on-error --python ${{ matrix.python }} --diff --coverage
+        working-directory: ./ansible_collections/community/mysql
+
+      - name: Generate coverage report.
+        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/community/mysql
+
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
+
+  units:
+    runs-on: ubuntu-latest
+    name: Units (Ⓐ${{ matrix.ansible }})
+    strategy:
+      # As soon as the first unit test fails,
+      # cancel the others to free up the CI queue
+      fail-fast: true
+      matrix:
+        ansible:
+          - stable-2.11
+          - stable-2.12
+          - stable-2.13
+          - devel
+        python:
+          - 3.8
+          - 3.9
+        exclude:
+          - python: 3.8
+            ansible: stable-2.13
+          - python: 3.8
+            ansible: devel
+          - python: 3.9
+            ansible: stable-2.11
+          - python: 3.9
+            ansible: stable-2.12
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ./ansible_collections/community/mysql
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-base (${{matrix.ansible}})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      # Run the unit tests
+      - name: Run unit test
+        run: ansible-test units -v --color --docker --coverage
+        working-directory: ./ansible_collections/community/mysql
+
+      # ansible-test support producing code coverage date
+      - name: Generate coverage report
+        run: ansible-test coverage xml -v --requirements --group-by command --group-by version
+        working-directory: ./ansible_collections/community/mysql
+
+      # See the reports at https://codecov.io/gh/GITHUBORG/REPONAME
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
