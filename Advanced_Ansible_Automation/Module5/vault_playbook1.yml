@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  vars_files:
+    - vaultfile1.yml
+  tasks:
+    - name: output encrypted content
+      debug:
+        msg: "{{ db_admin_user }}"  

@@ -1,0 +1,106 @@
+---
+- name: "Install lamp stack on remote hosts"
+  hosts: centos2
+  become: true 
+  gather_facts: true 
+# Apache Configuration
+  tasks:
+    - name: install apache
+      package:
+        name: 
+          - httpd
+          - httpd-tools
+        state: present
+        update_cache: true 
+
+    - name: install LAMP
+      yum:
+        name:
+          - php
+          - php-mysqlnd
+          - epel-release
+        state: present
+        update_cache: true 
+      notify: restart apache  
+
+    - name: start apache service
+      service:
+        name: 'httpd'
+        state: started
+        enabled: yes
+    
+    - name: deploy index.php
+      copy:
+        src: index.php
+        dest: "{{ document_root_path }}"
+        mode: 0775
+
+    - name: copy vhost config
+      template:
+        src: site_config.j2
+        dest: "{{ vhost_config_file }}"
+        mode: 0644
+        owner: root
+        group: root
+      notify: restart apache
+    - name: configure httpd.conf
+      lineinfile:
+        path: "{{ apache_config_file }}"
+        regexp: "^IncludeOptional"
+        line: "IncludeOptiona conf.d/*.conf"
+      notify: restart apache
+# MySQL Configuration
+    - name: Install db package
+      package:
+        name:
+          - mariadb-server
+          - python3-mysqlclient
+        update_cache: true 
+        state: present
+    - name: start mysql
+      service:
+        name:
+          - mariadb
+        state: started
+        enabled: true 
+    - name: create a new database
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        collation: utf8_general_ci
+    - name: create a database user
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_user_pass }}"
+        priv: "{{ db_user_priv }}"
+        host: "{{ db_allowed_hosts }}"
+        state: present
+    - name: allow localhost
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_user_pass }}"
+        priv: "{{ db_user_priv }}"
+        host: localhost
+        state: present
+    - name: copy sample data
+      copy:
+        src: demo.sql
+        dest: /tmp/demo.sql
+    - name: copy sample data
+      copy:
+        src: demo.sql
+        dest: /tmp/demo.sql
+    - name: insert sample data
+      shell: cat /tmp/demo.sql | mysql -u demo -p demo demo
+# Standalone task
+    - name: install script with db connectivity
+      copy:
+        src: files/db.php
+        dest: "{{ document_root_path }}db.php"
+        mode: 0775
+  handlers:
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted
+
