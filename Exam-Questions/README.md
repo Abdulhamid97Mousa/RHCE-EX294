@@ -304,9 +304,39 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
         mode: 644
 ```
 
+> Another way of solving the problem:
+
+## cat motd.yml
+
+- name: Changing MOTD
+  hosts: all
+  become: yes
+  tasks:
+  - name: Copy the content to HAProxy
+    copy:
+    content: "Welcome to HAProxy server\n"
+    dest: /etc/motd
+    when: "'proxy' in group_names"
+  - name: Copy the content to Apache
+    copy:
+    content: "Welcome to Apache server\n"
+    dest: /etc/motd
+    when: "'webservers' in group_names"
+  - name: Copy the content to MySQL
+    copy:
+    content: "Welcome to MySQL server\n"
+    dest: /etc/motd
+    when: "'database' in group_names"
+
 ## Q5. Ansible Facts
 
 - Create a playbook that meets following requirements:
-  - Is placed at /home/automation/plays/ansible_facts.yml
+  - Is placed at `/home/automation/plays/ansible_facts.yml`
   - Runs against proxy group
-  - Results in possiblity of getting a pair name=haproxy from ansible facts path ansible_local.environment.application after calling setup module
+  - Results in possiblity of getting a pair `name=haproxy` from ansible `facts path` dansible_local.environment.application after calling setup module
+
+## Q6: Work with Ansible Facts
+
+Create a playbook `/home/automation/plays/facts.yml` that runs on hosts in the `database host group` and does the following:
+
+A custom Ansible fact `server_role=mysql` is created that can be retrieved from ansible_local.custom.sample_exam when using Ansible setup module.
