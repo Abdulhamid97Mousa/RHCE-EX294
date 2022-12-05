@@ -30,6 +30,10 @@ flowchart TD;
     B -- Controlled By Node #A --> F[Managed Node4];
 ```
 
+## Lab Setup
+
+> you can create the lab setup manually, but instead i've `Vagrantfile` which you can use inorder to create this setup
+
 ## Q1. Ansible Installation and Configuration
 
 - Install the ansible package on the control node
@@ -171,7 +175,7 @@ ansible localhost -m openssh_keypair -a "path=/home/automation/.ssh/id_rsa owner
 # Create automation user on managed nodes.
 ansible all -m user -a "name=automation password={{ 'devops' | password_hash('sha512') }}"
 # share public key to managed nodes, remember to check your ansible.cfg configuration because this command needs sudo privileges.
-ansible all -b -m authorized_key -a "key="
-
-
+ansible all -m authorized_key -a "key={{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }} user=automation state=present"
+# Add the automation user in each managed node to sudoers group for privilege escalation.
+ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/sudoers.d/automation"
 ```
