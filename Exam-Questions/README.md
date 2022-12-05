@@ -9,17 +9,14 @@ You will need five RHEL 8 virtual machines to be able to successfully complete a
 
 One VM will be configured as an Ansible control node. Other four VMs will be used to apply playbooks to solve the sample exam questions. The following FQDNs will be used throughout the sample exam.
 
-| FQDN                  | Description           |
-| --------------------- | --------------------- |
-| repo.ansi.example.com | install packages from |
-
-http://repo.ansi.example.com/BaseOS
-http://repo.ansi.example.com/AppStream |
-| control.ansi.example.com | Ansible control node |
-| managed1.ansi.example.com | managed host |
-| managed2.ansi.example.com | managed host |
-| managed3.ansi.example.com | managed host |
-| managed4.ansi.example.com | managed host |
+| FQDN                      | Description                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| repo.ansi.example.com     | install packages from http://repo.ansi.example.com/BaseOS http://repo.ansi.example.com/AppStream |
+| control.ansi.example.com  | Ansible control node                                                                             |
+| managed1.ansi.example.com | managed host                                                                                     |
+| managed2.ansi.example.com | managed host                                                                                     |
+| managed3.ansi.example.com | managed host                                                                                     |
+| managed4.ansi.example.com | managed host                                                                                     |
 
 ```mermaid
 flowchart TD;
