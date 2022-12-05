@@ -135,15 +135,17 @@ proxy
 
 ```
 [defaults]
-inventory = ./inventory
-forks = 8
-log_path = /var/log/ansible/execution.log
-roles_path = ~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/automation/plays/roles
+remote_user=automation
+inventory=./inventory
+forks=8
+log_path=/var/log/ansible/execution.log
+roles_path=~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/automation/plays/roles
 
 [privilege_escalation]
-become = false
-become_ask_pass = false
-become_method = sudo
+become=false
+become_ask_pass=false
+become_method=sudo
+become_user=root
 ```
 
 > Save it to /home/automation/plays/ansible.cfg
