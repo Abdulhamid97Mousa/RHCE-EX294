@@ -306,6 +306,7 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 > Another way of solving the problem:
 
+```
 - name: Changing MOTD
   hosts: all
   become: yes
@@ -325,6 +326,7 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
     content: "Welcome to MySQL server\n"
     dest: /etc/motd
     when: "'database' in group_names"
+```
 
 ## Q5. Ansible Facts
 
@@ -359,8 +361,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## A6: Work with Ansible Facts
 
----
-
+```
 - name: Work with Ansible Facts
   hosts: database
   become: yes
@@ -374,3 +375,4 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
     copy:
     content: "[sample_exam]\nserver_role=mysql\n"
     dest: /etc/ansible/facts.d/custom.fact
+```
