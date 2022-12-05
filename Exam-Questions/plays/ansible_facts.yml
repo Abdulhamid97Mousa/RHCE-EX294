@@ -1,0 +1,15 @@
+- name: ansible facts
+  hosts: proxy
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Ensure directory hierarchy exists
+      file:
+        state: directory
+        path: /etc/ansible/facts.d
+    - name: Dump fact
+      copy:
+        content: "[application]\nname=haproxy\n"
+        dest: /etc/ansible/facts.d/environment.fact
+        mode: 0644
+

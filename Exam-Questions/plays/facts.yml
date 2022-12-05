@@ -1,0 +1,12 @@
+- name: a custom fact
+  hosts: database
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Ensure hierarchy
+      file:
+        path: /etc/ansible/facts.d
+        state: present
+    - name: 
+      setup:
+        file_path:

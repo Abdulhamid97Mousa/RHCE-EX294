@@ -1,0 +1,13 @@
+- name: file content distributed on hosts
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: populate the /etc/motd file
+      copy:
+        content: "{{ motd }}"
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: 644
+

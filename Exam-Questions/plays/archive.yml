@@ -39,10 +39,7 @@
         mode: 0660
 
 - name: fetch the archive
-  hosts:
-    - webservers
-    - proxy
-    - database
+  hosts: all
   become: true
   gather_facts: false
   tasks:
