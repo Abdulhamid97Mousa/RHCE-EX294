@@ -1,4 +1,32 @@
-# 1. Ansible Installation and Configuration
+# Ansible Sample Exam for RHCE EX294
+
+This is a sample Ansible exam that I’ve created to prepare for the new RHCE exam EX294. As with the real exam, no answers to the sample exam questions will be provided.
+
+## Requirements
+
+There are 18 questions in total could be more or less.
+You will need five RHEL 8 virtual machines to be able to successfully complete all questions.
+
+One VM will be configured as an Ansible control node. Other four VMs will be used to apply playbooks to solve the sample exam questions. The following FQDNs will be used throughout the sample exam.
+
+| FQDN | Description | |
+| repo.ansi.example.com | repository so you can install packages |
+| control.ansi.example.com | Ansible control node |
+| managed1.ansi.example.com | managed host |
+| managed2.ansi.example.com | managed host |
+| managed3.ansi.example.com | managed host |
+| managed4.ansi.example.com | managed host |
+
+```mermaid
+flowchart TD;
+    A[Fire Up 5 VMs] --> B(#A RHEL 8.6 Controller Node);
+    B -- Controlled By Node #A --> C[#B RHEL 8.6 Controller Node];
+    B -- Controlled By Node #A --> D[#C RHEL 8.6 Controller Node];
+    B -- Controlled By Node #A --> E[#D RHEL 8.6 Controller Node];
+    B -- Controlled By Node #A --> F[#E RHEL 8.6 Controller Node];
+```
+
+## 1. Ansible Installation and Configuration
 
 - Install the ansible package on the control node
 - Create automation user with devops password
