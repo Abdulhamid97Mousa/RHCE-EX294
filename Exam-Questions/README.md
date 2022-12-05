@@ -22,11 +22,12 @@ One VM will be configured as an Ansible control node. Other four VMs will be use
 
 ```mermaid
 flowchart TD;
-    A[Fire Up 5 VMs] --> B(#A RHEL 8.6 Controller Node);
-    B -- Controlled By Node #A --> C[#B RHEL 8.6 Managed Node1];
-    B -- Controlled By Node #A --> D[#C RHEL 8.6 Managed Node2];
-    B -- Controlled By Node #A --> E[#D RHEL 8.6 Managed Node3];
-    B -- Controlled By Node #A --> F[#E RHEL 8.6 Managed Node4];
+    A[Fire Up 5 VMs] --> B(#A Controller Node);
+    B -- Repo to pull packages from #A --> C[#Z repository];
+    B -- Controlled By Node #A --> C[#B Managed Node1];
+    B -- Controlled By Node #A --> D[#C Managed Node2];
+    B -- Controlled By Node #A --> E[#D Managed Node3];
+    B -- Controlled By Node #A --> F[#E Managed Node4];
 ```
 
 ## Q1. Ansible Installation and Configuration
