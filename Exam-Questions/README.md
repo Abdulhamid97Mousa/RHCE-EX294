@@ -203,3 +203,63 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
   - Runs against `all` host group
     `Retrieves archives from the managed nodes and stores them at`/backup/<hostname>-configuration.gz` on the control node
   - User automation should be owner of /backup and everything underneath. Both on the managed hosts and the control node. Only owner and members of his group should be able to read and manage files inside. Anyone should be allowed to list contents of `/backup`.
+
+## A3. Archiving
+
+```
+- name: Archiving
+  hosts: localhost
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Create a backup folder
+      file:
+        path: '/backup'
+        state: 'directory'
+        owner: automation
+        group: automation
+        mode: 0755
+
+- name: Archive config files
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Create a folder for archive
+      file:
+        path: /backup
+        owner: automation
+        group: automation
+        state: directory
+        mode: 0755
+
+- name: create the archive
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: create the archive
+      archive:
+        path: /etc
+        dest: /backup/configuration.gz
+        format: gz
+        owner: automation
+        group: automation
+        mode: 0660
+
+- name: fetch the archive
+  hosts:
+    - webservers
+    - proxy
+    - database
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Retrieves archives from managed nodes
+      fetch:
+        src: /backup/configuration.gz
+        dest: /backup/{{ ansible_hostname }}-configuration.gz
+        owner: automation
+        group: automation
+        mode: 0660
+```
