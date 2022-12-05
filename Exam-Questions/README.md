@@ -82,7 +82,8 @@ echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 ```
 
 - **step4:** Creating inventory
-  > Create directory for the inventory
+
+> Create directory for the inventory
 
 ```
 mkdir -p /home/automation/plays
@@ -111,7 +112,8 @@ proxy
 > Save it to /home/automation/plays/inventory
 
 - **step5:** Create the config file with following content
-  > Create the ansible.cfg `ansible configuration file` with following contents
+
+> Create the ansible.cfg `ansible configuration file` with following contents
 
 ```
 [defaults]
