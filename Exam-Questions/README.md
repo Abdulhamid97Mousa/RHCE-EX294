@@ -23,7 +23,7 @@ One VM will be configured as an Ansible control node. Other four VMs will be use
 ```mermaid
 flowchart TD;
     A[Fire Up 5 VMs] --> B(#A Controller Node);
-    B -- Repo to pull packages from #A --> C[#Z repository];
+    B -- Repo to pull packages from #Z --> Z[#Z repository];
     B -- Controlled By Node #A --> C[#B Managed Node1];
     B -- Controlled By Node #A --> D[#C Managed Node2];
     B -- Controlled By Node #A --> E[#D Managed Node3];
