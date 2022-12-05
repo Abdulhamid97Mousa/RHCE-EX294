@@ -139,3 +139,14 @@ chown -R automation:automation /home/automation
 ```
 
 > Do the same for /var/log/ansible directory
+
+## A2. Ad-Hoc Commands
+
+Generate an SSH keypair on the control node. You can perform this step manually.
+
+- Write a script `/home/automation/plays/adhoc` that uses Ansible ad-hoc commands to achieve the following:
+  - User automation is created on all inventory hosts (not the control node).
+  - SSH key (that you generated) is copied to all inventory hosts for the automation user and stored in `/home/automation/.ssh/authorized_keys`.
+  - The automation user is allowed to elevate privileges on all inventory hosts without having to provide a password.
+
+> **After running the adhoc script on the control node as the automation user, you should be able to SSH into all inventory hosts using the automation user without password, as well as a run all privileged commands.**
