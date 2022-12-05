@@ -87,6 +87,9 @@ echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 
 ```
 mkdir -p /home/automation/plays
+mkdir -p /home/automation/plays/roles
+sudo mkdir -p /var/log/ansible/
+sudo touch /var/log/ansible/execution.log
 vim /home/automation/plays/inventory
 ```
 
@@ -140,6 +143,10 @@ chown -R automation:automation /home/automation
 
 > Do the same for /var/log/ansible directory
 
+```
+sudo chown -R automation:automation /var/log/ansible
+```
+
 ## A2. Ad-Hoc Commands
 
 Generate an SSH keypair on the control node. You can perform this step manually.
@@ -150,3 +157,21 @@ Generate an SSH keypair on the control node. You can perform this step manually.
   - The automation user is allowed to elevate privileges on all inventory hosts without having to provide a password.
 
 > **After running the adhoc script on the control node as the automation user, you should be able to SSH into all inventory hosts using the automation user without password, as well as a run all privileged commands.**
+
+## Q2. Ad-Hoc Commands
+
+- **step1:** you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
+
+```
+#!/bin/bash
+# Create the directory for ssh keys.
+ansible localhost -m file -a "path=/home/automation/.ssh state=directory"
+# Generate the ssh keys.
+ansible localhost -m openssh_keypair -a "path=/home/automation/.ssh/id_rsa owner=automation group=automation type=rsa"
+# Create automation user on managed nodes.
+ansible all -m user -a "name=automation password={{ 'devops' | password_hash('sha512') }}"
+# share public key to managed nodes, remember to check your ansible.cfg configuration because this command needs sudo privileges.
+ansible all -b -m authorized_key -a "key="
+
+
+```
