@@ -166,6 +166,8 @@ Generate an SSH keypair on the control node. You can perform this step manually.
 
 - **step1:** you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
 
+- **step2:** you should read and understand the inventory file, if you haven't wrote your inventory by yourself, then you can check the inventory file in this repository.
+
 ```
 #!/bin/bash
 # Create the directory for ssh keys.
