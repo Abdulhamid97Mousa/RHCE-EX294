@@ -261,11 +261,15 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
         mode: 0660
 ```
 
-## Q4. Group differentiation
+## Q4. Group differentiation "File Content"
 
-- Create a playbook that meets following requirements:
-  - Populates /etc/motd with text, its content depends on the group
-  - proxy should use Welcome to HAProxy server as the message
-  - database should use Welcome to MySQL database as the message
-  - webservers should use Welcome to Apache server as the message
+- Create a playbook /home/automation/plays/motd.yml that runs on all inventory hosts and does the following:
+
+  - Populates /etc/motd with text, its content depends on the group, The playbook should replace any existing content of /etc/motd with text. Text depends on the host group.
+  - proxy should use Welcome to HAProxy server as the message, On hosts in the proxy host group the line should be “Welcome to HAProxy server”.
+
+  - database should use Welcome to MySQL database as the message, On hosts in the database host group the line should be “Welcome to MySQL server”
+
+  - webservers should use Welcome to Apache server as the message, On hosts in the webservers host group the line should be “Welcome to Apache server”.
+
   - Is placed at /home/automation/plays/motd.yml
