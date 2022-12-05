@@ -333,10 +333,46 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 - Create a playbook that meets following requirements:
   - Is placed at `/home/automation/plays/ansible_facts.yml`
   - Runs against proxy group
-  - Results in possiblity of getting a pair `name=haproxy` from ansible `facts path` dansible_local.environment.application after calling setup module
+  - Results in possiblity of getting a pair `name=haproxy` from ansible facts path `ansible_local.environment.application` after calling setup module
+
+## A5. Ansible Facts
+
+---
+
+- name: Work with Ansible Facts
+  hosts: database
+  become: yes
+  tasks:
+  - name: Ensure directory is exist
+    file:
+    path: /etc/ansible/facts.d
+    state: directory
+    recurse: yes
+  - name: Copy the content to the file
+    copy:
+    content: "[application]\nname=haproxy\n"
+    dest: /etc/ansible/facts.d/environment.fact
 
 ## Q6: Work with Ansible Facts
 
 Create a playbook `/home/automation/plays/facts.yml` that runs on hosts in the `database host group` and does the following:
 
-A custom Ansible fact `server_role=mysql` is created that can be retrieved from ansible_local.custom.sample_exam when using Ansible setup module.
+A custom Ansible fact `server_role=mysql` is created that can be retrieved from `ansible_local.custom.sample_exam` when using Ansible setup module.
+
+## A6: Work with Ansible Facts
+
+---
+
+- name: Work with Ansible Facts
+  hosts: database
+  become: yes
+  tasks:
+  - name: Ensure directory is exist
+    file:
+    path: /etc/ansible/facts.d
+    state: directory
+    recurse: yes
+  - name: Copy the content to the file
+    copy:
+    content: "[sample_exam]\nserver_role=mysql\n"
+    dest: /etc/ansible/facts.d/custom.fact
