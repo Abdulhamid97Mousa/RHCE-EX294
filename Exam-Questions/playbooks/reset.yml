@@ -1,0 +1,531 @@
+---
+- name: Resetting Control Node
+  hosts: control
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=control.ansi.example.com
+  - name: Creating User Account
+    user:
+      name: user
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+  - name: Changing User Password
+    shell: echo password | sudo passwd user --stdin
+  - name: Changing Root Password
+    shell: echo password | sudo passwd root --stdin
+  - name: Removing Routing 
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: '0'
+      sysctl_set: yes
+  - name: Resetting Timezone
+    timezone:
+      name: America/Los_Angeles
+  - name: Erasing Web Server Configuration
+    file:
+      path: /var/www/html/*
+      state: absent
+  - name: Erasing Shell Script (if present)
+    file:
+      path: /awesome.sh
+      state: absent
+  - name: Removing users
+    user:
+      name: automation
+      state: absent
+      remove: yes
+  - name: Removing Added Directories
+    file:
+      path: /home/automation
+      state: absent
+  - name: Removing Temporary Files
+    file:
+      path: /"{{ item }}"
+      state: absent
+    with_items:
+      - tmp
+      - find
+  - name: Adjusting Grub File
+    lineinfile:
+      state: present
+      dest: /etc/default/grub
+      insertafter: 'true'
+      regexp: '^(GRUB_CMDLINE_LINUX=(?!.* audit)\"[^\"]+)(\".*)'
+      line: 'GRUB_CMDLINE_LINUX="no_timer_check crashkernel=auto resume=/dev/mapper/rhel_rhel8-swap rd.lvm.lv=rhel_rhel8/root rd.lvm.lv=rhel_rhel8/swap biosdevname=0 net.ifnames=0 rhgb quiet"'
+  - name: Fixing Resolv File
+    lineinfile:
+      path: /etc/resolv.conf
+      line: 'nameserver 8.8.8.8'
+      state: present
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4\n:1         localhost localhost.localdomain localhost6 localhost6.localdomain6\n192.168.55.199 repo.ansi.example.com repo\n192.168.55.200 control.ansi.example.com control\n192.168.55.201 node1.ansi.example.com node1\n192.168.55.202 node2.ansi.example.com node2\n192.168.55.203 node3.ansi.example.com node3\n192.168.55.204 node4.ansi.example.com node4"
+      force: yes
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Creating Temporary Repo File
+    file:
+      path: /etc/yum.repos.d/ipa.repo
+      state: touch
+      mode: 0755
+  - name: Building Repo File
+    copy:
+      dest: /etc/yum.repos.d/ipa.repo
+      content: "[base]\nname=Base\nbaseurl=http://repo/BaseOS\ngpgcheck=0\nenabled=1\n\n[apps]\nname=Apps\nbaseurl=http://repo/AppStream\ngpgcheck=0\nenabled=1"
+      force: yes
+    tags: repo
+  - name: Starting services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
+      - firewalld
+      - httpd
+  - name: Enabling Firewall Services
+    firewalld: 
+      service: "{{ item }}"
+      immediate: yes
+      permanent: yes
+      state: enabled
+    with_items:
+      - http 
+      - https 
+      - ntp 
+      - dns
+      - ftp
+  - name: Reloading Firewall
+    service: name=firewalld state=restarted
+  - name: Configuring network
+    shell: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.200/24 ipv4.gateway 192.168.55.1 ipv4.dns 8.8.8.8 ipv4.dns-search ansi.example.com ipv4.method manual
+  - name: Reloaded Network
+    service:
+      name: NetworkManager
+      state: restarted
+  - name: Removing Old RSA Key
+    file: 
+      path: /home/user/.ssh/
+      state: absent
+  - name: Generating RSA Key
+    command : ssh-keygen -q -t rsa -f /home/user/.ssh/id_rsa -C "" -N ""
+    become: yes
+    become_user: user
+  - name: Adjusting services
+    selinux:
+      state: permissive
+      policy: targeted
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #            _            _           _          _           _          _           _     
+        #          /\ \          /\ \        /\ \     _ /\ \        /\ \       /\ \        _\ \   
+        #         /  \ \        /  \ \      /  \ \   /\_\_\ \      /  \ \     /  \ \      /\__ \  
+        #        / /\ \ \      / /\ \ \    / /\ \ \_/ / /\__ \    / /\ \ \   / /\ \ \    / /_ \_\ 
+        #       / / /\ \ \    / / /\ \ \  / / /\ \___/ / /_ \ \  / / /\ \_\ / / /\ \ \  / / /\/_/ 
+        #      / / /  \ \_\  / / /  \ \_\/ / /  \/____/ / /\ \ \/ / /_/ / // / /  \ \_\/ / /      
+        #     / / /    \/_/ / / /   / / / / /    / / / / /  \/_/ / /__\/ // / /   / / / / /       
+        #    / / /         / / /   / / / / /    / / / / /     / / /_____// / /   / / / / / ____   
+        #   / / /________ / / /___/ / / / /    / / / / /     / / /\ \ \ / / /___/ / / /_/_/ ___/\ 
+        #  / / /_________/ / /____\/ / / /    / / /_/ /     / / /  \ \ / / /____\/ /_______/\__\/ 
+        #  \/____________\/_________/\/_/     \/_/\_\/      \/_/    \_\\/_________/\_______\/     
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        # Repo/AppStream 
+        # Available to use from http://repo.ansi.example.com/BaseOS and http://repo.ansi.example.com/AppStream
+        "
+
+# ----------------------------------------------------------------------
+
+- name: Resetting Nodes
+  hosts: node1,node2,node3,node4
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Removing User Account
+    user:
+      name: "{{ item }}"
+      state: absent
+      force: yes
+    with_items:
+      - user
+      - ansible
+      - automation
+  - name: Changing Root Password
+    shell: echo password | sudo passwd root --stdin
+  - name: Readjusting services
+    selinux:
+      state: permissive
+      policy: targeted
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4\n:1         localhost localhost.localdomainlocalhost6localhost6.localdomain6\n192.168.55.199 repo.ansi.example.com repo\n192.168.55.200 control.ansi.example.com control\n192.168.55.201 node1.ansi.example.com node1\n192.168.55.202 node2.ansi.example.com node2\n192.168.55.203  node3.ansi.example.com node3\n192.168.55.204 node4.ansi.example.com node4"
+      force: yes
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Creating Temporary Repo File
+    file:
+      path: /etc/yum.repos.d/ipa.repo
+      state: touch
+      mode: 0755
+  - name: Building Repo File
+    copy:
+      dest: /etc/yum.repos.d/ipa.repo
+      content: "[base]\nname=Base\nbaseurl=http://repo/BaseOS\ngpgcheck=0\nenabled=1\n\n[apps]\nname=Apps\nbaseurl=http://repo/AppStream\ngpgcheck=0\nenabled=1"
+      force: yes
+  - name: Enabling IPV6
+    sysctl:
+      name: "{{ item }}"
+      value: '0'
+      sysctl_set: yes
+    with_items:
+      - net.ipv6.conf.lo.disable_ipv6
+      - net.ipv6.conf.all.disable_ipv6
+  - name: Removing Firewall Services
+    firewalld: 
+      service: "{{ item }}"
+      immediate: yes
+      permanent: yes
+      state: disabled
+    with_items:
+      - http 
+      - https 
+      - ntp 
+      - dns
+      - ftp
+  - name: Environment Packages Installed.
+    yum: name=man-pages state=present 
+    register: yum_sleeper
+  - name: Restarting services
+    service: name=firewalld enabled=true state=restarted
+  - name: Fixing Resolv File
+    lineinfile:
+      path: /etc/resolv.conf
+      line: 'nameserver 8.8.8.8'
+      state: present
+  - name: Recreating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Erasing Existing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Removing System Configs 
+    sysctl:
+      name: "{{ item.name }}"
+      value: "{{ item.value }}"
+      sysctl_set: yes
+      state: present
+    loop:
+      - { name: 'net.ipv4.ip_forward', value: '0'}
+      - { name: 'vm.swappiness', value: '20'}
+    tags: sys
+  - name: Restoring Booleans 
+    command: setsebool -P httpd_can_network_connect off
+  - name: Resetting Timezone
+    timezone:
+      name: America/Los_Angeles
+  - name: Erasing Web Server Configuration
+    file:
+      path: /var/www/html/*
+      state: absent
+  - name: Erasing Shell Script (if present)
+    file:
+      path: /awesome.sh
+      state: absent
+  - name: Removing users
+    user:
+      name: "{{ item }}"
+      state: absent
+      remove: yes
+    with_items:
+      - automation
+      - ansible
+      - alice
+      - sandy
+      - vincent
+      - patrick
+  - name: Removing packages
+    yum:
+      name:
+        - httpd
+        - mariadb
+        - mod_ssl
+        - php
+        - tcpdump
+        - mailx
+        - lsof
+      state: absent
+      autoremove: yes
+    tags: yum
+  - name: Removing Added Directories
+    file:
+      path: /"{{ item }}"
+      state: absent
+    with_items:
+      - home/automation
+      - home/ansible
+  - name: Removing Temporary Files
+    file:
+      path: /"{{ item }}"
+      state: absent
+    with_items:
+      - tmp
+      - find
+      - mnt
+      - etc/server_list.txt
+  - name: Adjusting Grub File
+    lineinfile:
+      state: present
+      dest: /etc/default/grub
+      insertafter: 'true'
+      regexp: '^(GRUB_CMDLINE_LINUX=(?!.* audit)\"[^\"]+)(\".*)'
+      line: 'GRUB_CMDLINE_LINUX="no_timer_check crashkernel=auto resume=/dev/mapper/rhel_rhel8-swap rd.lvm.lv=rhel_rhel8/root rd.lvm.lv=rhel_rhel8/swap biosdevname=0 net.ifnames=0 rhgb quiet"'
+  - name: Adjusting SSHD Config
+    lineinfile:
+      state: present
+      dest: /etc/ssh/sshd_config
+      regexp: "{{ item.regex }}"
+      line: "{{ item.line }}"
+      insertafter: "{{ item.after }}"
+    loop:
+      - { regex: '^#?X11Forwarding', line: 'X11Forwarding no', after: '^#?X11DisplayOffset'}
+      - { regex: '^#?MaxAuthTries', line: 'MaxAuthTries 7', after: '^#?StrictModes'}
+    tags: sshd
+  - name: Reading Partition Information
+    parted: device=/dev/sdb unit=MiB
+    register: sdb_info
+  - name: Removing all partitions from additional disk
+    parted:
+      device: /dev/sdb
+      number: '{{ item.num }}'
+      state: absent
+    loop: '{{ sdb_info.partitions }}'
+  - name: Creating User Account
+    user:
+      name: user
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+      generate_ssh_key: yes
+      force: yes
+  - name: Changing User Password
+    shell: echo password | sudo passwd user --stdin
+
+# ----------------------------------------------------------------------
+
+- name: Finishing Up Node 1
+  hosts: node1
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=node1.ansi.example.com
+
+  - name: Configuring network
+    command: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.201/24 ipv4.gateway 192.168.55.1 ipv4.method manual
+  - name: Restarting Network
+    service:
+      name: NetworkManager
+      state: restarted
+
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #           _            _           _           _       _              
+        #          /\ \     _   /\ \        /\ \        /\ \    / /\            
+        #         /  \ \   /\_\/  \ \      /  \ \____  /  \ \  / /  \           
+        #        / /\ \ \_/ / / /\ \ \    / /\ \_____\/ /\ \ \/_/ /\ \          
+        #       / / /\ \___/ / / /\ \ \  / / /\/___  / / /\ \_\_\/\ \ \         
+        #      / / /  \/____/ / /  \ \_\/ / /   / / / /_/_ \/_/    \ \ \        
+        #     / / /    / / / / /   / / / / /   / / / /____/\        \ \ \       
+        #    / / /    / / / / /   / / / / /   / / / /\____\/         \ \ \      
+        #   / / /    / / / / /___/ / /\ \ \__/ / / / /______        __\ \ \___  
+        #  / / /    / / / / /____\/ /  \ \___\/ / / /_______\      /___\_\/__/\ 
+        #  \/_/     \/_/\/_________/    \/_____/\/__________/      \_________\/ 
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        "
+
+# ----------------------------------------------------------------------
+
+- name: Finishing Up Node 2
+  hosts: node2
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=node2.ansi.example.com
+
+  - name: Configuring network
+    command: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.202/24 ipv4.gateway 192.168.55.1 ipv4.method manual
+  - name: Restarting Network
+    service: 
+      name: NetworkManager
+      state: restarted
+
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+         #!/bin/bash
+         #
+         echo -e '       
+         #           _            _           _           _        _       
+         #          /\ \     _   /\ \        /\ \        /\ \    /\ \      
+         #         /  \ \   /\_\/  \ \      /  \ \____  /  \ \  /  \ \     
+         #        / /\ \ \_/ / / /\ \ \    / /\ \_____\/ /\ \ \/ /\ \ \    
+         #       / / /\ \___/ / / /\ \ \  / / /\/___  / / /\ \_\/_/\ \ \   
+         #      / / /  \/____/ / /  \ \_\/ / /   / / / /_/_ \/_/   / / /   
+         #     / / /    / / / / /   / / / / /   / / / /____/\     / / /    
+         #    / / /    / / / / /   / / / / /   / / / /\____\/    / / /  _  
+         #   / / /    / / / / /___/ / /\ \ \__/ / / / /______   / / /_/\_\ 
+         #  / / /    / / / / /____\/ /  \ \___\/ / / /_______\ / /_____/ / 
+         #  \/_/     \/_/\/_________/    \/_____/\/__________/ \________/  
+         '"#
+         #
+         # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+         # This system is running `cat /etc/redhat-release`
+         #
+         "
+
+
+# ----------------------------------------------------------------------
+
+- name: Finishing Up Node 3
+  hosts: node3
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=node3.ansi.example.com
+
+  - name: Configuring network
+    command: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.203/24 ipv4.gateway 192.168.55.1 ipv4.method manual
+  - name: Restarting Network
+    service: 
+      name: NetworkManager
+      state: restarted
+
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #           _            _           _           _         _          
+        #          /\ \     _   /\ \        /\ \        /\ \     /\ \         
+        #         /  \ \   /\_\/  \ \      /  \ \____  /  \ \   /  \ \        
+        #        / /\ \ \_/ / / /\ \ \    / /\ \_____\/ /\ \ \ / /\ \ \       
+        #       / / /\ \___/ / / /\ \ \  / / /\/___  / / /\ \_/ / /\ \ \      
+        #      / / /  \/____/ / /  \ \_\/ / /   / / / /_/_ \/_\/_//_\ \ \     
+        #     / / /    / / / / /   / / / / /   / / / /____/\    __\___ \ \    
+        #    / / /    / / / / /   / / / / /   / / / /\____\/   / /\   \ \ \   
+        #   / / /    / / / / /___/ / /\ \ \__/ / / / /______  / /_/____\ \ \  
+        #  / / /    / / / / /____\/ /  \ \___\/ / / /_______\/__________\ \ \ 
+        #  \/_/     \/_/\/_________/    \/_____/\/__________/\_____________\/ 
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        "
+
+# ----------------------------------------------------------------------
+
+- name: Finishing Up Node 4
+  hosts: node4
+  strategy: free
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=node4.ansi.example.com
+
+  - name: Configuring network
+    command: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.204/24 ipv4.gateway 192.168.55.1 ipv4.method manual
+  - name: Restarting Network
+    service: name=NetworkManager state=restarted
+
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #           _            _           _           _           _           
+        #          /\ \     _   /\ \        /\ \        /\ \     _  /\ \         
+        #         /  \ \   /\_\/  \ \      /  \ \____  /  \ \   /\_\\ \ \        
+        #        / /\ \ \_/ / / /\ \ \    / /\ \_____\/ /\ \ \ / / / \ \ \       
+        #       / / /\ \___/ / / /\ \ \  / / /\/___  / / /\ \_/ / /   \ \ \      
+        #      / / /  \/____/ / /  \ \_\/ / /   / / / /_/_ \/_\ \ \____\ \ \     
+        #     / / /    / / / / /   / / / / /   / / / /____/\   \ \________\ \    
+        #    / / /    / / / / /   / / / / /   / / / /\____\/    \/________/\ \   
+        #   / / /    / / / / /___/ / /\ \ \__/ / / / /______              \ \ \  
+        #  / / /    / / / / /____\/ /  \ \___\/ / / /_______\              \ \_\ 
+        #  \/_/     \/_/\/_________/    \/_____/\/__________/               \/_/ 
+        #                                                                        
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        "
+  - name: Environment Reset Complete
+    debug:
+      msg:
+        - 'Next Steps: Accessing The Systems:'
+        - '- Control - 192.168.55.200'
+        - '- Node 1 - 192.168.55.201'
+        - '- Node 2 - 192.168.55.202'
+        - '- Node 3 - 192.168.55.203'
+        - '- Node 4 - 192.168.55.204'
+        - '- Username/Password - user/password'
+        - '--------------------------------------------------'
+        - '- For root - use `sudo` or `sudo su`'
+        - '- Access example - ssh user@192.168.55.200'
+        - '- Happy Studying!'
+        

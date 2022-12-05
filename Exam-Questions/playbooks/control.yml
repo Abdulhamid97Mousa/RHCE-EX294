@@ -1,0 +1,124 @@
+---
+- name: Setting up the Control Node
+  hosts: control
+  strategy: free
+  gather_facts: false
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=control.ansi.example.com
+  - name: Creating User Account
+    user:
+      name: user
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+      generate_ssh_key: yes
+      force: yes
+  - name: Changing User Password
+    shell: echo password | sudo passwd user --stdin
+  - name: Changing Root Password
+    shell: echo password | sudo passwd root --stdin
+  - name: Fixing Resolv File
+    lineinfile:
+      path: /etc/resolv.conf
+      line: 'nameserver 8.8.8.8'
+      state: present
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4\n:1         localhost localhost.localdomain localhost6 localhost6.localdomain6\n192.168.55.199 repo.ansi.example.com repo\n192.168.55.200 control.ansi.example.com control\n192.168.55.201 node1.ansi.example.com node1\n192.168.55.202 node2.ansi.example.com node2\n192.168.55.203 node3.ansi.example.com node3\n192.168.55.204 node4.ansi.example.com node4"
+      force: yes
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Creating Temporary Repo File
+    file:
+      path: /etc/yum.repos.d/ipa.repo
+      state: touch
+      mode: 0755
+  - name: Adding the rhel-system-repos.rpm
+    copy:
+      src: rhel-system-roles-1.0.1-1.el8.noarch.rpm
+      dest: /home/vagrant
+      owner: vagrant
+      group: vagrant
+      mode: "0775"
+  - name: Building Repo File
+    copy:
+      dest: /etc/yum.repos.d/ipa.repo
+      content: "[base]\nname=Base\nbaseurl=http://repo/BaseOS\ngpgcheck=0\nenabled=1\n\n[apps]\nname=Apps\nbaseurl=http://repo/AppStream\ngpgcheck=0\nenabled=1"
+      force: yes
+    tags: repo
+  - name: Starting services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
+      - firewalld
+      - httpd
+  - name: Enabling Firewall Services
+    firewalld: 
+      service: "{{ item }}"
+      immediate: yes
+      permanent: yes
+      state: enabled
+    with_items:
+      - http 
+      - https 
+      - ntp 
+      - dns
+      - ftp
+  - name: Reloading Firewall
+    service: name=firewalld state=restarted
+  - name: Configuring network
+    shell: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.200/24 ipv4.gateway 192.168.55.1 ipv4.dns 8.8.8.8 ipv4.dns-search ansi.example.com ipv4.method manual
+  - name: Reloaded Network
+    service:
+      name: NetworkManager
+      state: restarted
+#  - name: Generating RSA Key
+#    command : ssh-keygen -q -t rsa -f /home/user/.ssh/id_rsa -C "" -N ""
+#    become: yes
+#    become_user: user
+  - name: Adjusting services
+    selinux:
+      state: permissive
+      policy: targeted
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #            _            _           _          _           _          _           _     
+        #          /\ \          /\ \        /\ \     _ /\ \        /\ \       /\ \        _\ \   
+        #         /  \ \        /  \ \      /  \ \   /\_\_\ \      /  \ \     /  \ \      /\__ \  
+        #        / /\ \ \      / /\ \ \    / /\ \ \_/ / /\__ \    / /\ \ \   / /\ \ \    / /_ \_\ 
+        #       / / /\ \ \    / / /\ \ \  / / /\ \___/ / /_ \ \  / / /\ \_\ / / /\ \ \  / / /\/_/ 
+        #      / / /  \ \_\  / / /  \ \_\/ / /  \/____/ / /\ \ \/ / /_/ / // / /  \ \_\/ / /      
+        #     / / /    \/_/ / / /   / / / / /    / / / / /  \/_/ / /__\/ // / /   / / / / /       
+        #    / / /         / / /   / / / / /    / / / / /     / / /_____// / /   / / / / / ____   
+        #   / / /________ / / /___/ / / / /    / / / / /     / / /\ \ \ / / /___/ / / /_/_/ ___/\ 
+        #  / / /_________/ / /____\/ / / /    / / /_/ /     / / /  \ \ / / /____\/ /_______/\__\/ 
+        #  \/____________\/_________/\/_/     \/_/\_\/      \/_/    \_\\/_________/\_______\/     
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        # Repo/AppStream 
+        # Available to use from http://repo.ansi.example.com/BaseOS and http://repo.ansi.example.com/AppStream
+        "

@@ -1,0 +1,100 @@
+---
+- name: Setting Up Node 1
+  hosts: node1
+  strategy: free
+  gather_facts: False
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=node1.ansi.example.com
+  - name: Creating User Account
+    user:
+      name: user
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+  - name: Changing User Password
+    shell: echo password | sudo passwd user --stdin
+  - name: Changing Root Password
+    shell: echo password | sudo passwd root --stdin
+  - name: Adjusting services
+    selinux:
+      state: permissive
+      policy: targeted
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4\n:1         localhost localhost.localdomainlocalhost6localhost6.localdomain6\n192.168.55.199 repo.ansi.example.com repo\n192.168.55.200 control.ansi.example.com control\n192.168.55.201 node1.ansi.example.com node1\n192.168.55.202 node2.ansi.example.com node2\n192.168.55.203  node3.ansi.example.com node3\n192.168.55.204 node4.ansi.example.com node4"
+      force: yes
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Creating Temporary Repo File
+    file:
+      path: /etc/yum.repos.d/ipa.repo
+      state: touch
+      mode: 0755
+  - name: Building Repo File
+    copy:
+      dest: /etc/yum.repos.d/ipa.repo
+      content: "[base]\nname=Base\nbaseurl=http://repo/BaseOS\ngpgcheck=0\nenabled=1\n\n[apps]\nname=Apps\nbaseurl=http://repo/AppStream\ngpgcheck=0\nenabled=1"
+      force: yes
+  - name: Configuring network
+    command: nmcli con mod 'System eth1' ipv4.addresses 192.168.55.201/24 ipv4.gateway 192.168.55.1 ipv4.method manual
+  - name: Restarting Network
+    service:
+      name: NetworkManager
+      state: restarted
+  - name: Enabling IPV6
+    sysctl:
+      name: "{{ item }}"
+      value: '0'
+      sysctl_set: yes
+    with_items:
+      - net.ipv6.conf.lo.disable_ipv6
+      - net.ipv6.conf.all.disable_ipv6
+  - name: Environment Packages Installed.
+    yum: name=man-pages state=present 
+    register: yum_sleeper
+  - name: Starting services
+    service: name=firewalld enabled=true state=started
+  - name: Fixing Resolv File
+    lineinfile:
+      path: /etc/resolv.conf
+      line: 'nameserver 8.8.8.8'
+      state: present
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Erasing Repos
+    file: 
+      path: /etc/yum.repos.d/*
+      state: absent
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+        #!/bin/bash
+        #
+        echo -e '       
+        #           _            _           _           _       _              
+        #          /\ \     _   /\ \        /\ \        /\ \    / /\            
+        #         /  \ \   /\_\/  \ \      /  \ \____  /  \ \  / /  \           
+        #        / /\ \ \_/ / / /\ \ \    / /\ \_____\/ /\ \ \/_/ /\ \          
+        #       / / /\ \___/ / / /\ \ \  / / /\/___  / / /\ \_\_\/\ \ \         
+        #      / / /  \/____/ / /  \ \_\/ / /   / / / /_/_ \/_/    \ \ \        
+        #     / / /    / / / / /   / / / / /   / / / /____/\        \ \ \       
+        #    / / /    / / / / /   / / / / /   / / / /\____\/         \ \ \      
+        #   / / /    / / / / /___/ / /\ \ \__/ / / / /______        __\ \ \___  
+        #  / / /    / / / / /____\/ /  \ \___\/ / / /_______\      /___\_\/__/\ 
+        #  \/_/     \/_/\/_________/    \/_____/\/__________/      \_________\/ 
+        '"#
+        #
+        # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+        # This system is running `cat /etc/redhat-release`
+        #
+        "
+...

@@ -1,0 +1,93 @@
+---
+- name: Setting Up Repo Node
+  hosts: repo
+  strategy: free
+  gather_facts: False
+  ignore_errors: true
+  tasks:
+  - name: Setting Hostname
+    hostname: name=repo.ansi.example.com
+  - name: Creating User Account
+    user:
+      name: user
+      shell: /bin/bash
+      groups: wheel
+      append: yes
+  - name: Changing User Password
+    shell: echo password | sudo passwd user --stdin
+  - name: Disabling services
+    selinux:
+      state: disabled
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: "127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4\n:1         localhost localhost.localdomain localhost6localhost6.localdomain6\n192.168.55.199 repo.ansi.example.com repo\n192.168.55.200 control.ansi.example.com control\n192.168.55.201 node1.ansi.example.com node1\n192.168.55.202 node2.ansi.example.com node2\n192.168.55.203 node3.ansi.example.com node3\n192.168.55.204 node4.ansi.example.com node4"
+      force: yes
+  - name: Enabling services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
+      - httpd
+      - firewalld
+  - name: Enabling services
+    service:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    with_items:
+      - httpd
+      - firewalld
+  - name: Starting Firewalld
+    firewalld: 
+      service: "{{ item }}"
+      immediate: yes
+      permanent: yes
+      state: enabled
+    with_items:
+      - http 
+      - https 
+      - ntp 
+      - dns 
+      - kerberos 
+      - ldap 
+      - ldaps 
+      - ftp
+  - name: Reloading Firewall
+    service: name=firewalld state=restarted
+  - name: Enabling IPV6
+    shell: sysctl net.ipv6.conf.lo.disable_ipv6=0 ; sysctl net.ipv6.conf.all.disable_ipv6=0
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+  - name: Fixing SELinux Contexts
+    shell: restorecon -Rv /var/www/html
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+         #!/bin/bash
+         #
+         echo -e '
+         #           _          _           _         _       
+         #          /\ \       /\ \        /\ \      /\ \     
+         #         /  \ \     /  \ \      /  \ \    /  \ \    
+         #        / /\ \ \   / /\ \ \    / /\ \ \  / /\ \ \   
+         #       / / /\ \_\ / / /\ \_\  / / /\ \_\/ / /\ \ \  
+         #      / / /_/ / // /_/_ \/_/ / / /_/ / / / /  \ \_\ 
+         #     / / /__\/ // /____/\   / / /__\/ / / /   / / / 
+         #    / / /_____// /\____\/  / / /_____/ / /   / / /  
+         #   / / /\ \ \ / / /______ / / /     / / /___/ / /   
+         #  / / /  \ \ / / /_______/ / /     / / /____\/ /    
+         #  \/_/    \_\\/__________\/_/      \/_________/     
+         '"#
+         # Why are you here? You should be working on the system hosts...
+         # Anyway, try not to reboot me or bad stuff can happen.
+         #
+         # You are logged into \"`hostname`\" as the \"`whoami`\" account.
+         # This system is running `cat /etc/redhat-release`
+         #
+         "
