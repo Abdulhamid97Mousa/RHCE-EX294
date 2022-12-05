@@ -181,3 +181,12 @@ ansible all -m authorized_key -a "key={{ lookup('file', '/home/automation/.ssh/i
 # Add the automation user in each managed node to sudoers group for privilege escalation.
 ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/sudoers.d/automation"
 ```
+
+## Q3. Archiving
+
+- Create a playbook that meets following requirements:
+  - Creates a gzip archive containing `/etc` and stores it at `/backup/configuration.gz` on the managed hosts.
+  - Is placed at `/home/automation/plays/archive.yml`
+  - Runs against `all` host group
+    `Retrieves archives from the managed nodes and stores them at`/backup/<hostname>-configuration.gz` on the control node
+  - User automation should be owner of /backup and everything underneath. Both on the managed hosts and the control node. Only owner and members of his group should be able to read and manage files inside. Anyone should be allowed to list contents of `/backup`.
