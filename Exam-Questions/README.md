@@ -22,7 +22,7 @@ One VM will be configured as an Ansible control node. Other four VMs will be use
 
 ```mermaid
 flowchart TD;
-    A[Fire Up 5 VMs] --> B(#A Controller Node);
+    A[Fire Up 6 VMs] --> B(#A Controller Node);
     B -- Repo to pull packages from it --> Z[repository];
     B -- Controlled By Node #A --> C[Managed Node1];
     B -- Controlled By Node #A --> D[Managed Node2];
@@ -55,13 +55,13 @@ flowchart TD;
 
 ## A1. Ansible Installation and Configuration
 
-- step1: Installing the ansible
+- **step1:** Installing the ansible
 
 ```
 yum install -y ansible
 ```
 
-- step2: Configuring the user account
+- **step2:** Configuring the user account
 
 > Create an account
 
@@ -75,13 +75,13 @@ useradd automation
 echo devops | passwd --stdin automation
 ```
 
-- step3:Allow access to privileged commands
+- **step3:** Allow access to privileged commands
 
 ```
 echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 ```
 
-- step4: Creating inventory
+- **step4:** Creating inventory
   > Create directory for the inventory
 
 ```
@@ -110,7 +110,7 @@ proxy
 
 > Save it to /home/automation/plays/inventory
 
-- step5: Create the config file with following content
+- **step5:** Create the config file with following content
   > Create the ansible.cfg `ansible configuration file` with following contents
 
 ```
