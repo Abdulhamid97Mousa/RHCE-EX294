@@ -97,19 +97,30 @@ sudo touch /var/log/ansible/execution.log
 vim /home/automation/plays/inventory
 ```
 
+> Manage your /etc/hosts file to resolve host ip address to FQDNs
+
+```
+192.168.55.199 repo.ansi.example.com     repo
+192.168.55.200 control.ansi.example.com  control
+192.168.55.201 node1.ansi.example.com    managed1
+192.168.55.202 node2.ansi.example.com    managed2
+192.168.55.203 node3.ansi.example.com    managed3
+192.168.55.204 node4.ansi.example.com    managed4
+```
+
 > Create the inventory with following contents
 
 ```
 [proxy]
-managed1.example.com
+managed1 ansible_hostname=managed1 ansible_host=192.168.55.201 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
 
 [webservers]
-managed2.example.com
-managed3.example.com
+managed2 ansible_hostname=managed2 ansible_host=192.168.55.202 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
+managed3 ansible_hostname=managed3 ansible_host=192.168.55.203 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
 
 [database]
-managed3.example.com
-managed4.example.com
+managed3 ansible_hostname=managed3 ansible_host=192.168.55.203 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
+managed4 ansible_hostname=managed4 ansible_host=192.168.55.204 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
 
 [public:children]
 webservers
