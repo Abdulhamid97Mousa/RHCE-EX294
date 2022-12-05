@@ -27,7 +27,7 @@ flowchart TD;
     B -- Controlled By Node #A --> F[#E RHEL 8.6 Managed Node4];
 ```
 
-## 1. Ansible Installation and Configuration
+## Q1. Ansible Installation and Configuration
 
 - Install the ansible package on the control node
 - Create automation user with devops password
@@ -49,3 +49,88 @@ flowchart TD;
   - roles path should include /home/automation/plays/roles
   - ensure that priviledge escalation method is set to sudo
   - do not allow ansible to ask for password when elevating privileges
+
+## A1. Ansible Installation and Configuration
+
+- step1: Installing the ansible
+
+```
+yum install -y ansible
+```
+
+- step2: Configuring the user account
+
+> Create an account
+
+```
+useradd automation
+```
+
+> Set password
+
+```
+echo devops | passwd --stdin automation
+```
+
+- step3:Allow access to privileged commands
+
+```
+echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
+```
+
+- step4: Creating inventory
+  > Create directory for the inventory
+
+```
+mkdir -p /home/automation/plays
+vim /home/automation/plays/inventory
+```
+
+> Create the inventory with following contents
+
+```
+[proxy]
+managed1.example.com
+
+[webservers]
+managed2.example.com
+managed3.example.com
+
+[database]
+managed3.example.com
+managed4.example.com
+
+[public:children]
+webservers
+proxy
+```
+
+> Save it to /home/automation/plays/inventory
+
+- step5: Create the config file with following content
+  > Create the ansible.cfg `ansible configuration file` with following contents
+
+```
+[defaults]
+inventory = ./inventory
+forks = 8
+log_path = /var/log/ansible/execution.log
+roles_path = ~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/automation/plays/roles
+
+[privilege_escalation]
+become = false
+become_ask_pass = false
+become_method = sudo
+```
+
+> Save it to /home/automation/plays/ansible.cfg
+
+General thoughts
+
+Ensure that you have proper ownership, to restore it call
+
+```
+chown -R automation:automation /home/automation
+```
+
+> Do the same for /var/log/ansible directory
