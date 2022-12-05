@@ -248,10 +248,7 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
         mode: 0660
 
 - name: fetch the archive
-  hosts:
-    - webservers
-    - proxy
-    - database
+  hosts: all
   become: true
   gather_facts: false
   tasks:
