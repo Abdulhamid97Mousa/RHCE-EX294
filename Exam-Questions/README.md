@@ -306,8 +306,6 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 > Another way of solving the problem:
 
-## cat motd.yml
-
 - name: Changing MOTD
   hosts: all
   become: yes
