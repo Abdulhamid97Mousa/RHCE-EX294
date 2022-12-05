@@ -32,7 +32,7 @@ flowchart TD;
 
 ## Lab Setup
 
-> you can create the lab setup manually, but instead i've `Vagrantfile` which you can use inorder to create this setup
+> you can create the lab setup manually, but instead i've `Vagrantfile` which you can use inorder to create this setup, please go to this website for more information regarding lab setup https://github.com/rdbreak/rhce8env
 
 ## Q1. Ansible Installation and Configuration
 
