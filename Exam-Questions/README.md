@@ -1,6 +1,6 @@
 # Ansible Sample Exam for RHCE EX294
 
-This is a sample Ansible exam that I’ve created to prepare for the new RHCE exam EX294. As with the real exam, no answers to the sample exam questions will be provided.
+This is a sample Ansible exam that I’ve created to prepare for the new RHCE exam EX294. As with the real exam, no perfect answers to the sample exam questions will be provided, but more or less correct and accurate.
 
 ## Requirements
 
@@ -264,8 +264,42 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
 ## Q4. Group differentiation "File Content"
 
 - Create a playbook `/home/automation/plays/motd.yml` that runs on all inventory hosts and does the following:
-  - Populates /etc/motd with text, its content depends on the group, The playbook should replace any existing content of `/etc/motd` with text. Text depends on the host group.
-  - proxy should use `Welcome to HAProxy server` as the message, On hosts in the proxy host group the line should be “Welcome to HAProxy server”.
-  - database should use `Welcome to MySQL database` as the message, On hosts in the database host group the line should be “Welcome to MySQL server”
-  - webservers should use Welcome to Apache server as the message, On hosts in the webservers host group the line should be “Welcome to Apache server”.
+  - Populates /etc/motd with text, its content depends on the group, The
+  - proxy group should use `Welcome to HAProxy server` as the motd.
+  - database group should use `Welcome to MySQL database` as the motd
+  - webservers should use `Welcome to Apache server` as the motd.
   - Is placed at `/home/automation/plays/motd.yml`
+
+## A4. Group differentiation "File Content"
+
+- **step1: **Create directories for groups
+
+```
+mkdir -p /home/automation/plays/group_vars
+mkdir -p /home/automation/plays/group_vars/{proxy,database,webservers}
+```
+
+- **step2: **Populate yml for each group group
+
+```
+echo "motd: Welcome to HAProxy server" > /home/automation/plays/group_vars/proxy/motd.yml
+echo "motd: Welcome to MySQL database" > /home/automation/plays/group_vars/database/motd.yml
+echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webservers/motd.yml
+```
+
+- **step3: **Create the `motd.yml` playbook
+
+```
+- name: file content distributed on managed hosts
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: populate the /etc/motd file
+      copy:
+        content: "{{ motd }}"
+        dest: /etc/motd
+        owner: root
+        group: root
+        mode: 644
+```
