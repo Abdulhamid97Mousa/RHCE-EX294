@@ -210,7 +210,7 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
 - name: Archiving
   hosts: localhost
   become: true
-  gather_facts: true
+  gather_facts: false
   tasks:
     - name: Create a backup folder
       file:
