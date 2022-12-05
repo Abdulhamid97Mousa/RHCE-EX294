@@ -9,7 +9,7 @@ You will need five RHEL 8 virtual machines to be able to successfully complete a
 
 One VM will be configured as an Ansible control node. Other four VMs will be used to apply playbooks to solve the sample exam questions. The following FQDNs will be used throughout the sample exam.
 
-| FQDN | Description |
+| FQDN | Description |  
 | repo.ansi.example.com | repository so you can install packages |
 | control.ansi.example.com | Ansible control node |
 | managed1.ansi.example.com | managed host |
