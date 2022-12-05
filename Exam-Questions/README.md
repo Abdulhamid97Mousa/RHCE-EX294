@@ -336,7 +336,6 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 ## A5. Ansible Facts
 
 ```
----
 - name: Work with Ansible Facts
   hosts: database
   become: yes
