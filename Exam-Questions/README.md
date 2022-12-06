@@ -412,3 +412,33 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
         name: sshd
         state: restarted
 ```
+
+## Q8. Use Conditionals to Control Play Execution "Conditionals"
+
+- Create a playbook that meets following requirements:
+  - Is placed at `/home/automation/plays/system_control.yml`
+  - Runs against all hosts
+  - If a server has more than 1024MB of RAM, then use sysctl to set `vm.swppiness to 10`
+  - If a server has less or equal to 1024MB of RAM exist with error message Server has less than required 1024MB of RAM
+  - Configuration change should survive server reboots
+
+## A8. Use Conditionals to Control Play Execution "Conditionals"
+
+```
+- name: Configure sysctl parameter
+  hosts: all
+  vars:
+    ram_mb: 1024
+  tasks:
+    - name: If server has less than 1024Mb
+      fail:
+        msg: Server should have at least {{ ram_mb }}MB of ram
+      when: ansible_memtotal_mb < ram_mb
+    - name: Configure swappiness
+      become: true
+      sysctl:
+        name: vm.swappiness
+        value: '10'
+        sysctl_set: true
+        reload: true
+```
