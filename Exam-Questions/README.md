@@ -377,3 +377,11 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
       content: "[sample_exam]\nserver_role=mysql\n"
       dest: /etc/ansible/facts.d/custom.fact
 ```
+
+## Q7. Text Manipulation also called "Configure SSH Server"
+
+- Create a playbook that customizes ssh configuration with following requirements:
+  - Is placed at /home/automation/plays/ssh_config.yml
+  - Is run against all servers
+  - Disables X11 forwarding
+  - Sets maxminal number of auth tries to 3
