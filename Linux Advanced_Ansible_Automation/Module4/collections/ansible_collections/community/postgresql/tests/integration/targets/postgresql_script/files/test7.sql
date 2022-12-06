@@ -1,1 +1,0 @@
-INSERT INTO test1 (id) VALUES (1)
