@@ -538,7 +538,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 > Navigate to `/home/automation/plays` as automation user and create directories for the files
 
-> **Part 1: ** you'll need to create a separate file that contains a password "eureka" this file is used as decryption tool, so we'll first encrypt a file which contains a sensitive key value pair `user_password: devops` > `"vars/regular_users.yml"` and the only way to decrypt it is to use another file, for simplicity i chose to create this file`./plays/secrets/regular_users_password`
+> Part 1: you'll need to create a separate file that contains a password "eureka" this file is used as decryption tool, so we'll first encrypt a file which contains a sensitive key value pair `user_password: devops` > `"vars/regular_users.yml"` and the only way to decrypt it is to use another file, for simplicity i chose to create this file`./plays/secrets/regular_users_password`
 
 ```
 mkdir secrets vars
@@ -556,7 +556,7 @@ echo eureka > /home/automation/plays/secrets/regular_users_password
 ansible-vault encrypt vars/regular_users.yml --vault-id eureka@secrets/regular_users_password
 ```
 
-> **Part 2: ** similar process but this time we don't use a vault-id
+> Part 2: similar process but this time we don't use a vault-id
 
 ```
 echo "db_password=devops" > vars/database_users.yml
