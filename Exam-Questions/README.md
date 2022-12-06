@@ -381,7 +381,34 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 ## Q7. Text Manipulation also called "Configure SSH Server"
 
 - Create a playbook that customizes ssh configuration with following requirements:
-  - Is placed at /home/automation/plays/ssh_config.yml
+  - Is placed at `/home/automation/plays/ssh_config.yml`
   - Is run against all servers
   - Disables X11 forwarding
   - Sets maxminal number of auth tries to 3
+
+## A7. Text Manipulation also called "Configure SSH Server"
+
+```
+- name: SSH configuration
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Replace a SSH entry with our own
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#MaxAuthTries 6'
+        line: "MaxAuthTries 3"
+      notify: Restart ssh
+    - name: Replace a SSH entry  with our own
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^X11Forwarding yes'
+        line: 'X11Forwarding no'
+      notify: Restart ssh
+  handlers:
+    - name: Restart ssh
+      service:
+        name: sshd
+        state: restarted
+```
