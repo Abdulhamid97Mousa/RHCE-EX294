@@ -569,3 +569,13 @@ echo dbs-are-awesome > /home/automation/plays/secrets/database_users_password
 ```
 ansible-vault encrypt /home/automation/plays/vars/database_users.yml --vault-id @./secrets/database_users_password
 ```
+
+## Task 9: Ansible Vault
+
+Create Ansible vault file /home/automation/plays/secret.yml. Encryption/decryption password is devops.
+
+Add the following variables to the vault:
+
+user_password with value of devops
+database_password with value of devops
+Store Ansible vault password in the file /home/automation/plays/vault_key.
