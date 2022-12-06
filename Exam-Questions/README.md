@@ -97,17 +97,6 @@ sudo touch /var/log/ansible/execution.log
 vim /home/automation/plays/inventory
 ```
 
-> Manage your /etc/hosts file to resolve host ip address to FQDNs
-
-```
-192.168.55.199 repo.ansi.example.com     repo
-192.168.55.200 control.ansi.example.com  control
-192.168.55.201 node1.ansi.example.com    managed1
-192.168.55.202 node2.ansi.example.com    managed2
-192.168.55.203 node3.ansi.example.com    managed3
-192.168.55.204 node4.ansi.example.com    managed4
-```
-
 > Create the inventory with following contents
 
 ```
@@ -129,6 +118,17 @@ proxy
 
 > Save it to /home/automation/plays/inventory
 
+> Manage your /etc/hosts file to resolve host ip address to FQDNs
+
+```
+192.168.55.199 repo.ansi.example.com     repo
+192.168.55.200 control.ansi.example.com  control
+192.168.55.201 node1.ansi.example.com    managed1
+192.168.55.202 node2.ansi.example.com    managed2
+192.168.55.203 node3.ansi.example.com    managed3
+192.168.55.204 node4.ansi.example.com    managed4
+```
+
 - **step5:** Create the config file with following content
 
 > Create the ansible.cfg `ansible configuration file` with following contents
@@ -137,9 +137,10 @@ proxy
 [defaults]
 remote_user=automation
 inventory=./inventory
-forks=8
+host_key_checking=false
 log_path=/var/log/ansible/execution.log
-roles_path=~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:/home/automation/plays/roles
+roles_path=/home/automation/plays/roles
+forks=8
 
 [privilege_escalation]
 become=false
