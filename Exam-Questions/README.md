@@ -442,3 +442,27 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
         sysctl_set: true
         reload: true
 ```
+
+## Q8. YUM repositories
+
+- Create a playbook that meets following requirements:
+  - Is placed at `/home/automation/plays/yum.yml`
+  - Runs against database hosts
+  - Adds a definition of new yum repository
+  - Enables this repository in yum
+  - Enables GPG check for this repo, key can be found here `https://repo.mysql.com/RPM-GPG-KEY-mysql`
+  - Sets description of the repo to MySQL 5.7 Community Server
+  - Sets repo id to mysql57-community
+  - Sets url of the repo to `http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch/`
+
+## Task 8: Software Repositories
+
+- Create a playbook /home/automation/plays/repository.yml that runs on servers in the database host group and does the following:
+
+  - A YUM repository file is created.
+  - The name of the repository is `mysql80-community`.
+  - The description of the repository is `“MySQL 8.0 YUM Repo”`.
+  - Repository baseurl is `http://repo.mysql.com/yum/mysql-8.0-community/el/8/x86_64/`.
+  - Repository GPG key is at `http://repo.mysql.com/RPM-GPG-KEY-mysql`.
+  - Repository GPG check is enabled.
+  - Repository is enabled.
