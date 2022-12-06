@@ -354,13 +354,13 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
       dest: /etc/ansible/facts.d/environment.fact
 ```
 
-## Q6: Work with Ansible Facts
+## Q5: Work with Ansible Facts
 
 Create a playbook `/home/automation/plays/facts.yml` that runs on hosts in the `database host group` and does the following:
 
 A custom Ansible fact `server_role=mysql` is created that can be retrieved from `ansible_local.custom.sample_exam` when using Ansible setup module.
 
-## A6: Work with Ansible Facts
+## A5: Work with Ansible Facts
 
 ```
 - name: Work with Ansible Facts
@@ -378,7 +378,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
       dest: /etc/ansible/facts.d/custom.fact
 ```
 
-## Q7. Text Manipulation also called "Configure SSH Server"
+## Q6. Text Manipulation also called "Configure SSH Server"
 
 - Create a playbook that customizes ssh configuration with following requirements:
   - Is placed at `/home/automation/plays/ssh_config.yml`
@@ -386,7 +386,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - Disables X11 forwarding
   - Sets maxminal number of auth tries to 3
 
-## A7. Text Manipulation also called "Configure SSH Server"
+## A6. Text Manipulation also called "Configure SSH Server"
 
 ```
 - name: SSH configuration
@@ -413,7 +413,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
         state: restarted
 ```
 
-## Q8. Use Conditionals to Control Play Execution "Conditionals"
+## Q7. Use Conditionals to Control Play Execution "Conditionals"
 
 - Create a playbook that meets following requirements:
   - Is placed at `/home/automation/plays/system_control.yml`
@@ -422,7 +422,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - If a server has less or equal to 1024MB of RAM exist with error message Server has less than required 1024MB of RAM
   - Configuration change should survive server reboots
 
-## A8. Use Conditionals to Control Play Execution "Conditionals"
+## A7. Use Conditionals to Control Play Execution "Conditionals"
 
 ```
 - name: Configure sysctl parameter
@@ -451,9 +451,31 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - Adds a definition of new yum repository
   - Enables this repository in yum
   - Enables GPG check for this repo, key can be found here `https://repo.mysql.com/RPM-GPG-KEY-mysql`
-  - Sets description of the repo to MySQL 5.7 Community Server
-  - Sets repo id to mysql57-community
+  - Sets description of the repo to `"MySQL 5.7 Community Server"`.
+  - Sets repo id to `mysql57-community`
   - Sets url of the repo to `http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch/`
+
+## A8. YUM repositories
+
+```
+- name: yum repository configuration
+  hosts: database
+  become: true
+  gather_facts: false
+  tasks:
+  - name: import GPG key
+    rpm_key:
+      state: present
+      key: https://repo.mysql.com/RPM-GPG-KEY-mysql
+  - name: Add repository configuration enteries
+    yum_repository:
+      name: mysql57-community
+      description: "MySQL 5.7 Community Server"
+      baseurl: http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch
+      gpgcheck: true
+      gpgkey: https://repo.mysql.com/RPM-GPG-KEY-mysql
+      enabled: true
+```
 
 ## Task 8: Software Repositories
 
@@ -466,3 +488,25 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - Repository GPG key is at `http://repo.mysql.com/RPM-GPG-KEY-mysql`.
   - Repository GPG check is enabled.
   - Repository is enabled.
+
+## Solution 8: Software Repositories
+
+```
+- name: yum repository configuration
+  hosts: database
+  become: true
+  gather_facts: false
+  tasks:
+  - name: import GPG key
+    rpm_key:
+      state: present
+      key: http://repo.mysql.com/RPM-GPG-KEY-mysql
+  - name: Add repository configuration enteries
+    yum_repository:
+      name: mysql80-community
+      description: "MySQL 8.0 YUM Repo"
+      baseurl: http://repo.mysql.com/yum/mysql-8.0-community/el/8/x86_64
+      gpgcheck: true
+      gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
+      enabled: true
+```
