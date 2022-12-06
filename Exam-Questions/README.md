@@ -531,6 +531,5 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - Contains eureka as the content
 
 - Create a file that meets following requirements:
-
   - Is placed at /home/automation/plays/secrets/database_users_password
   - Contains dbs-are-awesome as the content
