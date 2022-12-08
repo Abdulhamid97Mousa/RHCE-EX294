@@ -737,7 +737,7 @@ ansible-playbook users.yml --vault-id @vault_key
       - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
 ```
 
-## Task 7: Scheduled Tasks
+## Task 11: Scheduled Tasks
 
 Create a playbook `/home/automation/plays/regular_tasks.yml` that runs on servers in the `proxy host group` and does the following:
 
