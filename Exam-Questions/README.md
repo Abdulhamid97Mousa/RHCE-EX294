@@ -562,7 +562,7 @@ mkdir secrets vars
 ```
 
 ```
-echo "user_password=devops" > /home/automation/plays/vars/regular_users.yml
+echo "user_password: devops" > /home/automation/plays/vars/regular_users.yml
 ```
 
 ```
@@ -576,7 +576,7 @@ ansible-vault encrypt vars/regular_users.yml --vault-id eureka@secrets/regular_u
 > Part 2: similar process but this time we don't use a vault-id
 
 ```
-echo "db_password=devops" > vars/database_users.yml
+echo "db_password: devops" > vars/database_users.yml
 ```
 
 ```
@@ -609,15 +609,20 @@ echo "devops" > vault_key
 > Step 2: put a key value pair inside `/home/automation/plays/secret.yml`
 
 ```
-echo "user_password=devops" > secret.yml
-echo "database_password=devops" > secret.yml
+echo "user_password: devops" > secret.yml
+echo "database_password: devops" > secret.yml
 ```
 
-> Step 3: encrypt the file
+> Step 3: encrypt the file `secret.yml`
 
 ```
-echo "user_password=devops" > secret.yml
-echo "database_password=devops" > secret.yml
+ansible-vault encrypt --vault-id @vault_key secret.yml
+```
+
+> Step 4: view the content of the file `secret.yml`
+
+```
+ansible-vault encrypt --vault-id @vault_key secret.yml
 ```
 
 ## Q10. User Accounts
@@ -693,4 +698,10 @@ users:
     when: ( item.uid < 2000 and inventory_hostname in groups['webservers'] ) or
           ( item.uid > 2000 and inventory_hostname in groups['database'] )
 
+```
+
+> Run this command to execute the `users.yml` playbook
+
+```
+ansible-playbook users.yml --vault-id @vault_key
 ```
