@@ -736,3 +736,10 @@ ansible-playbook users.yml --vault-id @vault_key
       - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
       - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
 ```
+
+## Task 7: Scheduled Tasks
+
+Create a playbook `/home/automation/plays/regular_tasks.yml` that runs on servers in the `proxy host group` and does the following:
+
+- A root crontab record is created that runs every hour.
+- The cron job appends the file /var/log/time.log with the output from the date command.
