@@ -647,8 +647,8 @@ users:
 
 - Create a playbook that meets following requirements:
 - Create a playbook `/home/automation/plays/users.yml` that uses the vault file `/home/automation/plays/secret.yml` to achieve the following:
-- Creates users whose id starts with 2 on webservers host group. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
-- Creates users whose id starts with 3 on database host group. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
+- Creates users whose id starts with 2 on `webservers host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
+- Creates users whose id starts with 3 on `database host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
 - Users should be part of supplementary group wheel
 - Users' shell should be set to `/bin/bash`
 - Password should use `SHA512` hash format
