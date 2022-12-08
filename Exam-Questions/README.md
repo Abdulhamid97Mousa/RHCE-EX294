@@ -562,7 +562,7 @@ mkdir secrets vars
 ```
 
 ```
-echo "user_password: devops" > /home/automation/plays/vars/regular_users.yml
+echo "user_password=devops" > /home/automation/plays/vars/regular_users.yml
 ```
 
 ```
@@ -589,13 +589,36 @@ ansible-vault encrypt /home/automation/plays/vars/database_users.yml --vault-id 
 
 ## Task 9: Ansible Vault
 
-Create Ansible vault file /home/automation/plays/secret.yml. Encryption/decryption password is devops.
+Create Ansible vault file `/home/automation/plays/secret.yml`. Encryption/decryption password is devops.
 
 Add the following variables to the vault:
 
 user_password with value of devops
 database_password with value of devops
-Store Ansible vault password in the file /home/automation/plays/vault_key.
+
+Store Ansible vault password in the file `/home/automation/plays/vault_key`.
+
+## Solution 9: Ansible Vault
+
+> Step 1: put a password inside `/home/automation/plays/vault_key`
+
+```
+echo "devops" > vault_key
+```
+
+> Step 2: put a key value pair inside `/home/automation/plays/secret.yml`
+
+```
+echo "user_password=devops" > secret.yml
+echo "database_password=devops" > secret.yml
+```
+
+> Step 3: encrypt the file
+
+```
+echo "user_password=devops" > secret.yml
+echo "database_password=devops" > secret.yml
+```
 
 ## Q10. User Accounts
 
@@ -618,13 +641,13 @@ users:
 > Store a file with the above content at `/home/automation/plays/vars/users.yml`
 
 - Create a playbook that meets following requirements:
-- Is placed at `/home/automation/plays/users.yml`
-- Creates users whose id starts with 2 on webservers host group. Password should - be taken from the variable stored at `/home/automation/plays/vars/user_password.yml` (created in previous exercise)
-- Creates users whose id starts with 3 on database host group. Password should - be taken from the variable stored at `/home/automation/plays/vars/user_password.yml` (created in previous exercise)
+- Create a playbook `/home/automation/plays/users.yml` that uses the vault file `/home/automation/plays/secret.yml` to achieve the following:
+- Creates users whose id starts with 2 on webservers host group. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
+- Creates users whose id starts with 3 on database host group. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
 - Users should be part of supplementary group wheel
 - Users' shell should be set to `/bin/bash`
 - Password should use `SHA512` hash format
-- Each user should have a SSH key uploaded - use the key from the first exercise
+- Each user should have an SSH key uploaded (use the SSH key that you created previously, see task #2)
 - After running the playbook users should be able to SSH into their servers - without providing password to prompt
 
 ## A10. User Accounts
