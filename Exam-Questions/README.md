@@ -647,8 +647,8 @@ users:
 
 - Create a playbook that meets following requirements:
 - Create a playbook `/home/automation/plays/users.yml` that uses the vault file `/home/automation/plays/secret.yml` to achieve the following:
-- Creates users whose id starts with 2 on `webservers host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
-- Creates users whose id starts with 3 on `database host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
+- Creates users whose uid starts with 2 on `webservers host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
+- Creates users whose uid starts with 3 on `database host group`. Password should - be taken from the variable stored at `/home/automation/plays/secret.yml` (created in previous exercise)
 - Users should be part of supplementary group wheel
 - Users' shell should be set to `/bin/bash`
 - Password should use `SHA512` hash format
@@ -658,18 +658,16 @@ users:
 ## A10. User Accounts
 
 ```
----
-- hosts: all
+- name: creatie specified users and their IDs
+  hosts: all
   become: yes
   gather_facts: no
 
   vars_files:
-  - vars/user_list.yml
+  - vars/users.yml
   - secret.yml
-
   vars:
     hash: "{{ user_password | password_hash('sha512') }}"
-
   tasks:
   - name: print user_password
     debug:
@@ -682,26 +680,59 @@ users:
       uid: "{{ item.uid }}"
       group: wheel
       shell: /bin/bash
-      append: yes
-    loop:
-      "{{ users }}"
-    when: ( item.uid < 2000 and inventory_hostname in groups['webservers'] ) or
-          ( item.uid > 2000 and inventory_hostname in groups['database'] )
+    loop: "{{ users }}"
+    when: ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
+          ( item.uid > 2002 and inventory_hostname in groups['database'] )
 
   - name: Set authorized key taken from file
     authorized_key:
       user: "{{ item.username }}"
       state: present
       key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
-    loop:
-      "{{ users }}"
-    when: ( item.uid < 2000 and inventory_hostname in groups['webservers'] ) or
-          ( item.uid > 2000 and inventory_hostname in groups['database'] )
-
+    loop: "{{ users }}"
+    when: ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
+          ( item.uid > 2002 and inventory_hostname in groups['database'] )
 ```
 
-> Run this command to execute the `users.yml` playbook
+> Run this command to execute the `users.yml` playbook, remember it relies on our vault file for decryption.
 
 ```
 ansible-playbook users.yml --vault-id @vault_key
+```
+
+> Another way of doing the same thing
+
+```
+---
+- name: Create users
+  hosts: all
+  become: yes
+  vars_files:
+  - vars/users.yml
+  - secret.yml
+  tasks:
+    - name: Ensure group is exist
+      group:
+        name: wheel
+        state: present
+    - name: Create users
+      user:
+        name: "{{ item.username }}"
+        group: wheel
+        password: "{{ user_password | password_hash('sha512') }}"
+        shell: /bin/bash
+        update_password: on_create
+      with_items: "{{ users }}"
+      when:
+        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
+        - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: "{{ item.username }}"
+        state: present
+        key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
+      loop: "{{ users }}"
+      when:
+      - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
+      - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
 ```
