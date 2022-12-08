@@ -59,6 +59,33 @@ flowchart TD;
 
 ## A1. Ansible Installation and Configuration
 
+> Manage your `/etc/hosts` file to resolve host ip address to FQDNs, in a real exam they will give you a FQDN and you need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**.
+
+```
+192.168.55.199 repo.ansi.example.com     repo
+192.168.55.200 control.ansi.example.com  control
+192.168.55.201 node1.ansi.example.com    managed1
+192.168.55.202 node2.ansi.example.com    managed2
+192.168.55.203 node3.ansi.example.com    managed3
+192.168.55.204 node4.ansi.example.com    managed4
+```
+
+> As root generating ssh key and copy it to the managed hosts:
+
+```
+[root@control ~]# ssh-keygen
+[root@control ~]# ssh-copy-id managed1
+[root@control ~]# ssh-copy-id managed2
+[root@control ~]# ssh-copy-id managed3
+[root@control ~]# ssh-copy-id managed4
+```
+
+> Let’s check if we can connect to the remote hosts as root without password:
+
+```
+[root@control ~]# ssh managed1
+```
+
 - **step1:** Installing the ansible
 
 ```
@@ -117,17 +144,6 @@ proxy
 ```
 
 > Save it to /home/automation/plays/inventory
-
-> Manage your /etc/hosts file to resolve host ip address to FQDNs
-
-```
-192.168.55.199 repo.ansi.example.com     repo
-192.168.55.200 control.ansi.example.com  control
-192.168.55.201 node1.ansi.example.com    managed1
-192.168.55.202 node2.ansi.example.com    managed2
-192.168.55.203 node3.ansi.example.com    managed3
-192.168.55.204 node4.ansi.example.com    managed4
-```
 
 - **step5:** Create the config file with following content
 
