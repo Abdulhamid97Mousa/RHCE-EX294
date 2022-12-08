@@ -1,0 +1,19 @@
+- name: Changing MOTD
+  hosts: all
+  become: yes
+  tasks:
+  - name: Copy the content to HAProxy
+    copy:
+      content: "Welcome to HAProxy server\n"
+      dest: /etc/motd
+    when: "'proxy' in group_names"
+  - name: Copy the content to Apache
+    copy:
+      content: "Welcome to Apache server\n"
+      dest: /etc/motd
+    when: "'webservers' in group_names"
+  - name: Copy the content to MySQL
+    copy:
+      content: "Welcome to MySQL server\n"
+      dest: /etc/motd
+    when: "'database' in group_names"

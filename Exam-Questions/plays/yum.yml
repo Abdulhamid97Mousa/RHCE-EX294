@@ -1,0 +1,17 @@
+- name: yum repository configuration
+  hosts: database
+  become: true
+  gather_facts: true
+  tasks:
+  - name: import GPG key
+    rpm_key:
+      state: present
+      key: https://repo.mysql.com/RPM-GPG-KEY-mysql
+  - name: Add repository configuration enteries
+    yum_repository:
+      name: mysql57-community
+      description: "MySQL 5.7 Community Server"
+      baseurl: http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch
+      gpgcheck: true
+      gpgkey: https://repo.mysql.com/RPM-GPG-KEY-mysql
+      enabled: true

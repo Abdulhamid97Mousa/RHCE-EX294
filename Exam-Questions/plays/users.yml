@@ -1,0 +1,34 @@
+- name: Create users
+  hosts: all
+  become: yes
+  vars_files:
+  - vars/users.yml
+  - secret.yml
+  tasks:
+    - name: Ensure group is exist
+      group:
+        name: wheel
+        state: present
+    - name: Create users
+      user:
+        name: "{{ item.username }}"
+        group: wheel
+        password: "{{ user_password | password_hash('sha512') }}"
+        shell: /bin/bash
+        update_password: on_create
+      with_items: "{{ users }}"
+      when:
+        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" ) 
+        - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: "{{ item.username }}"
+        state: present
+        key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
+      loop: "{{ users }}"
+      when:
+      - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" ) 
+      - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+        
+
+      
