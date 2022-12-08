@@ -38,6 +38,7 @@ flowchart TD;
 
 - Install the ansible package on the control node
 - Create automation user with devops password
+- You have root access to all five servers
 - the user should be allowed to execute any command without providing password to the prompt "Add the automation user to sudoers group"
 - Create inventory on the control node at /home/automation/plays/inventory. Meet following requirements:
 
