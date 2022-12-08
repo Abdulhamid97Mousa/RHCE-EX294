@@ -609,3 +609,48 @@ users:
 - Password should use `SHA512` hash format
 - Each user should have a SSH key uploaded - use the key from the first exercise
 - After running the playbook users should be able to SSH into their servers - without providing password to prompt
+
+## A10. User Accounts
+
+```
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+
+  vars_files:
+  - vars/user_list.yml
+  - secret.yml
+
+  vars:
+    hash: "{{ user_password | password_hash('sha512') }}"
+
+  tasks:
+  - name: print user_password
+    debug:
+      msg: "Password is {{ user_password }}, Hash is {{ hash }} "
+
+  - name: Add the user "{{ item.username }}" with a specific uid and a primary group of 'wheel'
+    user:
+      name: "{{ item.username }}"
+      password: "{{ user_password | password_hash('sha512') }}"
+      uid: "{{ item.uid }}"
+      group: wheel
+      shell: /bin/bash
+      append: yes
+    loop:
+      "{{ users }}"
+    when: ( item.uid < 2000 and inventory_hostname in groups['webservers'] ) or
+          ( item.uid > 2000 and inventory_hostname in groups['database'] )
+
+  - name: Set authorized key taken from file
+    authorized_key:
+      user: "{{ item.username }}"
+      state: present
+      key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
+    loop:
+      "{{ users }}"
+    when: ( item.uid < 2000 and inventory_hostname in groups['webservers'] ) or
+          ( item.uid > 2000 and inventory_hostname in groups['database'] )
+
+```
