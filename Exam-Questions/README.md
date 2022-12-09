@@ -970,10 +970,10 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 - name: My root user password
   mysql_user:
-    login_user: "{{ login_user }}"
-    login_password: "{{ login_password }}"
-    name: "{{ login_user }}"
-    password: "{{ login_password }}"
+    login_user: root
+    login_password: "{{ database_password }}"
+    name: root
+    password: "{{ database_password }}"
 
 - name: Adding template to my.cnf
   template:
