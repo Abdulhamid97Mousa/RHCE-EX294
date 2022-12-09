@@ -941,10 +941,10 @@ pid-file=/var/run/mysqld/mysqld.pid
     src: /dev/vg_database/lv_mysql
     fstype: xfs
     state: present
-# - name: Ensure packages are installed
-#   package:
-#     name: "pymysql"
-#     state: present
+- name: Ensure packages are installed
+  package:
+    name: "pymysql"
+    state: present
 - name: starting services
   service:
     name: "{{ item }}"
