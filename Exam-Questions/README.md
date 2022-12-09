@@ -1027,7 +1027,7 @@ log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
 
-## 13. SWAP
+## 14. SWAP
 
 - Create a playbook that meets following requirements:
 
