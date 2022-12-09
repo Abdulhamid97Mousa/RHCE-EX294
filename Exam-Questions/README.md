@@ -742,4 +742,293 @@ ansible-playbook users.yml --vault-id @vault_key
 Create a playbook `/home/automation/plays/regular_tasks.yml` that runs on servers in the `proxy host group` and does the following:
 
 - A root crontab record is created that runs every hour.
-- The cron job appends the file /var/log/time.log with the output from the date command.
+- The cron job appends the file `/var/log/time.log` with the output from the date command.
+
+## Solution 11: Scheduled Tasks
+
+```
+- name: regular_task
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Creates a cron file under /etc/cron.d
+    cron:
+      name: yum autoupdates
+      minute: '0'
+      hour: '*'
+      user: root
+      job: "echo /usr/bin/date >> /var/log/time.log"
+    when: inventory_hostname in groups['proxy']
+```
+
+> Let’s check if playbook works:
+
+```
+ansible all -b -a "crontab -l"
+```
+
+## Task 11: Periodic job Tasks
+
+- Create a playbook that meets following requirements:
+
+  - Is placed at `/home/automation/plays/periodic_jobs.yml`
+  - Is executed against proxy group
+  - Schedules a periodic job which runs every hour on workdays. It should be executed by the root. Every time the job is span it adds separator ----- which is followed by date and list of currently pluged devices below that. Please look at provided example. Make note of date format. Save the log to `/var/log/devices.log`. Set group and owner to the `root user`.
+  - Uses `at` to schedule a job that is going to be executed after 1 minute and dumps output from vmstat to `/var/log/vmstat.log`. The file should be owned by `automation user and group`. The file should be recreated each time the playbook is executed. If the playbook is executed a second time within a minute second job should not be scheduled
+
+```
+- name: crong job
+  hosts: proxy
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Schedule vmstat execution
+    at:
+      command: '/usr/bin/vmstat 1>/var/log/vmstat.log; chown automation:automation /var/log/vmstat.log'
+      count: 1
+      units: minutes
+      unique: true
+  - name: Schedule hourly job
+    cron:
+      name: Dump plugged devices
+      minute: '0'
+      hour: '*'
+      day: '*'
+      month: '*'
+      job: "echo ----- $(date \"+%m/%d/%y %H:%M\") >> /var/log/devices.log; lsblk >> /var/log/devices.log;chown root:root /var/log/devices.log"
+
+```
+
+## Task 12: Software Repositories
+
+Create a playbook /home/automation/plays/repository.yml that runs on servers in the database host group and does the following:
+
+- A YUM repository file is created.
+  - The name of the repository is mysql56-community.
+  - The description of the repository is “MySQL 5.6 YUM Repo”.
+  - Repository baseurl is http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/.
+  - Repository GPG key is at http://repo.mysql.com/RPM-GPG-KEY-mysql.
+  - Repository GPG check is enabled.
+  - Repository is enabled.
+
+## Solution Task 12 Software Repositories
+
+```
+- name: Software Repository
+  hosts: database
+  become: yes
+  gather_facts: no
+
+  tasks:
+
+  - name: YUM repository
+    yum_repository:
+      name: mysql56-community
+      description: MySQL 5.6 YUM Repo
+      baseurl: http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/
+      gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
+      gpgcheck: yes
+      enabled: yes
+
+```
+
+Check if playbook works:
+
+```
+ansible database -a "yum repolist"
+```
+
+## Task 13: Create and Work with Roles
+
+Create a role called sample-mysql and store it in `/home/automation/plays/roles`. The role should satisfy the following requirements:
+
+- A primary partition number 1 of size 800MB on device /dev/sdb is created.
+- An LVM volume group called vg_database is created that uses the primary partition created above.
+- An LVM logical volume called lv_mysql is created of size 512MB in the volume group vg_database.
+- An XFS filesystem on the logical volume lv_mysql is created.
+- Logical volume lv_mysql is permanently mounted on /mnt/mysql_backups.
+- mysql-community-server package is installed.
+- Firewall is configured to allow all incoming traffic on MySQL port TCP 3306.
+- MySQL root user password should be set from the variable database_password (see task #5).
+- MySQL server should be started and enabled on boot.
+- MySQL server configuration file is generated from the my.cnf.j2 Jinja2 template with the following content:
+
+```
+[mysqld]
+bind_address = {{ ansible_default_ipv4.address }}
+skip_name_resolve
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+
+symbolic-links=0
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+```
+
+> Create a playbook `/home/automation/plays/mysql.yml` that uses the role and runs on hosts in the database host group.
+
+```
+- name: my mysql role playbook
+  hosts: database
+  become: yes
+  vars_files: secret.yml
+
+  roles:
+  - sample-mysql
+
+  tasks:
+  - debug:
+      msg: "{{ database_password }}"
+```
+
+> Tasks: please take a look at the MySQL notes carefully to overcome any errors
+
+```
+---
+# tasks file for sample-mysql
+- name: primary partition
+  parted:
+    device: /dev/sdb
+    number: 1
+    flags: [ lvm ]
+    state: present
+    part_end: 800MiB
+  register: device_info
+- name: Create a volume group on top of /dev/sda1 with physical extent size = 32MB
+  lvg:
+    vg: vg_database
+    pvs: /dev/sdb1
+    state: present
+- name: Create a logical volume of 512g.
+  lvol:
+    vg: vg_database
+    lv: lv_mysql
+    size: 512M
+    state: present
+- name: Create a xfs filesystem on /dev/sdb1
+  filesystem:
+    fstype: xfs
+    dev: /dev/vg_database/lv_mysql
+- name: Create a file on remote systems
+  file:
+    path: /mnt/mysql_backups
+    state: directory
+
+- name: Mount up device by label
+  mount:
+    path: /mnt/mysql_backups
+    src: /dev/vg_database/lv_mysql
+    fstype: xfs
+    state: present
+# - name: Ensure packages are installed
+#   package:
+#     name: "pymysql"
+#     state: present
+- name: starting services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+  - firewalld
+  - mysqld
+  notify:
+  - RestartMySql
+
+- name: Open ports on firewall
+  firewalld:
+    port: 3306/tcp
+    permanent: yes
+    immediate: yes
+    state: enabled
+
+
+#Both login_password and login_user are required when you are passing credentials. If none are present,
+#the module will attempt to read the credentials from ~/.my.cnf, and finally fall back to using the
+#MySQL default login of ‘root’ with no password.
+
+- name: My root user password
+  mysql_user:
+    login_user: "{{ login_user }}"
+    login_password: "{{ login_password }}"
+    name: "{{ login_user }}"
+    password: "{{ login_password }}"
+
+- name: Adding template to my.cnf
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+  notify:
+  - RestartMySql
+```
+
+> Please note #MySQL default login of ‘root’ with no password, but it will throw an error because you are trying to login with root user and providing a password {{ database }}, because you haven't created a password for the root user in the first place it'll keep throwing error.
+
+> Solution, you need to ssh hosts in database, and then use this command
+
+```
+# this would give you access to mysql database
+mysql -u root
+```
+
+```
+# and now you can make the root user have a password "devops", and do the same thing to managed4 and managed3
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
+```
+
+Handlers:
+
+```
+---
+# handlers file for sample-mysql
+- name: RestartMySql
+  service:
+    name:
+    - 'mysqld'
+    - 'firewalld'
+    state: restarted
+```
+
+Templates:
+
+```
+[mysqld]
+bind_address = {{ ansible_default_ipv4.address }}
+skip_name_resolve
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+
+symbolic-links=0
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+```
+
+Playbook:
+
+```
+---
+- hosts: database
+  become: yes
+
+# The handlers will run when forced even if there's a failure.
+# However in this case, there is no failure, what's happening is there is no notification to that handler.
+# Without a notification, handlers won't run even if force_handlers is set.
+# We need changed_when: true
+
+  force_handlers: true
+  vars_files: secret.yml
+
+  roles:
+  - sample-mysql
+
+  tasks:
+  - debug:
+      msg: "{{ database_password }}"
+```
