@@ -983,7 +983,7 @@ pid-file=/var/run/mysqld/mysqld.pid
   - RestartMySql
 ```
 
-> Please note #MySQL default login of ‘root’ with no password, but it will throw an error because you are trying to login with root user and providing a password {{ database }}, because you haven't created a password for the root user in the first place it'll keep throwing error.
+> Please note, MySQL database defaults to login of ‘root’ with no password, if you try to login as -u root -p devops it will throw an error because you are trying to login with root user and providing a password {{ database }} and by default root has no password, because you haven't created a password for the root user in the first place it'll keep throwing error.
 
 > Solution, you need to ssh hosts in database, and then use this command
 
