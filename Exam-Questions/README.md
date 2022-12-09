@@ -1106,7 +1106,7 @@ pid-file=/var/run/mysqld/mysqld.pid
     when: "'[SWAP]' not in mounts.stdout"
 ```
 
-## 14. System target
+## 15. System target
 
 - Create a playbook that meets following requirements:
 
@@ -1114,3 +1114,15 @@ pid-file=/var/run/mysqld/mysqld.pid
   - Runs against all managed hosts
   - Sets target to multi-user.target
   - Must be idempotent - subsequent execution of playbook shouldn't result in changed state
+
+```
+- hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Set the default target
+    file:
+      dest: /etc/systemd/system/default.target
+      src: /usr/lib/systemd/system/multi-user.target
+      state: link
+```
