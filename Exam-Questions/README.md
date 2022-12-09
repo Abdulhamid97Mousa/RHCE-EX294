@@ -1026,26 +1026,3 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
-
-Playbook:
-
-```
----
-- hosts: database
-  become: yes
-
-# The handlers will run when forced even if there's a failure.
-# However in this case, there is no failure, what's happening is there is no notification to that handler.
-# Without a notification, handlers won't run even if force_handlers is set.
-# We need changed_when: true
-
-  force_handlers: true
-  vars_files: secret.yml
-
-  roles:
-  - sample-mysql
-
-  tasks:
-  - debug:
-      msg: "{{ database_password }}"
-```
