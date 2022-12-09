@@ -915,21 +915,25 @@ pid-file=/var/run/mysqld/mysqld.pid
     state: present
     part_end: 800MiB
   register: device_info
-- name: Create a volume group on top of /dev/sda1 with physical extent size = 32MB
+
+- name: Create a volume group on top of /dev/sda1
   lvg:
     vg: vg_database
     pvs: /dev/sdb1
     state: present
+
 - name: Create a logical volume of 512g.
   lvol:
     vg: vg_database
     lv: lv_mysql
     size: 512M
     state: present
+
 - name: Create a xfs filesystem on /dev/sdb1
   filesystem:
     fstype: xfs
     dev: /dev/vg_database/lv_mysql
+
 - name: Create a file on remote systems
   file:
     path: /mnt/mysql_backups
@@ -941,10 +945,16 @@ pid-file=/var/run/mysqld/mysqld.pid
     src: /dev/vg_database/lv_mysql
     fstype: xfs
     state: present
+
+- name: Mount if not mounted
+  command:
+    cmd: mount -a
+
 - name: Ensure packages are installed
   package:
     name: "pymysql"
     state: present
+
 - name: starting services
   service:
     name: "{{ item }}"
@@ -1036,3 +1046,62 @@ pid-file=/var/run/mysqld/mysqld.pid
   - Creates a partition on sdb drive on the managed hosts of size between 1000MB-1100MB
   - Uses this partition to extend available swap
   - Ensures that the partition is part of the swap pool on boot
+
+## A14. SWAP
+
+```
+- name: Configure SWAP
+  hosts: database
+  become: true
+  gather_facts: false
+  vars:
+    vg: swap
+    lv: swap
+  tasks:
+  # - name: Install tools
+  #   yum:
+  #     name: lvm2
+  - name: Partition the drive
+    parted:
+      device: /dev/sdb
+      part_type: primary
+      label: msdos
+      number: 2
+      flags: [ lvm ]
+      state: present
+      unit: MB
+      part_start: "60%"
+      part_end: "100%"
+
+  - name: Create volume group
+    lvg:
+      pvs: /dev/sdb2
+      vg: "{{ vg }}"
+      state: present
+
+  - name: Create logical volume
+    lvol:
+      lv: "{{ lv }}"
+      size: 100%VG
+      vg: "{{ vg }}"
+      state: present
+
+  - name: Create filesystem
+    filesystem:
+      dev: /dev/{{ vg }}/{{ lv }}
+      fstype: swap
+
+  - name: Mount on boot
+    lineinfile:
+      line: "/dev/{{ vg }}/{{ lv }} swap swap defaults 0 0"
+      path: /etc/fstab
+
+  - name: Check if mounted
+    shell: "lsblk -s | grep {{ vg }}-{{ lv }}"
+    changed_when: false
+    register: mounts
+
+  - name: Mount if not mounted
+    shell: swapon /dev/{{ vg }}/{{ lv }}
+    when: "'[SWAP]' not in mounts.stdout"
+```
