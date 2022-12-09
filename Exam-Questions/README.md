@@ -1026,3 +1026,13 @@ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
 log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
+
+## 13. SWAP
+
+- Create a playbook that meets following requirements:
+
+  - Is placed at /home/automation/plays/swap.yml
+  - Runs against database group
+  - Creates a partition on sdb drive on the managed hosts of size between 1000MB-1100MB
+  - Uses this partition to extend available swap
+  - Ensures that the partition is part of the swap pool on boot
