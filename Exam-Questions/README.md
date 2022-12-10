@@ -90,7 +90,7 @@ flowchart TD;
 - **step1:** Installing the ansible
 
 ```
-yum install -y ansible
+[root@control ~]# yum install -y ansible
 ```
 
 - **step2:** Configuring the user account
@@ -98,19 +98,19 @@ yum install -y ansible
 > Create an account
 
 ```
-useradd automation
+[root@control ~]# useradd automation
 ```
 
 > Set password
 
 ```
-echo devops | passwd --stdin automation
+[root@control ~]# echo devops | passwd --stdin automation
 ```
 
 - **step3:** Allow access to privileged commands
 
 ```
-echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
+[root@control ~]# echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 ```
 
 - **step4:** Creating inventory
