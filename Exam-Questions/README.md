@@ -237,45 +237,45 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
         group: automation
         mode: 0755
 
-- name: Archive config files
-  hosts: all
-  become: true
-  gather_facts: false
-  tasks:
-    - name: Create a folder for archive
-      file:
-        path: /backup
-        owner: automation
-        group: automation
-        state: directory
-        mode: 0755
+    - name: Archive config files
+      hosts: all
+      become: true
+      gather_facts: false
+      tasks:
+        - name: Create a folder for archive
+          file:
+            path: /backup
+            owner: automation
+            group: automation
+            state: directory
+            mode: 0755
 
-- name: create the archive
-  hosts: all
-  become: true
-  gather_facts: false
-  tasks:
     - name: create the archive
-      archive:
-        path: /etc
-        dest: /backup/configuration.gz
-        format: gz
-        owner: automation
-        group: automation
-        mode: 0660
+      hosts: all
+      become: true
+      gather_facts: false
+      tasks:
+        - name: create the archive
+          archive:
+            path: /etc
+            dest: /backup/configuration.gz
+            format: gz
+            owner: automation
+            group: automation
+            mode: 0660
 
-- name: fetch the archive
-  hosts: all
-  become: true
-  gather_facts: false
-  tasks:
-    - name: Retrieves archives from managed nodes
-      fetch:
-        src: /backup/configuration.gz
-        dest: /backup/{{ ansible_hostname }}-configuration.gz
-        owner: automation
-        group: automation
-        mode: 0660
+    - name: fetch the archive
+      hosts: all
+      become: true
+      gather_facts: false
+      tasks:
+        - name: Retrieves archives from managed nodes
+          fetch:
+            src: /backup/configuration.gz
+            dest: /backup/{{ inventory_hostname }}-configuration.gz
+            owner: automation
+            group: automation
+            mode: 0660
 ```
 
 ## Q4. Group differentiation "File Content"
@@ -332,17 +332,17 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
     copy:
       content: "Welcome to HAProxy server\n"
       dest: /etc/motd
-    when: "'proxy' in group_names"
+    when: "inventory_hostname in groups['proxy']"
   - name: Copy the content to Apache
     copy:
       content: "Welcome to Apache server\n"
       dest: /etc/motd
-    when: "'webservers' in group_names"
+    when: "inventory_hostname in groups['webservers']"
   - name: Copy the content to MySQL
     copy:
       content: "Welcome to MySQL server\n"
       dest: /etc/motd
-    when: "'database' in group_names"
+    when: "inventory_hostname in groups['database']"
 ```
 
 ## Q5. Ansible Facts
