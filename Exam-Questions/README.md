@@ -43,7 +43,6 @@ flowchart TD;
 - Create inventory on the control node at /home/automation/plays/inventory. Meet following requirements:
 
   - managed1.example.com should be a member of the proxy host group
-  - managed1.example.com should be a member of the proxy host group
   - managed2.example.com should be a member of the webservers host group
   - managed3.example.com should be a member of the webservers and database host group
   - managed4.example.com should be a member of the database host group
