@@ -1126,7 +1126,7 @@ pid-file=/var/run/mysqld/mysqld.pid
       state: link
 ```
 
-## Q15. Dynamic inventories
+## A16. Dynamic inventories
 
 - Create file in form of a dynamic inventory which meets following requirements:
 
@@ -1139,6 +1139,8 @@ pid-file=/var/run/mysqld/mysqld.pid
   - Defines following vars for proxy group, accessibility with value public
   - Defines following vars for managed2.example.com host accessibility with value unknown
   - Returns json to stdout when called Must be parsable by ansible
+
+## A16. Dynamic inventories
 
 ```
 #!/usr/bin/env python3
