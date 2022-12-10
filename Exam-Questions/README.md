@@ -1229,3 +1229,15 @@ Remember to set permissions to 755. To verify that the script works go to its fo
 ```
 ansible-inventory --list -i dynamic_inventory
 ```
+
+## Q17. Roles
+
+- Create a role called apache that meets following requirements:
+  - Is placed at `/home/automation/plays/roles/apache`.
+  - Installs httpd and firewalld packages
+  - Allows ports 80 and 443 to be accessible through firewall
+  - Ensures that httpd and firewalld services are started at boot time
+  - Deploys an index page that presents following message: Welcome, you have conntected to <fqdn>
+  - Create a playbook that meets following requirements:
+  - Is placed at `/home/automation/plays/apache.yml`
+  - Runs role apache against webservers hosts group
