@@ -1128,6 +1128,8 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 ## A16. Dynamic inventories
 
+> In my opinion Dynamic inventories aren't part of the RHCE exam, but it's good to to know how you would structure your inventory, you could simply use the ini file but also jason could be used.
+
 - Create file in form of a dynamic inventory which meets following requirements:
 
   - Is placed at `/home/automation/plays/scripts/dynamic_inventory`
