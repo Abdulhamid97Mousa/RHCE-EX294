@@ -1247,15 +1247,10 @@ ansible-inventory --list -i dynamic_inventory
 
 ## A17. Roles
 
-```
----
-# tasks file for apache
-
 > Go to the /home/automation/plays and create a folder for roles
+
 ```
-
 mkdir roles
-
 ```
 
 If you configured ansible correctly while solving the first exercise role that you are going to create will be detected by playbook automatically
@@ -1263,13 +1258,10 @@ If you configured ansible correctly while solving the first exercise role that y
 > Change CWD to newly created directory and initate skeleton for the role
 
 ```
-
 ansible-galaxy role init apache
-
 ```
+
 > Edit tasks/main.yml to look as follows
-
-```
 
 ```
 # tasks file for apache
@@ -1300,7 +1292,6 @@ ansible-galaxy role init apache
   copy:
   content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
   dest: /var/www/html/index.html
-
 ```
 
 > Edit meta/main.yml as below
