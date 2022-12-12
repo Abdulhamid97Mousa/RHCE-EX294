@@ -1323,8 +1323,6 @@ dependencies: []
 
 ```
 
----
-
 - hosts: webservers
   roles:
   - role: apache
