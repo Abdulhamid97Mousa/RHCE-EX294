@@ -1240,7 +1240,7 @@ ansible-inventory --list -i dynamic_inventory
   - Installs httpd and firewalld packages
   - Allows ports 80 and 443 to be accessible through firewall
   - Ensures that httpd and firewalld services are started at boot time
-  - Deploys an index page that presents following message: Welcome, you have conntected to <fqdn>
+  - Deploys an index page that presents following message: `Welcome, you have conntected to <fqdn>`
 - Create a playbook that meets following requirements:
   - Is placed at `/home/automation/plays/apache.yml`.
   - Runs role apache against `webservers hosts group`.
@@ -1325,13 +1325,13 @@ ansible-playbook apache.yml
 
 Create a requirements file that meets following objectives:
 
-- Is placed at /home/automation/plays/requirements.yml
+- Is placed at `/home/automation/plays/requirements.yml`
 - Installs git role with following params:
-  - Repository https://github.com/geerlingguy/ansible-role-git
+  - Repository `https://github.com/geerlingguy/ansible-role-git`
   - Uses git as name of the role
   - Is checkout from tag 3.0.0
 
-> After creating the file install the role at /home/automation/plays/roles
+> After creating the file install the role at `/home/automation/plays/roles`.
 
 ## A18. Requirements
 
@@ -1360,7 +1360,7 @@ ansible-galaxy install -r requirements.yml -p roles
 
 ## Q18. Templating
 
-Create a new folder named templates at /home/automation/plays and prepare there a template that is going to be used later to generete hosts file for each node from the inventory. General idea is described by the below scratch
+Create a new folder named templates at `/home/automation/plays` and prepare there a template that is going to be used later to generete hosts file for each node from the inventory. General idea is described by the below scratch
 
 ```
 127.0.0.1 localhost <local_short_name> <local_fqdn>
@@ -1404,7 +1404,7 @@ Create a playbook named `hosts.yml` that meets following requirements:
       dest: /etc/hosts
 ```
 
-> To run the playbook go to /home/automation/plays and execute
+> To run the playbook go to `/home/automation/plays` and execute
 
 ```
 ansible-playbook hosts.yml
