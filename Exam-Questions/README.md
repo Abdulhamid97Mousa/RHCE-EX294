@@ -1271,10 +1271,8 @@ ansible-galaxy role init apache
 
 ```
 
----
-
+```
 # tasks file for apache
-
 - name: install packages
   package:
   name:
@@ -1308,7 +1306,6 @@ ansible-galaxy role init apache
 > Edit meta/main.yml as below
 
 ```
-
 galaxy_info:
 author: Mateusz Stompór
 description: This role sets up webserver
@@ -1316,26 +1313,19 @@ license: MIT
 min_ansible_version: 2.9
 galaxy_tags: []
 dependencies: []
-
 ```
 
 > Finally create the playbook at `/home/automation/plays/apache.yml` with following content:
 
 ```
-
 - hosts: webservers
   roles:
   - role: apache
     become: true
-
 ```
 
 > To run the playbook go to /home/automation/plays and call
 
 ```
-
 ansible-playbook apache.yml
-
-```
-
 ```
