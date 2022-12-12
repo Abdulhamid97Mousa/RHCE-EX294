@@ -1320,3 +1320,40 @@ dependencies: []
 ```
 ansible-playbook apache.yml
 ```
+
+## Q17. Requirements
+
+Create a requirements file that meets following objectives:
+
+- Is placed at /home/automation/plays/requirements.yml
+- Installs git role with following params:
+  - Repository https://github.com/geerlingguy/ansible-role-git
+  - Uses git as name of the role
+  - Is checkout from tag 3.0.0
+
+> After creating the file install the role at /home/automation/plays/roles
+
+## A17. Requirements
+
+> Install `git` if it's not present
+
+```
+sudo yum install -y git
+
+```
+
+> Create the file `requirement.yml` in `/home/automation/plays/` with following content
+
+```
+---
+- name: git
+  scm: git
+  src: https://github.com/geerlingguy/ansible-role-git
+  version: 3.0.0
+```
+
+> Go to `/home/automation/plays` and execute
+
+```
+ansible-galaxy install -r requirements.yml -p roles
+```
