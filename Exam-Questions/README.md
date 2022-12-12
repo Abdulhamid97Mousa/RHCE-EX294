@@ -1387,7 +1387,7 @@ Create a playbook named `hosts.yml` that meets following requirements:
 127.0.0.1 localhost {{ ansible_hostname }} {{ ansible_fqdn }}
 127.0.1.1 localhost
 {% for host in groups['all'] %}
-{{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_fqdn'] }}
+{{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_fqdn'] }} {{ host }}
 {% endfor %}
 ```
 
