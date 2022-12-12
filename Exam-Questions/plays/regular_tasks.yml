@@ -1,0 +1,13 @@
+- name: regular_task
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Creates a cron file under /etc/cron.d
+    cron:
+      name: Cron with date commands as a job
+      minute: '0'
+      hour: '*'
+      user: root
+      job: "echo /usr/bin/date >> /var/log/time.log"
+    when: inventory_hostname in groups['proxy']

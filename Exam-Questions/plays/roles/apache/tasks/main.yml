@@ -1,0 +1,32 @@
+---
+# tasks file for apache
+
+- name: install packages
+  package:
+    name: 
+    - "httpd"
+    - "firewalld"
+    state: present
+- name: Allow required ports
+  firewalld:
+    permanent: true
+    state: enabled
+    port: "{{ item }}"
+    immediate: true
+  with_items:
+  - 80/tcp
+  - 443/tcp
+- name: Ensure that services are started on boot
+  service:
+    name: '{{ item }}'
+    state: started
+    enabled: true
+  with_items:
+    - 'httpd'
+    - 'firewalld'
+- name: Prepare index page
+  copy:
+    content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
+    dest: /var/www/html/index.html
+
+

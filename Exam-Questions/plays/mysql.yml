@@ -1,0 +1,11 @@
+- name: my mysql role playbook
+  hosts: all
+  become: yes
+  vars_files: secret.yml
+
+  roles:
+  - sample-mysql
+
+  tasks:
+  - debug:
+      msg: "{{ database_password }}"

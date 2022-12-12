@@ -1,0 +1,20 @@
+- name: crong job
+  hosts: proxy
+  gather_facts: false
+  become: true
+  tasks:
+  - name: Schedule vmstat execution
+    at:
+      command: '/usr/bin/vmstat 1>/var/log/vmstat.log; chown automation:automation /var/log/vmstat.log'
+      count: 1
+      units: minutes
+      unique: true
+  - name: Schedule hourly job
+    cron:
+      name: Dump plugged devices
+      minute: '0'
+      hour: '*'
+      day: '*'
+      month: '*'
+      job: "echo ----- $(date \"+%m/%d/%y %H:%M\") >> /var/log/devices.log; lsblk >> /var/log/devices.log;chown root:root /var/log/devices.log"
+

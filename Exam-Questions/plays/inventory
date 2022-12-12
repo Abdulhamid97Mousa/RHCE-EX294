@@ -8,6 +8,15 @@ managed3  ansible_hostname=managed3
 [database]
 managed3  ansible_hostname=managed3 
 managed4  ansible_hostname=managed4
+
+[repository]
+repo
+
+[mysql]
+127.0.0.1
+
 [public:children]
 proxy
 webservers
+
+

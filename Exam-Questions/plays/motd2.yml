@@ -6,14 +6,14 @@
     copy:
       content: "Welcome to HAProxy server\n"
       dest: /etc/motd
-    when: "'proxy' in group_names"
+    when: "inventory_hostname in groups['proxy']"
   - name: Copy the content to Apache
     copy:
       content: "Welcome to Apache server\n"
       dest: /etc/motd
-    when: "'webservers' in group_names"
+    when: "inventory_hostname in groups['webservers']"
   - name: Copy the content to MySQL
     copy:
       content: "Welcome to MySQL server\n"
       dest: /etc/motd
-    when: "'database' in group_names"
+    when: "inventory_hostname in groups['database']"

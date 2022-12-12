@@ -1,0 +1,3 @@
+---
+# vars file for sample-mysql
+mysql_root_password: password

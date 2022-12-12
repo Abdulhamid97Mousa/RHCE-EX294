@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+import json
+import argparse
+
+
+GROUPS = {
+  "proxy": {
+    "hosts": [
+      "managed1",
+    ]    
+  },
+  "webservers": {
+      "hosts": [
+          "managed2",
+          "managed3"
+          ]
+  },
+  "database": {
+      "hosts": [
+          "managed3",
+          "managed4"
+          ]
+      }
+}
+
+
+HOST_VARS = {
+  "managed2": {
+    "accessibility": "unknown"
+  }
+}
+
+
+GROUP_VARS = {
+  "database": {
+    "accessibility": "private"
+  },
+  "proxy": {
+    "accessibility": "public"
+  }
+}
+
+def parse_arguments():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--list', help='List all groups and hosts', action='store_true')
+  parser.add_argument('--host', help='Provides variables for a specific host')
+  arguments = parser.parse_args()
+  if not arguments.list and arguments.host is None:
+      parser.error("You must either list all hosts or retrieve variables for a specific one")
+  return arguments
+
+
+def list_all():
+  common = {
+    "all": {
+        "children": ["ungrouped"] + list(GROUPS.keys())
+            
+    }
+  }
+  return dict(**common, **GROUPS)
+
+
+def provide_vars(host):
+    groups_of_host = {name for name in GROUPS.keys() if host in GROUPS.get(name, {}).get("hosts", [])}
+    base = dict()
+    for name in groups_of_host:
+        base = dict(**base, **GROUP_VARS.get(name, {}))
+    return dict(**base, **HOST_VARS.get(host, {}))
+
+
+if __name__ == '__main__':
+  args = parse_arguments()
+  if args.list:
+      print(json.dumps(list_all()))
+  else:
+      print(json.dumps(provide_vars(args.host)))

@@ -1,0 +1,120 @@
+--- 
+# tasks file for sample-mysql
+- name: primary partition
+  parted:
+    device: /dev/sdb
+    number: 1
+    flags: [ lvm ]
+    state: present
+    part_start: 0%
+    part_end: 800MiB
+  register: device_info
+  when: inventory_hostname in groups['database']
+
+
+
+
+- name: Create a volume group on top of /dev/sda1
+  lvg:
+    vg: vg_database
+    pvs: /dev/sdb1
+    state: present
+  when: inventory_hostname in groups['database']
+
+- name: Create a logical volume of 512g.
+  lvol:
+    vg: vg_database
+    lv: lv_mysql
+    size: 512M
+    state: present
+  when: inventory_hostname in groups['database']
+
+- name: Create a xfs filesystem on /dev/sdb1
+  filesystem:
+    fstype: xfs
+    dev: /dev/vg_database/lv_mysql
+  when: inventory_hostname in groups['database']
+  
+  
+  
+
+- name: Create a file on remote systems
+  file:
+    path: /mnt/mysql_backups
+    state: directory
+  when: inventory_hostname in groups['database']
+
+- name: Mount up device by label
+  mount:
+    path: /mnt/mysql_backups
+    src: /dev/vg_database/lv_mysql
+    fstype: xfs
+    state: present
+  when: inventory_hostname in groups['database']
+
+- name: Mount if not mounted
+  command:
+    cmd: mount -a
+  when: inventory_hostname in groups['database']
+
+- name: Ensure packages are installed
+  package:
+    name: 
+    - "mysql-server"
+    - "mysql"
+    - "python3-PyMySQL"
+    update_cache: yes 
+    state: present
+  when: '"{{ item }}" in group_names'
+  with_items:
+    - "proxy"
+    - "database"
+    - "webservers"
+ 
+- name: starting services
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups['database'] or inventory_hostname in groups['mysql']
+  loop:
+  - firewalld
+  - mysqld
+  notify:
+  - RestartMySql
+
+- name: Open ports on firewall
+  firewalld:
+    port: 3306/tcp
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: inventory_hostname in groups['database'] or inventory_hostname in groups['mysql']
+
+
+#Both login_password and login_user are required when you are passing credentials. If none are present,
+#the module will attempt to read the credentials from ~/.my.cnf, and finally fall back to using the
+#MySQL default login of ‘root’ with no password.
+
+- name: update mysql root password for all root accounts  
+  mysql_user:  
+    name: root  
+    host: "{{ item }}"  
+    password: "{{ mysql_root_password }}"  
+    login_user: root  
+    login_password: "{{ mysql_root_password }}"  
+    check_implicit_admin: yes  
+    priv: "*.*:ALL,GRANT"  
+  with_items:  
+  - managed3
+  - managed4  
+  - 127.0.0.1  
+  - ::1  
+  - localhost
+
+- name: Adding template to my.cnf
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+  notify:
+  - RestartMySql

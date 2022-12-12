@@ -1,0 +1,7 @@
+- name: apache role
+  hosts: webservers
+  become: yes
+  gather_facts: true
+  roles:
+    - role: apache
+      become: true
