@@ -1321,7 +1321,7 @@ dependencies: []
 ansible-playbook apache.yml
 ```
 
-## Q17. Requirements
+## Q18. Requirements
 
 Create a requirements file that meets following objectives:
 
@@ -1333,7 +1333,7 @@ Create a requirements file that meets following objectives:
 
 > After creating the file install the role at /home/automation/plays/roles
 
-## A17. Requirements
+## A18. Requirements
 
 > Install `git` if it's not present
 
@@ -1356,4 +1356,56 @@ sudo yum install -y git
 
 ```
 ansible-galaxy install -r requirements.yml -p roles
+```
+
+## Q18. Templating
+
+Create a new folder named templates at /home/automation/plays and prepare there a template that is going to be used later to generete hosts file for each node from the inventory. General idea is described by the below scratch
+
+```
+127.0.0.1 localhost <local_short_name> <local_fqdn>
+127.0.1.1 localhost
+<ip_address_host1> <short_name_host1> <fqdn_host1>
+<ip_address_host2> <short_name_host2> <fqdn_host2>
+[...]
+```
+
+Set the name to hosts.j2
+
+Create a playbook named `hosts.yml` that meets following requirements:
+
+- Is placed at `/home/automation/plays/roles`
+- Runs against all hosts
+- Uses templating to populate hosts.j2 created before to all hosts from the - inventory
+- After playbook execution it should be possible to reach from any node to a different one using ip, short name or fqdn
+
+## 18. Templating - Solution
+
+> The template might look as follows
+
+```
+127.0.0.1 localhost {{ ansible_hostname }} {{ ansible_fqdn }}
+127.0.1.1 localhost
+{% for host in groups['all'] %}
+{{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_fqdn'] }}
+{% endfor %}
+```
+
+> Playbook definition
+
+```
+- name: Configure hosts file
+  hosts: all
+  become: true
+  tasks:
+  - name: Copy hosts file
+    template:
+      src: templates/hosts.j2
+      dest: /etc/hosts
+```
+
+> To run the playbook go to /home/automation/plays and execute
+
+```
+ansible-playbook hosts.yml
 ```
