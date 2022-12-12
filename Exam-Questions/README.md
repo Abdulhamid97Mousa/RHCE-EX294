@@ -1730,9 +1730,9 @@ Aim of this task is to write a dynamic inventory script that returns a given hos
 
 ## Q26. Prompt
 
-You were asked to write a playbook that creates account for new employees. The idea is to execute the playbook each time a new person joins the company. To ease the boarding process your playbook should ask the user for his username and password while executing. All the people that are going to execute the playbook are suppossed to be part of networking team. From time to time they will need to interact with nmcli tool but despite that they shouldn't have access to privileged commands
+You were asked to write a playbook that creates account for new employees. The idea is to execute the playbook each time a new person joins the company. To ease the boarding process your playbook should ask the user for his username and password while executing. All the people that are going to execute the playbook are suppossed to be part of `networking team`. From time to time they will need to interact with nmcli tool but despite that they shouldn't have access to `privileged commands`.
 
-To achieve that create a playbook named prompt.yml at /home/automation/plays that meets following requirements:
+To achieve that create a playbook named `prompt.yml` at `/home/automation/plays` that meets following requirements:
 
 - Asks for username of a new user
 - Runs against all hosts
@@ -1740,3 +1740,46 @@ To achieve that create a playbook named prompt.yml at /home/automation/plays tha
 - Creates networking group
 - Allows the networking group to call `nmcli` tool with sudo without password. Ensure that nmcli is the - ONLY tool that the group is allowed to execute with root privileges
 - Assigns the user to `networking` supplementary group
+
+## A26. Prompt
+
+The playbook might look as follows:
+
+```
+- name: Create new account
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    group: networking
+  vars_prompt:
+  - name: username
+    prompt: What is your username?
+    private: false
+  - name: password
+    prompt: What is your password?
+    private: true
+    confirm: true
+    salt_size: 2
+    encrypt: sha512_crypt
+  tasks:
+  - name: Create group for the users
+    group:
+      name: '{{ group }}'
+      state: present
+  - name: Make people belonging to the {{ group }} allowed to use nmcli
+    copy:
+      content: "%{{ group }} ALL = NOPASSWD: /usr/bin/nmcli\n"
+      dest: /etc/sudoers.d/{{ group }}
+  - name: Create account for the user
+    user:
+      name: "{{ username }}"
+      password: "{{ password }}"
+      groups: ['{{ group }}']
+```
+
+> Go to `/home/automation/plays` and execute
+
+```
+ansible-playbook prompt.yml
+```
