@@ -1128,7 +1128,7 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 ## A16. Dynamic inventories
 
-> In my opinion Dynamic inventories aren't part of the RHCE exam, but it's good to to know how you would structure your inventory, you could simply use the ini file but also jason could be used.
+> In my opinion, Dynamic inventories aren't part of the RHCE-EX294 exam, but it's good to to know how you would structure your inventory, you could simply use the ini file but also jason could be used.
 
 - Create file in form of a dynamic inventory which meets following requirements:
 
@@ -1238,6 +1238,84 @@ ansible-inventory --list -i dynamic_inventory
   - Allows ports 80 and 443 to be accessible through firewall
   - Ensures that httpd and firewalld services are started at boot time
   - Deploys an index page that presents following message: Welcome, you have conntected to <fqdn>
-  - Create a playbook that meets following requirements:
-  - Is placed at `/home/automation/plays/apache.yml`
-  - Runs role apache against webservers hosts group
+- Create a playbook that meets following requirements:
+  - Is placed at `/home/automation/plays/apache.yml`.
+  - Runs role apache against `webservers hosts group`.
+
+## A17. Roles
+
+```
+---
+# tasks file for apache
+
+> Go to the /home/automation/plays and create a folder for roles
+```
+
+mkdir roles
+
+```
+
+If you configured ansible correctly while solving the first exercise role that you are going to create will be detected by playbook automatically
+
+> Change CWD to newly created directory and initate skeleton for the role
+
+```
+
+ansible-galaxy role init apache
+
+```
+> Edit tasks/main.yml to look as follows
+
+- name: install packages
+  package:
+    name: "httpd"
+    state: latest
+- name: Allow required ports
+  firewalld:
+    permanent: true
+    state: enabled
+    port: "{{ item }}"
+    immediate: true
+  with_items:
+  - 80/tcp
+  - 443/tcp
+- name: Ensure that services are started on boot
+  service:
+    name:
+    - httpd
+    - firewalld
+    state: started
+    enabled: true
+- name: Prepare index page
+  copy:
+    content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
+    dest: /var/www/html/index.html
+```
+
+> Edit meta/main.yml as below
+
+```
+galaxy_info:
+  author: Mateusz Stompór
+  description: This role sets up webserver
+  license: MIT
+  min_ansible_version: 2.9
+  galaxy_tags: []
+dependencies: []
+```
+
+> Finally create the playbook at `/home/automation/plays/apache.yml` with following content:
+
+```
+---
+- hosts: webservers
+  roles:
+  - role: apache
+    become: true
+```
+
+> To run the playbook go to /home/automation/plays and call
+
+```
+ansible-playbook apache.yml
+```
