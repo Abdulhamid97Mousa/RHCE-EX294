@@ -1324,7 +1324,7 @@ dependencies: []
     become: true
 ```
 
-> To run the playbook go to /home/automation/plays and call
+> To run the playbook go to `/home/automation/plays` and call
 
 ```
 ansible-playbook apache.yml
