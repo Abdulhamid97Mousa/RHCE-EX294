@@ -1727,3 +1727,16 @@ ansible-playbook dynamic_facts.yml
 ## Q25. Reachable hosts
 
 Aim of this task is to write a dynamic inventory script that returns a given host only if it is reachable. The idea is to avoid attempts of interacting with a server that is shut off. Use script from 15th exercise as the base for development. Store the script at `/home/automation/plays/scripts/reachable_hosts`. You can use `ssh` or `ping` command to verify that a host responds. Meet the same requirements in terms of defined hosts' variables as in 15th exercise
+
+## Q26. Prompt
+
+You were asked to write a playbook that creates account for new employees. The idea is to execute the playbook each time a new person joins the company. To ease the boarding process your playbook should ask the user for his username and password while executing. All the people that are going to execute the playbook are suppossed to be part of networking team. From time to time they will need to interact with nmcli tool but despite that they shouldn't have access to privileged commands
+
+To achieve that create a playbook named prompt.yml at /home/automation/plays that meets following requirements:
+
+- Asks for username of a new user
+- Runs against all hosts
+- Asks for his password - ensure that it is hidden while the user is typing it. The user should type the - password twice
+- Creates networking group
+- Allows the networking group to call `nmcli` tool with sudo without password. Ensure that nmcli is the - ONLY tool that the group is allowed to execute with root privileges
+- Assigns the user to `networking` supplementary group
