@@ -1728,6 +1728,100 @@ ansible-playbook dynamic_facts.yml
 
 Aim of this task is to write a dynamic inventory script that returns a given host only if it is reachable. The idea is to avoid attempts of interacting with a server that is shut off. Use script from 15th exercise as the base for development. Store the script at `/home/automation/plays/scripts/reachable_hosts`. You can use `ssh` or `ping` command to verify that a host responds. Meet the same requirements in terms of defined hosts' variables as in 15th exercise
 
+```
+#!/usr/bin/python3
+
+import json
+import argparse
+import subprocess
+
+
+GROUPS = {
+  "proxy": {
+    "hosts": [
+      "managed1.example.com",
+    ]
+  },
+  "webservers": {
+      "hosts": [
+          "managed2.example.com",
+          "managed3.example.com"
+          ]
+  },
+  "database": {
+      "hosts": [
+          "managed3.example.com",
+          "managed4.example.com"
+          ]
+      }
+}
+
+
+HOST_VARS = {
+  "managed2.example.com": {
+    "accessibility": "unknown"
+  }
+}
+
+
+GROUP_VARS = {
+  "database": {
+    "accessibility": "private"
+  },
+  "proxy": {
+    "accessibility": "public"
+  }
+}
+
+
+def is_pingable(hostname):
+    with open('/dev/null', 'r') as dev_null:
+        p = subprocess.Popen('/usr/bin/ping -c 1 ' + hostname,
+        shell=True, stdout=dev_null, stderr=dev_null, stdin=dev_null)
+    p.wait()
+    return p.returncode == 0
+
+
+def parse_arguments():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--list', help='List all groups and hosts', action='store_true')
+  parser.add_argument('--host', help='Provides variables for a specific host')
+  arguments = parser.parse_args()
+  if not arguments.list and arguments.host is None:
+      parser.error("You must either list all hosts or retrieve variables for a specific one")
+  return arguments
+
+
+def list_all():
+  common = {
+    "all": {
+        "children": ["ungrouped"] + list(GROUPS.keys())
+
+    }
+  }
+  reachable_hosts = {group: {'hosts': [h for h in details['hosts'] if is_pingable(h)]} for group, details in GROUPS.items()}
+  return dict(**common, **reachable_hosts)
+
+
+def provide_vars(host):
+    groups_of_host = {name for name in GROUPS.keys() if host in GROUPS.get(name, {}).get("hosts", [])}
+    base = dict()
+    for name in groups_of_host:
+        base = dict(**base, **GROUP_VARS.get(name, {}))
+    return dict(**base, **HOST_VARS.get(host, {}))
+
+
+if __name__ == '__main__':
+  args = parse_arguments()
+  if args.list:
+      print(json.dumps(list_all()))
+  else:
+      if is_pingable(args.host):
+        print(json.dumps(provide_vars(args.host)))
+      else:
+        print(json.dumps({}))
+```
+
 ## Q26. Prompt
 
 You were asked to write a playbook that creates account for new employees. The idea is to execute the playbook each time a new person joins the company. To ease the boarding process your playbook should ask the user for his username and password while executing. All the people that are going to execute the playbook are suppossed to be part of `networking team`. From time to time they will need to interact with nmcli tool but despite that they shouldn't have access to `privileged commands`.
