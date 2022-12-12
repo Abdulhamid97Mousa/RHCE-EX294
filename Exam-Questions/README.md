@@ -951,7 +951,10 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 - name: Ensure packages are installed
   package:
-    name: "pymysql"
+    name:
+    - "mysql-server"
+    - "mysql"
+    - "python3-PyMySQL"
     state: present
 
 - name: starting services
