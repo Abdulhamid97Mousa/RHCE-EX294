@@ -1581,7 +1581,7 @@ ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no 
 
 ## Q22. Networking
 
-Create a playbook named `network.yml` at /home/automation/plays that configures eth2 interface on `managed1.example.com` and `managed4.example.com`
+Create a playbook named `network.yml` at `/home/automation/plays` that configures eth2 interface on `managed1.example.com` and `managed4.example.com`
 
 Meet following objectives:
 
@@ -1594,3 +1594,46 @@ Meet following objectives:
 - Uses system role for it
 
 ## A22. Networking
+
+> The playbook `network.yml` may be implemented as below:
+
+```
+- hosts: managed1,managed4
+  become: true
+  roles:
+  - name: rhel-system-roles.network
+```
+
+> To differentiate hosts config separte vars definition should be placed at `host_vars` directory in `/home/automation/plays/host_vars/managed1/connections.yml`, remember if you are setting this on your home lab make sure you turn of your managed1 and managed4 machinese and then add host-only adapters because by default you only have Nat networking adapter `eth0` and host-only adapter `eth1`, and you don't have any other adapters. therefore, make sure to manually add adapters.
+
+```
+
+- name: Internal
+  type: ethernet
+  interface_name: eth2
+  ip:
+    address:
+    - 192.168.57.101/24
+  state: up
+```
+
+> host_vars directory >>> `/home/automation/plays/host_vars/managed4/connections.yml`
+
+```
+network_connections:
+- name: Internal
+  type: ethernet
+  interface_name: eth2
+  ip:
+    address:
+    - 192.168.57.104/24
+  state: up
+```
+
+> To run the playbook go to `/home/automation/plays` and execute
+
+```
+ansible-playbook network.yml
+```
+
+> Ensure that you have rhel-system-roles package installed
