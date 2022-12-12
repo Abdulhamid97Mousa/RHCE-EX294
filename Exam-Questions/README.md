@@ -1266,56 +1266,75 @@ ansible-galaxy role init apache
 ```
 > Edit tasks/main.yml to look as follows
 
+```
+
+---
+
+# tasks file for apache
+
 - name: install packages
   package:
-    name: "httpd"
-    state: latest
+  name:
+  - "httpd"
+  - "firewalld"
+    state: present
 - name: Allow required ports
   firewalld:
-    permanent: true
-    state: enabled
-    port: "{{ item }}"
-    immediate: true
+  permanent: true
+  state: enabled
+  port: "{{ item }}"
+  immediate: true
   with_items:
   - 80/tcp
   - 443/tcp
 - name: Ensure that services are started on boot
   service:
-    name:
-    - httpd
-    - firewalld
-    state: started
-    enabled: true
+  name: '{{ item }}'
+  state: started
+  enabled: true
+  with_items:
+  - 'httpd'
+  - 'firewalld'
 - name: Prepare index page
   copy:
-    content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
-    dest: /var/www/html/index.html
+  content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
+  dest: /var/www/html/index.html
+
 ```
 
 > Edit meta/main.yml as below
 
 ```
+
 galaxy_info:
-  author: Mateusz Stompór
-  description: This role sets up webserver
-  license: MIT
-  min_ansible_version: 2.9
-  galaxy_tags: []
+author: Mateusz Stompór
+description: This role sets up webserver
+license: MIT
+min_ansible_version: 2.9
+galaxy_tags: []
 dependencies: []
+
 ```
 
 > Finally create the playbook at `/home/automation/plays/apache.yml` with following content:
 
 ```
+
 ---
+
 - hosts: webservers
   roles:
   - role: apache
     become: true
+
 ```
 
 > To run the playbook go to /home/automation/plays and call
 
 ```
+
 ansible-playbook apache.yml
+
+```
+
 ```
