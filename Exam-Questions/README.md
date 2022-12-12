@@ -1358,7 +1358,7 @@ sudo yum install -y git
 ansible-galaxy install -r requirements.yml -p roles
 ```
 
-## Q18. Templating
+## Q19. Templating
 
 Create a new folder named templates at `/home/automation/plays` and prepare there a template that is going to be used later to generete hosts file for each node from the inventory. General idea is described by the below scratch
 
@@ -1379,7 +1379,7 @@ Create a playbook named `hosts.yml` that meets following requirements:
 - Uses templating to populate hosts.j2 created before to all hosts from the - inventory
 - After playbook execution it should be possible to reach from any node to a different one using ip, short name or fqdn
 
-## 18. Templating - Solution
+## 19. Templating - Solution
 
 > The template might look as follows
 
@@ -1408,4 +1408,96 @@ Create a playbook named `hosts.yml` that meets following requirements:
 
 ```
 ansible-playbook hosts.yml
+```
+
+## Q20. System roles
+
+Use NTP system role to configure all hosts time synchronization. To achieve that create a playbook named time.yml that meets following requirements:
+
+- Is placed at `/home/automation/plays`
+- Uses `1.pl.pool.ntp.org` and `2.pl.pool.ntp.org` server pool to synchronize time
+- Enables iburst
+- Configure timezone as UTC
+
+## A20. System roles
+
+> Install system roles first
+
+```
+yum install -y rhel-system-roles
+```
+
+> the playbook might look like this
+
+```
+- name: NTP SYSTEM ROLE
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    timesynce_ntp_servers:
+    - hostname: 1.pl.pool.ntp.org
+      iburst: true
+      pool: true
+    - hostname: 2.pl.pool.ntp.org
+      iburst: true
+      pool: true
+  roles:
+    - rhel-system-roles.timesync
+  post_tasks:
+    - name: Set the timezone
+      timezone:
+        name: UTC
+```
+
+> Another way you can do the same thing, you can grab the content of your local ntp config file and then use it to send it over to managed nodes, here i try to only use regular expression -E and invert it using -v and i want to grap lines that don't start with # or empty lines $
+
+```
+grep -Ev '^(#|$)' /etc/chron.conf > <where you want the file to be created>
+grep -Ev '^(#|$)' /etc/chron.conf > chron_config
+```
+
+> edit the content of the `chron_config`, in the beginning it looks like this
+
+```
+pool 2.rhel.pool.ntp.org iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
+```
+
+> i will change the content slightly
+
+```
+server 1.pl.pool.ntp.org iburst
+server 2.pl.pool.ntp.org iburst
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
+```
+
+> the playbook might look like this
+
+```
+- name: NTP SYSTEM ROL
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Ensure /etc/chrony.conf file is deleted
+      file:
+        path: /etc/chron.conf
+        state: absent
+    - name: copy chron.conf to managed nodes
+      copy:
+        src: /home/automation/plays/chrony.conf
+        dest: /etc/chrony.conf
+    - name: configure timezone as UTC
+      command: timedatectl set-timezone UTC
 ```
