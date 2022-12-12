@@ -1506,22 +1506,64 @@ logdir /var/log/chrony
         state: restarted
 ```
 
-## Q20. Advanced SSH
+## Q21. Advanced SSH
 
 Aim of this task is to make ssh-server listen on non-standard port on top of commonly used - 22. To ensure that servers are secured properly firewall service must be running as well as selinux mode set to enforcing
 
-Create a playbook named ssh.yml that meets following requirements:
+Create a playbook named `ssh.yml` that meets following requirements:
 
 - Ensures that firewalld is installed and running on boot
-- Opens 20022 in firewall for incoming connections
-- Modifies sshd config to listen on both 22 and 20022
-- Is executed against webservers group
-- Uses system role selinux to enable enforcing mode and allow connection on port 20022
+- Opens `20022` in firewall for incoming connections
+- Modifies sshd config to listen on both `22` and `20022`
+- Is executed against `webservers group`
+- Uses system role selinux to enable enforcing mode and allow connection on `port 20022`
 - Reboots machines as the last task that playbook executes
-- Ensure that during playbook execution at least one server is available, configure it to run - sequentially Ensure that after reboot firewalld service is running, selinux mode set to enforcing and the machine can be accessed by both ports
+- Ensure that during playbook execution at least one server is available, configure it to `run - sequentially` Ensure that after reboot firewalld service is running, selinux mode set to enforcing and the machine can be accessed by both ports
 
 You can use below command to verify the result
 
 ```
 ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no managed4.example.com exit
+```
+
+## A21. Advanced SSH
+
+```
+- name: Advanced ssh
+  hosts: webservers
+  become: true
+  serial: 1
+  vars:
+    selinux_state: enforcing
+    selinux_ports:
+    - { ports: '20022', proto: 'tcp', setype: 'ssh_port_t', state: 'present' }
+  tasks:
+    - name: Ensure that firewalld is installed and running on boot
+      package:
+        name: firewalld
+        state: present
+    - name: Run the service firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: true
+    - name: opens 20022/tcp for incoming connections
+      firewalld:
+        port: 20022/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Ensure that server listens on non-standard port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: Port 20022
+    - name: Ensure that server listens on standard port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: Port 22
+    roles:
+      - role: rhel-system-roles.selinux
+    post_tasks:
+      - name: Reboot the systems
+        reboot:
 ```
