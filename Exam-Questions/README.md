@@ -1637,3 +1637,89 @@ ansible-playbook network.yml
 ```
 
 > Ensure that you have rhel-system-roles package installed
+
+## Q23. Extending facts
+
+Write a playbook named additional_facts.yml that meets following requirements:
+
+- Is placed at `/home/automation/plays`
+- Gathers facts about all hosts
+- Gets data related to installed packages on database belonging hosts
+- Prints facts of each host to the console
+
+## A23. Extending facts
+
+```
+- hosts: all
+  tasks:
+  - name: Gather package facts
+    when: inventory_hostname in groups["database"]
+    package_facts:
+  - name: Print out facts
+    debug:
+      var: ansible_facts
+
+```
+
+## Q24. Extending facts
+
+1. Create a script which is going to be used as a dynamic fact and and store it at `/home/automation/plays/files`. The script should print out what is disk usage of `/usr/share` folder. Once present on a machine after running setup module against it you should be able to see result as below
+
+```
+"ansible_facts": {
+    [...]
+    "ansible_local": {
+        "usage": {
+            "/usr/share": 11488
+        }
+    }
+    [...]
+```
+
+2. Create a playbook that deploys the script to all machines. Ensure that group and owner is set to root but let anyone execute the script. Store the playbook at `/home/automation/plays/dynamic_facts.yml`.
+
+## A24. Extending facts
+
+The script might look as below
+
+> /home/automation/plays/files/usage.fact
+
+```
+#!/usr/bin/bash
+PATH=/usr/share
+SIZE=$(/usr/bin/du $PATH -s 2>/dev/null | /usr/bin/awk '{print $1}')
+echo {\"$PATH\": $SIZE}
+```
+
+> Playbook `/home/automation/plays/dynamic_facts.yml` itself may be implemented as follows
+
+```
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+  - name: Create directory for the facts
+    file:
+      state: directory
+      path: "{{ item }}"
+      mode: 0755
+      owner: root
+      group: root
+    loop:
+    - /etc/ansible
+    - /etc/ansible/facts.d
+  - name: Copy dynamic facts file
+    copy:
+      src: files/usage.fact
+      dest: /etc/ansible/facts.d/usage.fact
+      mode: 0755
+      owner: root
+      group: root
+```
+
+> To run the playbook go to `/home/automation/plays` and execute
+
+```
+ansible-playbook dynamic_facts.yml
+```
