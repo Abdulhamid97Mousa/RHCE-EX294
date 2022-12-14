@@ -2131,13 +2131,6 @@ cat /usr/share/doc/rhel
     selinux_booleans:
       - { name: "httpd_can_network_connect", state: "on" }
 
-  tasks:
-    # Selinux requires libsemanage-python support
-    - name: install libsemanage-python
-      yum:
-        name: libsemanage-python
-        state: present
-
   roles:
     - linux-system-roles.selinux
 ```
