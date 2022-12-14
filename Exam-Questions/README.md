@@ -459,6 +459,22 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
         reload: true
 ```
 
+> or you can also do this
+
+```yaml
+- hosts: all
+  become: yes
+
+  tasks:
+    - debug:
+        msg: "Server {{ inventory_hostname }} memory has less than 2048MB"
+      when: ansible_memtotal_mb < 2048
+
+    - debug:
+        vm.swappiness: 10
+      when: ansible_memtotal_mb > 2048
+```
+
 ## Q8. YUM repositories
 
 - Create a playbook that meets following requirements:
@@ -2107,23 +2123,21 @@ cat /usr/share/doc/rhel
 > Create a playbook:
 
 ```yaml
-[automation@ansible-control plays]$ cat selinux.yml
 ---
 - hosts: webservers
   become: yes
 
   vars:
     selinux_booleans:
-    - { name: 'httpd_can_network_connect', state: 'on' }
+      - { name: "httpd_can_network_connect", state: "on" }
 
   tasks:
-
-  # Selinux requires libsemanage-python support
-  - name: install libsemanage-python
-    yum:
-      name: libsemanage-python
-      state: present
+    # Selinux requires libsemanage-python support
+    - name: install libsemanage-python
+      yum:
+        name: libsemanage-python
+        state: present
 
   roles:
-  - linux-system-roles.selinux
+    - linux-system-roles.selinux
 ```
