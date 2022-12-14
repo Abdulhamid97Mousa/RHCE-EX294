@@ -1879,3 +1879,107 @@ The playbook might look as follows:
 ```
 ansible-playbook prompt.yml
 ```
+
+## Q27. Create and Work with Roles (apache role)
+
+Create a role called `sample-apache` and store it in /home/automation/plays/roles. The role should satisfy the following requirements:
+
+_ `The httpd, mod_ssl and php packages are installed`. Apache service is running and enabled on boot.
+_ Firewall is configured to allow all `incoming traffic on HTTP port TCP 80 and HTTPS port TCP 443`.
+_ Apache service should be `restarted every time the file /var/www/html/index.html is modified`.
+_ A Jinja2 template file `index.html.j2` is used to create the file `/var/www/html/index.html` with the \_ following content:
+
+```
+The address of the server is: IPV4ADDRESS
+```
+
+> IPV4ADDRESS is the IP address of the managed node.
+
+Create a playbook `/home/automation/plays/apache.yml` that uses the role and runs on hosts in the `webservers host group`.
+
+## A27. Create and Work with Roles (apache role)
+
+> the playbook may look like this, remember to include roles: - role: sample-apache
+
+```
+[automation@control roles]$ ansible-galaxy init sample-apache
+```
+
+> the `tasks/main.yml` in sub folder of sample-apache may look like this
+
+> tasks file for apache
+
+```
+
+- name: install packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - httpd
+  - firewalld
+
+- name: Allow required ports
+  firewalld:
+    permanent: true
+    state: enabled
+    port: "{{ item }}"
+    immediate: true
+  with_items:
+  - 80/tcp
+  - 443/tcp
+
+- name: Ensure that services are started on boot
+  service:
+    name: '{{ item }}'
+    state: started
+    enabled: true
+  with_items:
+  - 'httpd'
+  - 'firewalld'
+
+- name: Prepare index page
+  copy:
+    content: "Welcome, you have connected to {{ ansible_facts.fqdn }}\n"
+    dest: /var/www/html/index.html
+
+- name: Index content
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+  notify: restart-service
+
+```
+
+> the `templates/index.html.j2` in sub folder of `sample-apache/templates/index.html.j2` may look like this
+
+```
+{% for host in groups['webservers'] %}
+Welcome to {{ hostvars[host]['ansible_fqdn'] }} {{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} \n
+{% endfor %}
+```
+
+> the `handlers/main.yml` in sub folder of `sample-apache/handlers/main.yml` may look like this
+
+```
+# handlers file for apach
+- name: restart-service
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+  - httpd
+  - firewalld
+```
+
+> the `play/sample-apache,yml` may look like this
+
+```
+- name: http server
+  hosts: webservers
+  gather_facts: true
+  become: true
+  roles:
+    - role: sample-apache
+
+```
