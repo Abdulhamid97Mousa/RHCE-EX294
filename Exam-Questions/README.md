@@ -1918,6 +1918,8 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
   with_items:
   - httpd
   - firewalld
+  - mod_ssl
+  - php
 
 - name: Allow required ports
   firewalld:
@@ -1957,6 +1959,12 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
 {% for host in groups['webservers'] %}
 Welcome to {{ hostvars[host]['ansible_fqdn'] }} {{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} \n
 {% endfor %}
+```
+
+> or
+
+```
+the address of the server is : {{ ansible_default_ipv4.address }}
 ```
 
 > the `handlers/main.yml` in sub folder of `sample-apache/handlers/main.yml` may look like this
