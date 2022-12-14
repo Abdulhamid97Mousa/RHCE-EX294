@@ -1,0 +1,10 @@
+---
+# handlers file for apach
+- name: restart-service
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+  - httpd
+  - firewalld
+

@@ -12,14 +12,7 @@ managed3  ansible_host=192.168.55.203 ansible_user=vagrant ansible_ssh_pass=vagr
 managed3  ansible_host=192.168.55.203 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
 managed4  ansible_host=192.168.55.204 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3
 
-[database]
-repo  ansible_host=192.168.55.199 ansible_user=vagrant ansible_ssh_pass=vagrant 
- 
-
 [public:children]
 proxy
 webservers
 
-
-[mysql]
-127.0.0.1 ansible_host=192.168.55.200 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_python_interpreter=/usr/bin/python3

@@ -1,0 +1,8 @@
+- name: http server
+  hosts: webservers
+  gather_facts: true
+  become: true
+
+  roles:
+    - role: sample-apache
+

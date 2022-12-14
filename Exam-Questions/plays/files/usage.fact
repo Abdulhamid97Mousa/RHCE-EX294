@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+PATH=/usr/share
+SIZE=$(/usr/bin/du $PATH -s 2> /dev/null | /usr/bin/awk '{print #1}')
+echo {\"$PATH\": $SIZE}

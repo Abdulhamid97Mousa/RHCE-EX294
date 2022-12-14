@@ -198,7 +198,7 @@ Generate an SSH keypair on the control node. You can perform this step manually.
 
 - **step2:** you should read and understand the inventory file, if you haven't wrote your inventory by yourself, then you can check the inventory file in this repository.
 
-```
+```shell
 #!/bin/bash
 # Create the directory for ssh keys.
 ansible localhost -m file -a "path=/home/automation/.ssh state=directory"
@@ -223,7 +223,7 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
 
 ## A3. Archiving
 
-```
+```yaml
 - name: Archiving
   hosts: localhost
   become: true
@@ -231,8 +231,8 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
   tasks:
     - name: Create a backup folder
       file:
-        path: '/backup'
-        state: 'directory'
+        path: "/backup"
+        state: "directory"
         owner: automation
         group: automation
         mode: 0755
@@ -306,7 +306,7 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 - **step3: **Create the `motd.yml` playbook
 
-```
+```yaml
 - name: file content distributed on managed hosts
   hosts: all
   become: true
@@ -323,26 +323,26 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 > Another way of solving the problem:
 
-```
+```yaml
 - name: Changing MOTD
   hosts: all
   become: yes
   tasks:
-  - name: Copy the content to HAProxy
-    copy:
-      content: "Welcome to HAProxy server\n"
-      dest: /etc/motd
-    when: "inventory_hostname in groups['proxy']"
-  - name: Copy the content to Apache
-    copy:
-      content: "Welcome to Apache server\n"
-      dest: /etc/motd
-    when: "inventory_hostname in groups['webservers']"
-  - name: Copy the content to MySQL
-    copy:
-      content: "Welcome to MySQL server\n"
-      dest: /etc/motd
-    when: "inventory_hostname in groups['database']"
+    - name: Copy the content to HAProxy
+      copy:
+        content: "Welcome to HAProxy server\n"
+        dest: /etc/motd
+      when: "inventory_hostname in groups['proxy']"
+    - name: Copy the content to Apache
+      copy:
+        content: "Welcome to Apache server\n"
+        dest: /etc/motd
+      when: "inventory_hostname in groups['webservers']"
+    - name: Copy the content to MySQL
+      copy:
+        content: "Welcome to MySQL server\n"
+        dest: /etc/motd
+      when: "inventory_hostname in groups['database']"
 ```
 
 ## Q5. Ansible Facts
@@ -354,20 +354,20 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 ## A5. Ansible Facts
 
-```
+```yaml
 - name: Work with Ansible Facts
   hosts: database
   become: yes
   tasks:
-  - name: Ensure directory is exist
-    file:
-      path: /etc/ansible/facts.d
-      state: directory
-      recurse: yes
-  - name: Copy the content to the file
-    copy:
-      content: "[application]\nname=haproxy\n"
-      dest: /etc/ansible/facts.d/environment.fact
+    - name: Ensure directory is exist
+      file:
+        path: /etc/ansible/facts.d
+        state: directory
+        recurse: yes
+    - name: Copy the content to the file
+      copy:
+        content: "[application]\nname=haproxy\n"
+        dest: /etc/ansible/facts.d/environment.fact
 ```
 
 ## Q5: Work with Ansible Facts
@@ -378,20 +378,20 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## A5: Work with Ansible Facts
 
-```
+```yaml
 - name: Work with Ansible Facts
   hosts: database
   become: yes
   tasks:
-  - name: Ensure directory is exist
-    file:
-      path: /etc/ansible/facts.d
-      state: directory
-      recurse: yes
-  - name: Copy the content to the file
-    copy:
-      content: "[sample_exam]\nserver_role=mysql\n"
-      dest: /etc/ansible/facts.d/custom.fact
+    - name: Ensure directory is exist
+      file:
+        path: /etc/ansible/facts.d
+        state: directory
+        recurse: yes
+    - name: Copy the content to the file
+      copy:
+        content: "[sample_exam]\nserver_role=mysql\n"
+        dest: /etc/ansible/facts.d/custom.fact
 ```
 
 ## Q6. Text Manipulation also called "Configure SSH Server"
@@ -404,7 +404,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## A6. Text Manipulation also called "Configure SSH Server"
 
-```
+```yaml
 - name: SSH configuration
   hosts: all
   become: true
@@ -413,14 +413,14 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
     - name: Replace a SSH entry with our own
       lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#MaxAuthTries 6'
+        regexp: "^#MaxAuthTries 6"
         line: "MaxAuthTries 3"
       notify: Restart ssh
     - name: Replace a SSH entry  with our own
       lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^X11Forwarding yes'
-        line: 'X11Forwarding no'
+        regexp: "^X11Forwarding yes"
+        line: "X11Forwarding no"
       notify: Restart ssh
   handlers:
     - name: Restart ssh
@@ -440,7 +440,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## A7. Use Conditionals to Control Play Execution "Conditionals"
 
-```
+```yaml
 - name: Configure sysctl parameter
   hosts: all
   vars:
@@ -454,7 +454,7 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
       become: true
       sysctl:
         name: vm.swappiness
-        value: '10'
+        value: "10"
         sysctl_set: true
         reload: true
 ```
@@ -473,24 +473,24 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## A8. YUM repositories
 
-```
+```yaml
 - name: yum repository configuration
   hosts: database
   become: true
   gather_facts: false
   tasks:
-  - name: import GPG key
-    rpm_key:
-      state: present
-      key: https://repo.mysql.com/RPM-GPG-KEY-mysql
-  - name: Add repository configuration enteries
-    yum_repository:
-      name: mysql57-community
-      description: "MySQL 5.7 Community Server"
-      baseurl: http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch
-      gpgcheck: true
-      gpgkey: https://repo.mysql.com/RPM-GPG-KEY-mysql
-      enabled: true
+    - name: import GPG key
+      rpm_key:
+        state: present
+        key: https://repo.mysql.com/RPM-GPG-KEY-mysql
+    - name: Add repository configuration enteries
+      yum_repository:
+        name: mysql57-community
+        description: "MySQL 5.7 Community Server"
+        baseurl: http://repo.mysql.com/yum/mysql-5.7-community/el/6/$basearch
+        gpgcheck: true
+        gpgkey: https://repo.mysql.com/RPM-GPG-KEY-mysql
+        enabled: true
 ```
 
 ## Task 8: Software Repositories
@@ -507,24 +507,24 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 ## Solution 8: Software Repositories
 
-```
+```yaml
 - name: yum repository configuration
   hosts: database
   become: true
   gather_facts: false
   tasks:
-  - name: import GPG key
-    rpm_key:
-      state: present
-      key: http://repo.mysql.com/RPM-GPG-KEY-mysql
-  - name: Add repository configuration enteries
-    yum_repository:
-      name: mysql80-community
-      description: "MySQL 8.0 YUM Repo"
-      baseurl: http://repo.mysql.com/yum/mysql-8.0-community/el/8/x86_64
-      gpgcheck: true
-      gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
-      enabled: true
+    - name: import GPG key
+      rpm_key:
+        state: present
+        key: http://repo.mysql.com/RPM-GPG-KEY-mysql
+    - name: Add repository configuration enteries
+      yum_repository:
+        name: mysql80-community
+        description: "MySQL 8.0 YUM Repo"
+        baseurl: http://repo.mysql.com/yum/mysql-8.0-community/el/8/x86_64
+        gpgcheck: true
+        gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
+        enabled: true
 ```
 
 ## Q9. Vault
@@ -656,41 +656,43 @@ users:
 
 ## A10. User Accounts
 
-```
+```yaml
 - name: creatie specified users and their IDs
   hosts: all
   become: yes
   gather_facts: no
 
   vars_files:
-  - vars/users.yml
-  - secret.yml
+    - vars/users.yml
+    - secret.yml
   vars:
     hash: "{{ user_password | password_hash('sha512') }}"
   tasks:
-  - name: print user_password
-    debug:
-      msg: "Password is {{ user_password }}, Hash is {{ hash }} "
+    - name: print user_password
+      debug:
+        msg: "Password is {{ user_password }}, Hash is {{ hash }} "
 
-  - name: Add the user "{{ item.username }}" with a specific uid and a primary group of 'wheel'
-    user:
-      name: "{{ item.username }}"
-      password: "{{ user_password | password_hash('sha512') }}"
-      uid: "{{ item.uid }}"
-      group: wheel
-      shell: /bin/bash
-    loop: "{{ users }}"
-    when: ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
-          ( item.uid > 2002 and inventory_hostname in groups['database'] )
+    - name: Add the user "{{ item.username }}" with a specific uid and a primary group of 'wheel'
+      user:
+        name: "{{ item.username }}"
+        password: "{{ user_password | password_hash('sha512') }}"
+        uid: "{{ item.uid }}"
+        group: wheel
+        shell: /bin/bash
+      loop: "{{ users }}"
+      when:
+        ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
+        ( item.uid > 2002 and inventory_hostname in groups['database'] )
 
-  - name: Set authorized key taken from file
-    authorized_key:
-      user: "{{ item.username }}"
-      state: present
-      key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
-    loop: "{{ users }}"
-    when: ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
-          ( item.uid > 2002 and inventory_hostname in groups['database'] )
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: "{{ item.username }}"
+        state: present
+        key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
+      loop: "{{ users }}"
+      when:
+        ( item.uid < 2002 and inventory_hostname in groups['webservers'] ) or
+        ( item.uid > 2002 and inventory_hostname in groups['database'] )
 ```
 
 > Run this command to execute the `users.yml` playbook, remember it relies on our vault file for decryption.
@@ -701,14 +703,14 @@ ansible-playbook users.yml --vault-id @vault_key
 
 > Another way of doing the same thing
 
-```
+```yaml
 ---
 - name: Create users
   hosts: all
   become: yes
   vars_files:
-  - vars/users.yml
-  - secret.yml
+    - vars/users.yml
+    - secret.yml
   tasks:
     - name: Ensure group is exist
       group:
@@ -732,8 +734,8 @@ ansible-playbook users.yml --vault-id @vault_key
         key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
       loop: "{{ users }}"
       when:
-      - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
-      - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
+        - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
 ```
 
 ## Task 11: Scheduled Tasks
@@ -745,20 +747,20 @@ Create a playbook `/home/automation/plays/regular_tasks.yml` that runs on server
 
 ## Solution 11: Scheduled Tasks
 
-```
+```yaml
 - name: regular_task
   hosts: all
   become: true
   gather_facts: false
   tasks:
-  - name: Creates a cron file under /etc/cron.d
-    cron:
-      name: yum autoupdates
-      minute: '0'
-      hour: '*'
-      user: root
-      job: "echo /usr/bin/date >> /var/log/time.log"
-    when: inventory_hostname in groups['proxy']
+    - name: Creates a cron file under /etc/cron.d
+      cron:
+        name: yum autoupdates
+        minute: "0"
+        hour: "*"
+        user: root
+        job: "echo /usr/bin/date >> /var/log/time.log"
+      when: inventory_hostname in groups['proxy']
 ```
 
 > Let’s check if playbook works:
@@ -793,27 +795,26 @@ sdb      8:16   0    5G  0 disk
 
 ## Solution 11: Periodic job Tasks
 
-```
+```yaml
 - name: crong job
   hosts: proxy
   gather_facts: false
   become: true
   tasks:
-  - name: Schedule vmstat execution
-    at:
-      command: '/usr/bin/vmstat 1>/var/log/vmstat.log; chown automation:automation /var/log/vmstat.log'
-      count: 1
-      units: minutes
-      unique: true
-  - name: Schedule hourly job
-    cron:
-      name: Dump plugged devices
-      minute: '0'
-      hour: '*'
-      day: '*'
-      month: '*'
-      job: "echo ----- $(date \"+%m/%d/%y %H:%M\") >> /var/log/devices.log; lsblk >> /var/log/devices.log;chown root:root /var/log/devices.log"
-
+    - name: Schedule vmstat execution
+      at:
+        command: "/usr/bin/vmstat 1>/var/log/vmstat.log; chown automation:automation /var/log/vmstat.log"
+        count: 1
+        units: minutes
+        unique: true
+    - name: Schedule hourly job
+      cron:
+        name: Dump plugged devices
+        minute: "0"
+        hour: "*"
+        day: "*"
+        month: "*"
+        job: 'echo ----- $(date "+%m/%d/%y %H:%M") >> /var/log/devices.log; lsblk >> /var/log/devices.log;chown root:root /var/log/devices.log'
 ```
 
 ## Task 12: Software Repositories
@@ -830,23 +831,21 @@ Create a playbook /home/automation/plays/repository.yml that runs on servers in 
 
 ## Solution Task 12 Software Repositories
 
-```
+```yaml
 - name: Software Repository
   hosts: database
   become: yes
   gather_facts: no
 
   tasks:
-
-  - name: YUM repository
-    yum_repository:
-      name: mysql56-community
-      description: MySQL 5.6 YUM Repo
-      baseurl: http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/
-      gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
-      gpgcheck: yes
-      enabled: yes
-
+    - name: YUM repository
+      yum_repository:
+        name: mysql56-community
+        description: MySQL 5.6 YUM Repo
+        baseurl: http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/
+        gpgkey: http://repo.mysql.com/RPM-GPG-KEY-mysql
+        gpgcheck: yes
+        enabled: yes
 ```
 
 Check if playbook works:
@@ -887,30 +886,30 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 > Create a playbook `/home/automation/plays/mysql.yml` that uses the role and runs on hosts in the database host group.
 
-```
+```yaml
 - name: my mysql role playbook
   hosts: database
   become: yes
   vars_files: secret.yml
 
   roles:
-  - sample-mysql
+    - sample-mysql
 
   tasks:
-  - debug:
-      msg: "{{ database_password }}"
+    - debug:
+        msg: "{{ database_password }}"
 ```
 
 > Tasks: please take a look at the MySQL notes carefully to overcome any errors
 
-```
+```yaml
 ---
 # tasks file for sample-mysql
 - name: primary partition
   parted:
     device: /dev/sdb
     number: 1
-    flags: [ lvm ]
+    flags: [lvm]
     state: present
     part_end: 800MiB
   register: device_info
@@ -952,9 +951,9 @@ pid-file=/var/run/mysqld/mysqld.pid
 - name: Ensure packages are installed
   package:
     name:
-    - "mysql-server"
-    - "mysql"
-    - "python3-PyMySQL"
+      - "mysql-server"
+      - "mysql"
+      - "python3-PyMySQL"
     state: present
 
 - name: starting services
@@ -963,10 +962,10 @@ pid-file=/var/run/mysqld/mysqld.pid
     state: started
     enabled: yes
   loop:
-  - firewalld
-  - mysqld
+    - firewalld
+    - mysqld
   notify:
-  - RestartMySql
+    - RestartMySql
 
 - name: Open ports on firewall
   firewalld:
@@ -974,7 +973,6 @@ pid-file=/var/run/mysqld/mysqld.pid
     permanent: yes
     immediate: yes
     state: enabled
-
 
 #Both login_password and login_user are required when you are passing credentials. If none are present,
 #the module will attempt to read the credentials from ~/.my.cnf, and finally fall back to using the
@@ -992,7 +990,7 @@ pid-file=/var/run/mysqld/mysqld.pid
     src: my.cnf.j2
     dest: /etc/my.cnf
   notify:
-  - RestartMySql
+    - RestartMySql
 ```
 
 > Please note, MySQL database defaults to login of ‘root’ with no password, if you try to login as -u root -p devops it will throw an error because you are trying to login with root user and providing a password {{ database }} and by default root has no password, because you haven't created a password for the root user in the first place it'll keep throwing error.
@@ -1011,14 +1009,14 @@ mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
 
 Handlers:
 
-```
+```yaml
 ---
 # handlers file for sample-mysql
 - name: RestartMySql
   service:
     name:
-    - 'mysqld'
-    - 'firewalld'
+      - "mysqld"
+      - "firewalld"
     state: restarted
 ```
 
@@ -1051,7 +1049,7 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 ## A14. SWAP
 
-```
+```yaml
 - name: Configure SWAP
   hosts: database
   become: true
@@ -1060,52 +1058,52 @@ pid-file=/var/run/mysqld/mysqld.pid
     vg: swap
     lv: swap
   tasks:
-  # - name: Install tools
-  #   yum:
-  #     name: lvm2
-  - name: Partition the drive
-    parted:
-      device: /dev/sdb
-      part_type: primary
-      label: msdos
-      number: 2
-      flags: [ lvm ]
-      state: present
-      unit: MB
-      part_start: "60%"
-      part_end: "100%"
+    # - name: Install tools
+    #   yum:
+    #     name: lvm2
+    - name: Partition the drive
+      parted:
+        device: /dev/sdb
+        part_type: primary
+        label: msdos
+        number: 2
+        flags: [lvm]
+        state: present
+        unit: MB
+        part_start: "60%"
+        part_end: "100%"
 
-  - name: Create volume group
-    lvg:
-      pvs: /dev/sdb2
-      vg: "{{ vg }}"
-      state: present
+    - name: Create volume group
+      lvg:
+        pvs: /dev/sdb2
+        vg: "{{ vg }}"
+        state: present
 
-  - name: Create logical volume
-    lvol:
-      lv: "{{ lv }}"
-      size: 100%VG
-      vg: "{{ vg }}"
-      state: present
+    - name: Create logical volume
+      lvol:
+        lv: "{{ lv }}"
+        size: 100%VG
+        vg: "{{ vg }}"
+        state: present
 
-  - name: Create filesystem
-    filesystem:
-      dev: /dev/{{ vg }}/{{ lv }}
-      fstype: swap
+    - name: Create filesystem
+      filesystem:
+        dev: /dev/{{ vg }}/{{ lv }}
+        fstype: swap
 
-  - name: Mount on boot
-    lineinfile:
-      line: "/dev/{{ vg }}/{{ lv }} swap swap defaults 0 0"
-      path: /etc/fstab
+    - name: Mount on boot
+      lineinfile:
+        line: "/dev/{{ vg }}/{{ lv }} swap swap defaults 0 0"
+        path: /etc/fstab
 
-  - name: Check if mounted
-    shell: "lsblk -s | grep {{ vg }}-{{ lv }}"
-    changed_when: false
-    register: mounts
+    - name: Check if mounted
+      shell: "lsblk -s | grep {{ vg }}-{{ lv }}"
+      changed_when: false
+      register: mounts
 
-  - name: Mount if not mounted
-    shell: swapon /dev/{{ vg }}/{{ lv }}
-    when: "'[SWAP]' not in mounts.stdout"
+    - name: Mount if not mounted
+      shell: swapon /dev/{{ vg }}/{{ lv }}
+      when: "'[SWAP]' not in mounts.stdout"
 ```
 
 ## 15. System target
@@ -1117,16 +1115,16 @@ pid-file=/var/run/mysqld/mysqld.pid
   - Sets target to multi-user.target
   - Must be idempotent - subsequent execution of playbook shouldn't result in changed state
 
-```
+```yaml
 - hosts: all
   gather_facts: false
   become: true
   tasks:
-  - name: Set the default target
-    file:
-      dest: /etc/systemd/system/default.target
-      src: /usr/lib/systemd/system/multi-user.target
-      state: link
+    - name: Set the default target
+      file:
+        dest: /etc/systemd/system/default.target
+        src: /usr/lib/systemd/system/multi-user.target
+        state: link
 ```
 
 ## A16. Dynamic inventories
@@ -1147,7 +1145,7 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 ## A16. Dynamic inventories
 
-```
+```json
 #!/usr/bin/env python3
 
 import json
@@ -1227,7 +1225,7 @@ if __name__ == '__main__':
       print(json.dumps(provide_vars(args.host)))
 ```
 
-Remember to set permissions to 755. To verify that the script works go to its folder and execute
+> Remember to set permissions to 755. To verify that the script works go to its folder and execute
 
 ```
 ansible-inventory --list -i dynamic_inventory
@@ -1263,7 +1261,7 @@ ansible-galaxy role init apache
 
 > Edit tasks/main.yml to look as follows
 
-```
+```yaml
 # tasks file for apache
 - name: install packages
   package:
@@ -1344,7 +1342,7 @@ sudo yum install -y git
 
 > Create the file `requirement.yml` in `/home/automation/plays/` with following content
 
-```
+```yaml
 ---
 - name: git
   scm: git
@@ -1393,15 +1391,15 @@ Create a playbook named `hosts.yml` that meets following requirements:
 
 > Playbook definition
 
-```
+```yaml
 - name: Configure hosts file
   hosts: all
   become: true
   tasks:
-  - name: Copy hosts file
-    template:
-      src: templates/hosts.j2
-      dest: /etc/hosts
+    - name: Copy hosts file
+      template:
+        src: templates/hosts.j2
+        dest: /etc/hosts
 ```
 
 > To run the playbook go to `/home/automation/plays` and execute
@@ -1429,19 +1427,19 @@ yum install -y rhel-system-roles
 
 > the playbook might look like this
 
-```
+```yaml
 - name: NTP SYSTEM ROLE
   hosts: all
   become: true
   gather_facts: true
   vars:
     timesynce_ntp_servers:
-    - hostname: 1.pl.pool.ntp.org
-      iburst: true
-      pool: true
-    - hostname: 2.pl.pool.ntp.org
-      iburst: true
-      pool: true
+      - hostname: 1.pl.pool.ntp.org
+        iburst: true
+        pool: true
+      - hostname: 2.pl.pool.ntp.org
+        iburst: true
+        pool: true
   roles:
     - rhel-system-roles.timesync
   post_tasks:
@@ -1484,8 +1482,8 @@ logdir /var/log/chrony
 
 > the playbook might look like this
 
-```
-- name: NTP SYSTEM ROL
+```yaml
+- name: NTP SYSTEM ROLE
   hosts: all
   become: true
   gather_facts: true
@@ -1528,7 +1526,7 @@ ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no 
 
 ## A21. Advanced SSH
 
-```
+```yaml
 - name: Advanced ssh
   hosts: webservers
   become: true
@@ -1536,7 +1534,7 @@ ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no 
   vars:
     selinux_state: enforcing
     selinux_ports:
-    - { ports: '20022', proto: 'tcp', setype: 'ssh_port_t', state: 'present' }
+      - { ports: "20022", proto: "tcp", setype: "ssh_port_t", state: "present" }
   tasks:
     - name: Ensure that firewalld is installed and running on boot
       package:
@@ -1556,15 +1554,15 @@ ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no 
     - name: Ensure that server listens on standard poot
       lineinfile:
         path: /etc/ssh/sshd_config
-        line: 'Port 22'
-        insertafter: '^#Port 22'
+        line: "Port 22"
+        insertafter: "^#Port 22"
         state: present
 
     - name: Ensure that server listens on standard port
       lineinfile:
         path: /etc/ssh/sshd_config
-        line: 'Port 20022'
-        insertafter: '^#Port 22'
+        line: "Port 20022"
+        insertafter: "^#Port 22"
         state: present
 
     - name: Restart SSHD
@@ -1597,37 +1595,36 @@ Meet following objectives:
 
 > The playbook `network.yml` may be implemented as below:
 
-```
+```yaml
 - hosts: managed1,managed4
   become: true
   roles:
-  - name: rhel-system-roles.network
+    - name: rhel-system-roles.network
 ```
 
 > To differentiate hosts config separte vars definition should be placed at `host_vars` directory in `/home/automation/plays/host_vars/managed1/connections.yml`, remember if you are setting this on your home lab make sure you turn of your managed1 and managed4 machinese and then add host-only adapters because by default you only have Nat networking adapter `eth0` and host-only adapter `eth1`, and you don't have any other adapters. therefore, make sure to manually add adapters.
 
-```
-
+```yaml
 - name: Internal
   type: ethernet
   interface_name: eth2
   ip:
     address:
-    - 192.168.57.101/24
+      - 192.168.57.101/24
   state: up
 ```
 
 > host_vars directory >>> `/home/automation/plays/host_vars/managed4/connections.yml`
 
-```
+```yaml
 network_connections:
-- name: Internal
-  type: ethernet
-  interface_name: eth2
-  ip:
-    address:
-    - 192.168.57.104/24
-  state: up
+  - name: Internal
+    type: ethernet
+    interface_name: eth2
+    ip:
+      address:
+        - 192.168.57.104/24
+    state: up
 ```
 
 > To run the playbook go to `/home/automation/plays` and execute
@@ -1649,16 +1646,15 @@ Write a playbook named additional_facts.yml that meets following requirements:
 
 ## A23. Extending facts
 
-```
+```yaml
 - hosts: all
   tasks:
-  - name: Gather package facts
-    when: inventory_hostname in groups["database"]
-    package_facts:
-  - name: Print out facts
-    debug:
-      var: ansible_facts
-
+    - name: Gather package facts
+      when: inventory_hostname in groups["database"]
+      package_facts:
+    - name: Print out facts
+      debug:
+        var: ansible_facts
 ```
 
 ## Q24. Extending facts
@@ -1684,7 +1680,7 @@ The script might look as below
 
 > /home/automation/plays/files/usage.fact
 
-```
+```yaml
 #!/usr/bin/bash
 PATH=/usr/share
 SIZE=$(/usr/bin/du $PATH -s 2>/dev/null | /usr/bin/awk '{print $1}')
@@ -1693,29 +1689,29 @@ echo {\"$PATH\": $SIZE}
 
 > Playbook `/home/automation/plays/dynamic_facts.yml` itself may be implemented as follows
 
-```
+```yaml
 ---
 - hosts: all
   become: true
   gather_facts: false
   tasks:
-  - name: Create directory for the facts
-    file:
-      state: directory
-      path: "{{ item }}"
-      mode: 0755
-      owner: root
-      group: root
-    loop:
-    - /etc/ansible
-    - /etc/ansible/facts.d
-  - name: Copy dynamic facts file
-    copy:
-      src: files/usage.fact
-      dest: /etc/ansible/facts.d/usage.fact
-      mode: 0755
-      owner: root
-      group: root
+    - name: Create directory for the facts
+      file:
+        state: directory
+        path: "{{ item }}"
+        mode: 0755
+        owner: root
+        group: root
+      loop:
+        - /etc/ansible
+        - /etc/ansible/facts.d
+    - name: Copy dynamic facts file
+      copy:
+        src: files/usage.fact
+        dest: /etc/ansible/facts.d/usage.fact
+        mode: 0755
+        owner: root
+        group: root
 ```
 
 > To run the playbook go to `/home/automation/plays` and execute
@@ -1730,7 +1726,7 @@ Aim of this task is to write a dynamic inventory script that returns a given hos
 
 ## A25. Reachable hosts
 
-```
+```json
 #!/usr/bin/python3
 
 import json
@@ -1841,7 +1837,7 @@ To achieve that create a playbook named `prompt.yml` at `/home/automation/plays`
 
 The playbook might look as follows:
 
-```
+```yaml
 - name: Create new account
   hosts: all
   become: true
@@ -1849,29 +1845,29 @@ The playbook might look as follows:
   vars:
     group: networking
   vars_prompt:
-  - name: username
-    prompt: What is your username?
-    private: false
-  - name: password
-    prompt: What is your password?
-    private: true
-    confirm: true
-    salt_size: 2
-    encrypt: sha512_crypt
+    - name: username
+      prompt: What is your username?
+      private: false
+    - name: password
+      prompt: What is your password?
+      private: true
+      confirm: true
+      salt_size: 2
+      encrypt: sha512_crypt
   tasks:
-  - name: Create group for the users
-    group:
-      name: '{{ group }}'
-      state: present
-  - name: Make people belonging to the {{ group }} allowed to use nmcli
-    copy:
-      content: "%{{ group }} ALL = NOPASSWD: /usr/bin/nmcli\n"
-      dest: /etc/sudoers.d/{{ group }}
-  - name: Create account for the user
-    user:
-      name: "{{ username }}"
-      password: "{{ password }}"
-      groups: ['{{ group }}']
+    - name: Create group for the users
+      group:
+        name: "{{ group }}"
+        state: present
+    - name: Make people belonging to the {{ group }} allowed to use nmcli
+      copy:
+        content: "%{{ group }} ALL = NOPASSWD: /usr/bin/nmcli\n"
+        dest: /etc/sudoers.d/{{ group }}
+    - name: Create account for the user
+      user:
+        name: "{{ username }}"
+        password: "{{ password }}"
+        groups: ["{{ group }}"]
 ```
 
 > Go to `/home/automation/plays` and execute
@@ -1909,17 +1905,16 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
 
 > tasks file for apache
 
-```
-
+```yaml
 - name: install packages
   package:
     name: "{{ item }}"
     state: present
   with_items:
-  - httpd
-  - firewalld
-  - mod_ssl
-  - php
+    - httpd
+    - firewalld
+    - mod_ssl
+    - php
 
 - name: Allow required ports
   firewalld:
@@ -1928,17 +1923,17 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
     port: "{{ item }}"
     immediate: true
   with_items:
-  - 80/tcp
-  - 443/tcp
+    - 80/tcp
+    - 443/tcp
 
 - name: Ensure that services are started on boot
   service:
-    name: '{{ item }}'
+    name: "{{ item }}"
     state: started
     enabled: true
   with_items:
-  - 'httpd'
-  - 'firewalld'
+    - "httpd"
+    - "firewalld"
 
 - name: Prepare index page
   copy:
@@ -1950,7 +1945,6 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
     src: index.html.j2
     dest: /var/www/html/index.html
   notify: restart-service
-
 ```
 
 > the `templates/index.html.j2` in sub folder of `sample-apache/templates/index.html.j2` may look like this
@@ -1969,25 +1963,167 @@ the address of the server is : {{ ansible_default_ipv4.address }}
 
 > the `handlers/main.yml` in sub folder of `sample-apache/handlers/main.yml` may look like this
 
-```
+```yaml
 # handlers file for apach
 - name: restart-service
   service:
     name: "{{ item }}"
     state: restarted
   loop:
-  - httpd
-  - firewalld
+    - httpd
+    - firewalld
 ```
 
 > the `play/sample-apache,yml` may look like this
 
-```
+```yaml
 - name: http server
   hosts: webservers
   gather_facts: true
   become: true
   roles:
     - role: sample-apache
+```
 
+## Q28. Security
+
+Create a playbook `/home/automation/plays/selinux.yml` that runs on hosts in the webservers host group and does the following:
+
+Uses the selinux RHEL system role.
+Enables httpd_can_network_connect SELinux boolean.
+The change must survive system reboot
+
+- Uses the selinux RHEL system role.
+- Enables httpd_can_network_connect SELinux boolean.
+- The change must survive system reboot.
+
+## A28. Security
+
+> firstly, you need to install rhel-system-rols
+
+```
+sudo yum -y install rhel-system-roles
+```
+
+> Now you can search through ansible galaxy to find a role that modify your selinux configuration
+
+```
+ansible-galaxy search selinux | grep roles
+```
+
+> now you can install the role `linux-system-roles.selinux`
+
+```
+ansible-galaxy install linux-system-roles.selinux
+ansible-galaxy list
+```
+
+> Preinstalled example of playbook with selinux role:
+
+```
+cat /usr/share/doc/rhel
+```
+
+```yaml
+- hosts: all
+  become: true
+  become_method: sudo
+  become_user: root
+  vars:
+    # Use "targeted" SELinux policy type
+    selinux_policy: targeted
+    # Set "enforcing" mode
+    selinux_state: enforcing
+    # Switch some SELinux booleans
+    selinux_booleans:
+      # Set the 'samba_enable_home_dirs' boolean to 'on' in the current
+      # session only
+      - { name: "samba_enable_home_dirs", state: "on" }
+      # Set the 'ssh_sysadm_login' boolean to 'on' permanently
+      - { name: "ssh_sysadm_login", state: "on", persistent: "yes" }
+    # Map '/tmp/test_dir' and its subdirectories to the 'user_home_dir_t'
+    # SELinux file type
+    selinux_fcontexts:
+      - { target: "/tmp/test_dir(/.*)?", setype: "user_home_dir_t", ftype: "d" }
+    # Restore SELinux file contexts in '/tmp/test_dir'
+    selinux_restore_dirs:
+      - /tmp/test_dir
+    # Map tcp port 22100 to the 'ssh_port_t' SELinux port type
+    selinux_ports:
+      - { ports: "22100", proto: "tcp", setype: "ssh_port_t", state: "present" }
+    # Map the 'sar-user' Linux user to the 'staff_u' SELinux user
+    selinux_logins:
+      - {
+          login: "sar-user",
+          seuser: "staff_u",
+          serange: "s0-s0:c0.c1023",
+          state: "present",
+        }
+    # Manage modules
+    selinux_modules:
+      # Install the 'localpolicy.cil' with priority 300
+      - { path: "localpolicy.cil", priority: "300", state: "enabled" }
+      # Disable the 'unconfineduser' module with priority 100
+      - { name: "unconfineduser", priority: "100", state: "disabled" }
+      # Remove the 'temporarypolicy' module with priority 400
+      - { name: "temporarypolicy", priority: "400", state: "absent" }
+
+  # Prepare the prerequisites required for this playbook
+  tasks:
+    - name: Creates directory
+      file:
+        path: /tmp/test_dir
+        state: directory
+        mode: "0755"
+    - name: Add a Linux System Roles SELinux User
+      user:
+        comment: Linux System Roles SELinux User
+        name: sar-user
+    - name: execute the role and catch errors
+      block:
+        - name: Include selinux role
+          include_role:
+            name: rhel-system-roles.selinux
+      rescue:
+        # Fail if failed for a different reason than selinux_reboot_required.
+        - name: handle errors
+          fail:
+            msg: "role failed"
+          when: not selinux_reboot_required
+
+        - name: restart managed host
+          reboot:
+
+        - name: wait for managed host to come back
+          wait_for_connection:
+            delay: 10
+            timeout: 300
+
+        - name: reapply the role
+          include_role:
+            name: rhel-system-roles.selinux
+```
+
+> Create a playbook:
+
+```yaml
+[automation@ansible-control plays]$ cat selinux.yml
+---
+- hosts: webservers
+  become: yes
+
+  vars:
+    selinux_booleans:
+    - { name: 'httpd_can_network_connect', state: 'on' }
+
+  tasks:
+
+  # Selinux requires libsemanage-python support
+  - name: install libsemanage-python
+    yum:
+      name: libsemanage-python
+      state: present
+
+  roles:
+  - linux-system-roles.selinux
 ```

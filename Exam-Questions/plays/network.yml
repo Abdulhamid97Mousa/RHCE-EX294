@@ -1,0 +1,5 @@
+- name: Configure Networking on remote hosts
+  hosts:  managed1, managed4
+  become: true
+  roles:
+  - name: rhel-system-roles.network

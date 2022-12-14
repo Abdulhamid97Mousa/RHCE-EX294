@@ -1,0 +1,8 @@
+network_connections:
+- name: Internal
+  type: ethernet
+  interface_name: eth2
+  ip:
+    address:
+    - 192.168.57.101/24
+  state: up

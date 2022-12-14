@@ -1,0 +1,19 @@
+- name: NTP SYSTEM ROL
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Ensure /etc/chrony.conf file is deleted
+      file:
+        path: /etc/chron.conf
+        state: absent
+    - name: copy chron.conf to managed nodes
+      copy:
+        src: /home/automation/plays/chrony.conf
+        dest: /etc/chrony.conf
+    - name: configure timezone as UTC
+      command: timedatectl set-timezone UTC 
+    - name: Restart NTP
+      service:
+        name: chronyd
+        state: restarted

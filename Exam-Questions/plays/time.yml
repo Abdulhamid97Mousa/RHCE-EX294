@@ -1,0 +1,19 @@
+- name: NTP SYSTEM ROL
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    timesynce_ntp_servers:
+    - hostname: 1.pl.pool.ntp.org
+      iburst: true
+      pool: true
+    - hostname: 2.pl.pool.ntp.org
+      iburst: true
+      pool: true
+  roles:
+    - rhel-system-roles.timesync
+  post_tasks:
+    - name: Set the timezone
+      timezone:
+        name: UTC
+  

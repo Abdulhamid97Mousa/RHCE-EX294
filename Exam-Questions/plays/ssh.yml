@@ -1,0 +1,49 @@
+- name: Advanced ssh
+  hosts: webservers
+  become: true
+  serial: 1
+  vars:
+    selinux_state: enforcing
+    selinux_ports:
+    - { ports: '20022', proto: 'tcp', setype: 'ssh_port_t', state: 'present' }
+  tasks:
+    - name: Ensure that firewalld is installed and running on boot
+      package:
+        name: firewalld
+        state: present
+    - name: Run the service firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: true
+    - name: opens 20022/tcp for incoming connections
+      firewalld:
+        port: 20022/tcp
+        permanent: true
+        state: enabled
+        immediate: true
+    - name: Ensure that server listens on standard poot
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'Port 22'
+        insertafter: '^#Port 22'
+        state: present 
+        
+    - name: Ensure that server listens on standard port
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        line: 'Port 20022'
+        insertafter: '^#Port 22'
+        state: present
+
+    - name: Restart SSHD
+      service:
+        name: sshd
+        state: restarted
+        enabled: true
+  roles:
+    - role: rhel-system-roles.selinux
+  post_tasks:
+    - name: Reboot the systems
+      reboot:
+  

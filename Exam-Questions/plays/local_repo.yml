@@ -15,7 +15,7 @@
       yum_repository:
         name: baseOS
         description: http://repo.ansi.example.com
-        baseurl: http://repo.ansi.example.com
+        baseurl: http://192.168.55.199
         gpgcheck: no
         enabled: yes
 
@@ -23,7 +23,7 @@
       yum_repository:
         name: AppStream
         description: http://repo.ansi.example.com
-        baseurl: http://repo.ansi.example.com
+        baseurl: http://192.168.55.199
         gpgcheck: no
         enabled: yes
 
@@ -41,7 +41,7 @@
       yum_repository:
         name: baseOS
         description: http://repo.ansi.example.com
-        baseurl: http://repo.ansi.example.com
+        baseurl: http://192.168.55.199
         gpgcheck: no
         enabled: yes
 
@@ -49,6 +49,6 @@
       yum_repository:
         name: AppStream
         description: http://repo.ansi.example.com
-        baseurl: http://repo.ansi.example.com
+        baseurl: http://192.168.55.199
         gpgcheck: no
         enabled: yes
