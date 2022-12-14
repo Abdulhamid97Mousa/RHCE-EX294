@@ -1,8 +1,0 @@
-- name: 'Manage Disk File'
-  hosts: all
-  gather_facts: false
-  tasks:
-    - name: 'Create daw disk files'
-      command:
-        cmd: 'fallocate -l 1G /root/disk0'
-        creates: '/root/disk0'

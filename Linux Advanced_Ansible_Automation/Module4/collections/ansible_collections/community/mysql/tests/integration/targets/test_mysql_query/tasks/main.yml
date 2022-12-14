@@ -1,9 +1,0 @@
-####################################################################
-# WARNING: These are designed specifically for Ansible tests       #
-# and should not be used as examples of how to write Ansible roles #
-####################################################################
-
-# mysql_query module initial CI tests
-- import_tasks: mysql_query_initial.yml
-
-- include: issue-28.yml

@@ -1,8 +1,0 @@
----
-# defaults file for test_mysql_variables
-mysql_user: root
-mysql_password: msandbox
-mysql_primary_port: 3307
-
-user_name_1: 'db_user1'
-user_password_1: 'gadfFDSdtTU^Sdfuj'

@@ -1,8 +1,0 @@
-####################################################################
-# WARNING: These are designed specifically for Ansible tests       #
-# and should not be used as examples of how to write Ansible roles #
-####################################################################
-
-- import_tasks: mysql_variables.yml
-
-- include: issue-28.yml

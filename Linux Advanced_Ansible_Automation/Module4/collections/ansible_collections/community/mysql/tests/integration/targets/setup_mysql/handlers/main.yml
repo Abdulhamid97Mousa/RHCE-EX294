@@ -1,6 +1,0 @@
----
-- name: "{{ role_name }} | handler | create dbdeployer installed file"
-  template:
-    src: installed_file.j2
-    dest: "{{ dbdeployer_installed_file }}"
-  listen: create zookeeper installed file

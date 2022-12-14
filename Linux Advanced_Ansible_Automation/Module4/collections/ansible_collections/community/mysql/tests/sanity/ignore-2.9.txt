@@ -1,3 +1,0 @@
-plugins/modules/mysql_db.py validate-modules:use-run-command-not-popen
-plugins/modules/mysql_user.py validate-modules:parameter-type-not-in-doc
-plugins/modules/mysql_user.py validate-modules:undocumented-parameter
