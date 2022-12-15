@@ -12,6 +12,3 @@ managed4  ansible_hostname=managed4
 [public:children]
 proxy
 webservers
-
-[repository]
-repo      ansible_host=192.168.55.199 ansible_user=vagrant ansible_ssh_pass=vagrant

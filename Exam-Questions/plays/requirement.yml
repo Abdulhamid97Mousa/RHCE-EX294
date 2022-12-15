@@ -1,0 +1,6 @@
+---
+- name: haprox
+  scm: git
+  src: https://github.com/geerlingguy/ansible-role-haproxy
+  version: 1.3.0
+

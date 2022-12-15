@@ -1,0 +1,11 @@
+- name: security
+  hosts: webservers
+  become: true
+  gather_facts: true
+
+  vars:
+    selinux_booleans:
+    - { name: 'httpd_can_network_connect', state: 'on' }
+
+  roles:
+    - role: rhel-system-roles.selinux
