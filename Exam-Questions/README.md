@@ -2179,7 +2179,9 @@ If your playbook works, then doing “curl http://ansible2.hl.local/” should r
 
 > Installing geerlingguy.haproxy role:
 
-```
+> while installing geerlingguy.haproxy, you might fail in downloading it, due to many reasons, but one way you can solve this problem is by editing your `Vagrantfile` and to include this line `config.vm.box_download_insecure = true` or for more information go to `https://github.com/hashicorp/vagrant/issues/5391`.
+
+```bash
 ansible-galaxy install geerlingguy.haproxy
 ```
 
