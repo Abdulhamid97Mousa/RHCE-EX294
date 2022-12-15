@@ -2134,3 +2134,78 @@ cat /usr/share/doc/rhel
   roles:
     - linux-system-roles.selinux
 ```
+
+## Q29. Requirements file
+
+Use Ansible Galaxy with a requirements file called `/home/admin/ansible/roles/install.yml` to download and install roles to `/home/admin/ansible/roles` from the
+
+following URLs:
+
+`http://classroom.example.com/role1.tar.gz`The name of this role should be balancer
+
+`http://classroom.example.com/role2.tar.gz` The name of this role should be phphello
+
+## A29. Requirements file
+
+> `/home/admin/ansible/roles/install.yml`
+
+```yaml
+---
+- name: balancer
+  - src: http:// classroom.example.com /role1.tar.gz
+- name: phphello
+  - src: http:// classroom.example.com /role1.tar.gz
+```
+
+> and simply run the following command
+
+```bash
+ansible-galaxy install -r roles/install.yml -p roles
+```
+
+## Q30: Download Roles From Ansible Galaxy and Use Them
+
+Use Ansible Galaxy to download and install `geerlingguy.haproxy` role in `/home/automation/plays/roles`.
+
+Create a playbook `/home/automation/plays/haproxy.yml` that runs on servers in the `proxy host group` and does the following:
+
+Use `geerlingguy.haproxy` role to load balance request between hosts in the webservers host group.
+Use `roundrobin load balancing method`.
+HAProxy backend servers should be configured for HTTP only (port 80).
+Firewall is configured to allow all incoming traffic on port TCP 80.
+If your playbook works, then doing “curl http://ansible2.hl.local/” should return output from the web server (see task #10). Running the command again should return output from the other web server.
+
+## A30: Download Roles From Ansible Galaxy and Use Them
+
+> Installing geerlingguy.haproxy role:
+
+```
+ansible-galaxy install geerlingguy.haproxy
+```
+
+> Playbook:
+
+```yaml
+---
+- hosts: proxy
+  become: yes
+
+  vars:
+    haproxy_backend_balance_method: "roundrobin"
+    haproxy_backend_mode: "http"
+    haproxy_backend_servers:
+      - name: app1
+        address: ansible3.hl.local
+      - name: app2
+        address: ansible4.hl.local
+
+  tasks:
+    - firewalld:
+        service: http
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+  roles:
+    - geerlingguy.haproxy
+```
