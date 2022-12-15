@@ -2272,3 +2272,37 @@ git clone https://github.com/geerlingguy/ansible-role-haproxy.git
   roles:
     - geerlingguy.haproxy
 ```
+
+## Q31: Install packages
+
+- Create a playbook /home/automation/plays/packages.yml that runs on all inventory hosts and does the following:
+
+- Installs tcpdump and mailx packages on hosts in the proxy host groups.
+- Installs lsof and mailx and packages on hosts in the database host groups.
+
+## A31: Install packages
+
+```yaml
+- hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Packages for proxy
+      yum:
+        name:
+          - tcpdump
+          - mailx
+        state: present
+      when: inventory_hostname in groups['proxy']
+      tags: proxy
+
+    - name: Packages for database
+      yum:
+        name:
+          - lsof
+          - mailx
+        state: present
+      when: inventory_hostname in groups['database']
+      tags: database
+```
