@@ -1216,7 +1216,7 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 ## A16. Dynamic inventories
 
-```json
+```JSON
 #!/usr/bin/env python3
 
 import json
@@ -1797,7 +1797,7 @@ Aim of this task is to write a dynamic inventory script that returns a given hos
 
 ## A25. Reachable hosts
 
-```json
+```JSON
 #!/usr/bin/python3
 
 import json
