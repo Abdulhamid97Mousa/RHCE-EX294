@@ -407,6 +407,36 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
         dest: /etc/ansible/facts.d/custom.fact
 ```
 
+> or
+
+```yaml
+- hosts: database
+  become: yes
+  # gather_facts: no
+
+  tasks:
+    - name: create a directory
+      file:
+        path: /etc/ansible/facts.d
+        state: directory
+
+    - name: touch a file
+      file:
+        path: /etc/ansible/facts.d/custom.fact
+        state: touch
+
+    - name: blockinfile
+      blockinfile:
+        path: /etc/ansible/facts.d/custom.fact
+        block: |
+          [sample_exam]
+          server_role=mysql
+
+    - name: debug
+      debug:
+        msg: "{{ ansible_local.custom.sample_exam }}"
+```
+
 ## Q6. Text Manipulation also called "Configure SSH Server"
 
 - Create a playbook that customizes ssh configuration with following requirements:
@@ -1154,6 +1184,18 @@ pid-file=/var/run/mysqld/mysqld.pid
         dest: /etc/systemd/system/default.target
         src: /usr/lib/systemd/system/multi-user.target
         state: link
+```
+
+> or
+
+```yaml
+- hosts: webservers
+  become: yes
+  gather_facts: no
+
+  tasks:
+    - name: Set default system target to boot at multi-user
+      shell: systemctl set-default multi-user.target
 ```
 
 ## A16. Dynamic inventories
@@ -2196,6 +2238,12 @@ If your playbook works, then doing “curl http://ansible2.hl.local/” should r
 
 ```bash
 ansible-galaxy install geerlingguy.haproxy
+```
+
+or
+
+```bash
+git clone https://github.com/geerlingguy/ansible-role-haproxy.git
 ```
 
 > Playbook:
