@@ -1,0 +1,27 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: haproxy
+  author: geerlingguy
+  description: HAProxy installation and configuration.
+  company: "Midwestern Mac, LLC"
+  license: "license (BSD, MIT)"
+  min_ansible_version: 2.2
+  platforms:
+    - name: EL
+      versions:
+        - 7
+        - 8
+    - name: Ubuntu
+      versions:
+        - precise
+        - trusty
+        - xenial
+  galaxy_tags:
+    - web
+    - networking
+    - cloud
+    - haproxy
+    - loadbalancer
+    - http
