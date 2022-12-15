@@ -212,6 +212,19 @@ ansible all -m authorized_key -a "key={{ lookup('file', '/home/automation/.ssh/i
 ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/sudoers.d/automation"
 ```
 
+## Similar Question
+
+Because you will have to install software on the managed hosts, you need to do the following:
+\*Create a shell script with the name `packages.sh` that runs an Ansible ad-hoc command to create a yum repository on all managed hosts using the information as below:
+
+- The Appstream base URL and BaseOS URL are `http://repo.ansi.example.com/AppStream` and `http://repo.ansi.example.com/BaseOS`
+
+- The Appstream and BaseOS description are `RHEL 8 Appstream` and `RHEL 8 BaseOS`
+
+- The Appstream and BaseOS names are `RHEL_Appstream` `RHEL_BaseOS`
+
+- The repositories must be enabled with a gpgkey of `http://repo.ansi.example.com/RPM-GPG-KEY-redhat-release`
+
 ## Q3. Archiving
 
 - Create a playbook that meets following requirements:
