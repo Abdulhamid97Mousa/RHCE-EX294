@@ -1,0 +1,17 @@
+####################################################################
+# WARNING: These are designed specifically for Ansible tests       #
+# and should not be used as examples of how to write Ansible roles #
+####################################################################
+
+- name: alias mysql command to include default options
+  set_fact:
+    mysql_command: "mysql -u{{ mysql_user }} -p{{ mysql_password }} -P{{ mysql_primary_port }} --protocol=tcp"
+
+
+# mysql_role module initial CI tests
+- import_tasks: mysql_role_initial.yml
+
+# Test that subtract_privs will only revoke the grants given by priv
+# (https://github.com/ansible-collections/community.mysql/issues/331)
+- include: test_priv_subtract.yml enable_check_mode=no
+- include: test_priv_subtract.yml enable_check_mode=yes

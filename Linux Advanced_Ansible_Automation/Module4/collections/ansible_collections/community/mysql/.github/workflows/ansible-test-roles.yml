@@ -1,0 +1,64 @@
+name: Roles CI
+on:
+  push:
+    paths:
+      - 'roles/**'
+      - '.github/workflows/ansible-test-roles.yml'
+  pull_request:
+    paths:
+      - 'roles/**'
+      - '.github/workflows/ansible-test-roles.yml'
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  molecule:
+    name: "Molecule (Python: ${{ matrix.python }}, Ansible: ${{ matrix.ansible }}, MySQL: ${{ matrix.mysql }})"
+    runs-on: ubuntu-latest
+    env:
+      PY_COLORS: 1
+      ANSIBLE_FORCE_COLOR: 1
+    strategy:
+      matrix:
+        mysql:
+          - 2.0.12
+        ansible:
+          - stable-2.11
+          - stable-2.12
+          - stable-2.13
+          - devel
+        python:
+          - 3.6
+          - 3.8
+        exclude:
+          - python: 3.8
+            ansible: stable-2.11
+          - python: 3.6
+            ansible: stable-2.12
+          - python: 3.6
+            ansible: stable-2.13
+          - python: 3.6
+            ansible: devel
+
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: ansible_collections/community/mysql
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install ansible-core (${{ matrix.ansible }})
+        run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Install molecule and related dependencies
+        run: |
+          pip install ansible-lint docker flake8 molecule testinfra yamllint
+
+      # - name: Run molecule default test scenario
+      #   run: for d in roles/*/; do (cd "$d" && molecule --version && molecule test) done
+      #   working-directory: ./ansible_collections/community/mysql

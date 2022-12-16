@@ -1,0 +1,6 @@
+---
+# handlers file for ntp
+- name: restart chrony daemon
+  service:
+    name: chronyd
+    state: restarted

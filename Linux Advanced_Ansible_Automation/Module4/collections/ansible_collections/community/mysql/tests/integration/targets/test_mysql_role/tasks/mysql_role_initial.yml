@@ -1,0 +1,1649 @@
+# Test code for mysql_role module
+
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+    task_parameters: &task_params
+      register: result
+
+  block:
+
+  - name: Get server version
+    mysql_info:
+      <<: *mysql_params
+    register: srv
+
+  - name: When run with unsupported server versions, must fail
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: test
+    ignore_errors: yes
+
+  - name: Must fail when meet unsupported version
+    assert:
+      that:
+      - result is failed
+      - result is search('Roles are not supported by the server')
+    when:
+    - srv['version']['major'] < 8
+
+  # Skip unsupported versions
+  - meta: end_play
+    when: srv['version']['major'] < 8
+
+  #########
+  # Prepare
+  - name: Create db {{ test_db }}
+    <<: *task_params
+    mysql_db:
+      <<: *mysql_params
+      name: '{{ test_db }}'
+
+  - name: Create table {{ test_table }}
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      login_db: '{{ test_db }}'
+      query: 'DROP TABLE IF EXISTS {{ test_table }}'
+
+  - name: Create table {{ test_table }}
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      login_db: '{{ test_db }}'
+      query: 'CREATE TABLE IF NOT EXISTS {{ test_table }} (id int)'
+
+  - name: Create users
+    <<: *task_params
+    mysql_user:
+      <<: *mysql_params
+      name: '{{ item }}'
+      password: '{{ mysql_password }}'
+    loop:
+    - '{{ user0 }}'
+    - '{{ user1 }}'
+    - '{{ user2 }}'
+
+  ###########
+  # Run tests
+
+  - name: Create role {{ role0 }} in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 0
+
+  # It must fail because of check_mode
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  #=====================
+
+  - name: Check that the user have no active roles
+    <<: *task_params
+    mysql_query:
+      login_user: '{{ user0 }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+      query: 'SELECT COALESCE(current_role(), "NONE") as "current_role()"'
+
+  - name: Check
+    assert:
+      that:
+      - result.query_result.0.0["current_role()"] == "NONE"
+
+  - name: Create role {{ role0 }}
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check that the role is active
+    <<: *task_params
+    mysql_query:
+      login_user: '{{ user0 }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+      query: 'SELECT current_role()'
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - "'{{ role0 }}' in result.query_result.0.0['current_role()']"
+    when: install_type == 'mysql'
+
+  - name: Check that the role is active (mariadb)
+    <<: *task_params
+    mysql_query:
+      login_user: '{{ user0 }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+      query:
+        - 'SET ROLE {{ role0 }}'
+        - 'SELECT current_role()'
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - "'{{ role0 }}' in result.query_result.1.0['current_role()']"
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Create role {{ role0 }} again in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Create role {{ role0 }} again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+
+  #========================
+
+  - name: Drop role {{ role0 }} in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: absent
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+
+  # Must pass because of check_mode
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  # Must pass because of check_mode
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Drop role {{ role0 }}
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: absent
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 0
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Drop role {{ role0 }} again in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: absent
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  - name: Drop role {{ role0 }} again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: absent
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  # ==================
+
+  - name: Create role {{ role0 }} in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+      priv:
+        '*.*': 'SELECT,INSERT'
+        'mysql.*': 'UPDATE'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 0
+
+  #========================
+
+  - name: Create role {{ role0 }}
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+      priv:
+        '*.*': 'SELECT,INSERT'
+        'mysql.*': 'UPDATE'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}'"
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+
+  #========================
+
+  - name: Create role {{ role0 }} in check_mode again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+      priv:
+        '*.*': 'SELECT,INSERT'
+        'mysql.*': 'UPDATE'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  #========================
+
+  - name: Create role {{ role0 }} again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user0 }}@localhost'
+      priv:
+        '*.*': 'SELECT,INSERT'
+        'mysql.*': 'UPDATE'
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  # ##############################################
+  # Test rewriting / appending / detaching members
+  # ##############################################
+
+  - name: Create role {{ role1 }}
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role1 }}'
+      state: present
+
+  # Rewriting members
+  - name: Rewrite members in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+      - '{{ role1 }}'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  # user0 is still a member because of check_mode
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  # user0 is still a member because of check_mode
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  # user1, user2, and role1 are not members because of check_mode
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user1 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user2 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user2 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role1 }} USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ role1 }}' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Rewrite members
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+      - '{{ role1 }}'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  # user0 is not a member any more
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  # user0 is not a member any more
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - "'{{ role0 }}' not in result.query_result.0.0['Grants for user0@localhost']"
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user1 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user2 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user2 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role1 }} USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ role1 }}' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+
+  #==========================
+
+  - name: Rewrite members again in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+      - '{{ role1 }}'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  #==========================
+
+  - name: Rewrite members again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+      - '{{ role1 }}'
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  #==========================
+
+  # Append members
+  - name: Append a member in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      append_members: yes
+      members:
+      - '{{ user0 }}@localhost'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+  #=====================
+
+  - name: Append a member
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      append_members: yes
+      members:
+      - '{{ user0 }}@localhost'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  # user1 and user2 must still be in DB because we are appending
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user1 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user2 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user2 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Append a member again in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      append_members: yes
+      members:
+      - '{{ user0 }}@localhost'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  #========================
+
+  - name: Append a member again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      append_members: yes
+      members:
+      - '{{ user0 }}@localhost'
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  ##############
+  # Detach users
+  - name: Detach users in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      detach_members: yes
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  # They must be there because of check_mode
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user1 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user2 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user2 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  #========================
+
+  - name: Detach users
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      detach_members: yes
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user0 }}@localhost USING '{{ role0 }}'"
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is succeeded
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user0 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 1
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user1 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  - name: Check in DB, if not granted, the query will fail
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user2 }}@localhost USING '{{ role0 }}'"
+    ignore_errors: yes
+    when: install_type == 'mysql'
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+    when: install_type == 'mysql'
+
+  - name: Check in DB (mariadb)
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT count(User) as user_roles FROM mysql.roles_mapping WHERE User = '{{ user2 }}' AND Host = 'localhost' AND Role = '{{ role0 }}'"
+    when: install_type == 'mariadb'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0['user_roles'] == 0
+    when: install_type == 'mariadb'
+
+  #=====================
+
+  - name: Detach users in check_mode again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      detach_members: yes
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  - name: Detach users again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      detach_members: yes
+      members:
+      - '{{ user1 }}@localhost'
+      - '{{ user2 }}@localhost'
+
+  - name: Check
+    assert:
+      that:
+      - result is not changed
+
+  - name: '"detach" users when creating a new role'
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role3 }}'
+      state: present
+      detach_members: yes
+      members:
+        - '{{ user1 }}@localhost'
+
+  - name: Check the role was created
+    assert:
+      that:
+        - result is changed
+
+  - name: Check grants
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ user1 }}@localhost"
+
+  - name: asssert detach_members did not add a user to the role
+    assert:
+      that:
+        - "'{{ role3 }}' not in result.query_result.0.0['Grants for {{ user1 }}@localhost']"
+
+  # test members_must_exist
+  - name: try failing on not-existing user in check-mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members_must_exist: yes
+      append_members: yes
+      members:
+        - 'not_existent@localhost'
+    ignore_errors: yes
+    check_mode: yes
+  - name: assert failure
+    assert:
+      that:
+        - result is failed
+
+  - name: try failing on not-existing user in check-mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members_must_exist: no
+      append_members: yes
+      members:
+        - 'not_existent@localhost'
+    check_mode: yes
+  - name: Check for lack of change
+    assert:
+      that:
+        - result is not changed
+
+  - name: try failing on not-existing user
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members_must_exist: yes
+      append_members: yes
+      members:
+        - 'not_existent@localhost'
+    ignore_errors: yes
+  - name: assert failure
+    assert:
+      that:
+        - result is failed
+
+  - name: try failing on not-existing user
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members_must_exist: no
+      append_members: yes
+      members:
+        - 'not_existent@localhost'
+  - name: Check for lack of change
+    assert:
+      that:
+        - result is not changed
+
+  # ##########
+  # Test privs
+  # ##########
+
+  - name: Create test DBs
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: 'CREATE DATABASE {{ item }}'
+    loop:
+    - '{{ test_db1 }}'
+    - '{{ test_db2 }}'
+
+  - name: Create table {{ test_table }}
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      login_db: '{{ item }}'
+      query: 'CREATE TABLE {{ test_table }} (id int)'
+    loop:
+    - '{{ test_db1 }}'
+    - '{{ test_db2 }}'
+
+  - name: Check grants
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role0 }}"
+
+  - name: Check
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0@%"] == "GRANT SELECT, INSERT ON *.* TO `role0`@`%`"
+      - result.query_result.0.1["Grants for role0@%"] == "GRANT UPDATE ON `mysql`.* TO `role0`@`%`"
+      - result.rowcount.0 == 2
+    when: install_type == 'mysql'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0"] == "GRANT SELECT, INSERT ON *.* TO `role0`"
+      - result.query_result.0.1["Grants for role0"] == "GRANT UPDATE ON `mysql`.* TO `role0`"
+      - result.rowcount.0 == 2
+    when: install_type == 'mariadb'
+
+  - name: Append privs in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      priv: '{{ test_db1 }}.{{ test_table }}:SELECT,INSERT/{{ test_db2 }}.{{ test_table }}:DELETE'
+      append_privs: yes
+    check_mode: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check grants
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role0 }}"
+
+  - name: Check
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0@%"] == "GRANT SELECT, INSERT ON *.* TO `role0`@`%`"
+      - result.query_result.0.1["Grants for role0@%"] == "GRANT UPDATE ON `mysql`.* TO `role0`@`%`"
+      - result.rowcount.0 == 2
+    when: install_type == 'mysql'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0"] == "GRANT SELECT, INSERT ON *.* TO `role0`"
+      - result.query_result.0.1["Grants for role0"] == "GRANT UPDATE ON `mysql`.* TO `role0`"
+      - result.rowcount.0 == 2
+    when: install_type == 'mariadb'
+
+  - name: Append privs
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      priv: '{{ test_db1 }}.{{ test_table }}:SELECT,INSERT/{{ test_db2 }}.{{ test_table }}:DELETE'
+      append_privs: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check grants
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role0 }}"
+
+  - name: Check
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0@%"] == "GRANT SELECT, INSERT ON *.* TO `role0`@`%`"
+      - result.query_result.0.1["Grants for role0@%"] == "GRANT UPDATE ON `mysql`.* TO `role0`@`%`"
+      - result.query_result.0.2["Grants for role0@%"] == "GRANT SELECT, INSERT ON `test_db1`.`test_table` TO `role0`@`%`"
+      - result.query_result.0.3["Grants for role0@%"] == "GRANT DELETE ON `test_db2`.`test_table` TO `role0`@`%`"
+      - result.rowcount.0 == 4
+    when: install_type == 'mysql'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0"] == "GRANT SELECT, INSERT ON *.* TO `role0`"
+      - result.query_result.0.1["Grants for role0"] == "GRANT UPDATE ON `mysql`.* TO `role0`"
+      - result.query_result.0.2["Grants for role0"] == "GRANT SELECT, INSERT ON `test_db1`.`test_table` TO `role0`"
+      - result.query_result.0.3["Grants for role0"] == "GRANT DELETE ON `test_db2`.`test_table` TO `role0`"
+      - result.rowcount.0 == 4
+    when: install_type == 'mariadb'
+
+  - name: Append privs again in check_mode
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      priv: '{{ test_db1 }}.{{ test_table }}:SELECT,INSERT/{{ test_db2 }}.{{ test_table }}:DELETE'
+      append_privs: yes
+    check_mode: yes
+
+  # TODO it must be changed. The module uses user_mod function
+  # taken from mysql_user module. It's a bug / expected behavior
+  # because I added a similar tasks to mysql_user tests
+  # https://github.com/ansible-collections/community.mysql/issues/50#issuecomment-871216825
+  # and it's also failed. Create an issue after the module is merged to avoid conflicts.
+  # TODO Fix this after user_mod is fixed.
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Append privs again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      priv: '{{ test_db1 }}.{{ test_table }}:SELECT,INSERT/{{ test_db2 }}.{{ test_table }}:DELETE'
+      append_privs: yes
+
+  - name: Check that there's no change
+    assert:
+      that:
+      - result is not changed
+
+  - name: Rewrite privs
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      priv:
+        '*.*': 'SELECT'
+
+  - name: Check
+    assert:
+      that:
+      - result is changed
+
+  - name: Check grants
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SHOW GRANTS FOR {{ role0 }}"
+
+  - name: Check
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0@%"] == "GRANT SELECT ON *.* TO `role0`@`%`"
+      - result.rowcount.0 == 1
+    when: install_type == 'mysql'
+
+  - name: Check (mariadb)
+    assert:
+      that:
+      - result.query_result.0.0["Grants for role0"] == "GRANT SELECT ON *.* TO `role0`"
+      - result.rowcount.0 == 1
+    when: install_type == 'mariadb'
+
+  # #################
+  # Test admin option
+  # #################
+
+  - name: Drop role
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: absent
+
+  - name: Create role with admin
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      admin: '{{ user0 }}@localhost'
+    ignore_errors: yes
+
+  - name: Check with MySQL
+    assert:
+      that:
+      - result is failed
+      - result.msg is search('option can be used only with MariaDB')
+    when: install_type == 'mysql'
+
+  - name: Check with MariaDB
+    assert:
+      that:
+      - result is changed
+    when: install_type == 'mariadb'
+
+  - name: Check in DB
+    <<: *task_params
+    mysql_query:
+      <<: *mysql_params
+      query: "SELECT 1 FROM mysql.user WHERE User = '{{ role0 }}' AND Host = ''"
+    when: install_type == 'mariadb'
+
+  - name: Check
+    assert:
+      that:
+      - result.rowcount.0 == 1
+    when: install_type == 'mariadb'
+
+  - name: Create role with admin again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      admin: '{{ user0 }}@localhost'
+    ignore_errors: yes
+
+  - name: Check with MySQL
+    assert:
+      that:
+      - result is failed
+      - result.msg is search('option can be used only with MariaDB')
+    when: install_type == 'mysql'
+
+  - name: Check with MariaDB
+    assert:
+      that:
+      - result is not changed
+    when: install_type == 'mariadb'
+
+  # Try to grant a role to a user who does not exist
+  - name: Create role with admin again
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ role0 }}'
+      state: present
+      members:
+      - '{{ nonexistent }}@localhost'
+    ignore_errors: yes
+
+  - name: Check
+    assert:
+      that:
+      - result is failed
+      - result.msg is search('does not exist')
+
+  always:
+  # Clean up
+  - name: Drop DBs
+    mysql_query:
+      <<: *mysql_params
+      query: 'DROP DATABASE {{ item }}'
+    loop:
+    - '{{ test_db }}'
+    - '{{ test_db1 }}'
+    - '{{ test_db2 }}'
+
+  - name: Drop users
+    <<: *task_params
+    mysql_user:
+      <<: *mysql_params
+      name: '{{ item }}'
+      state: absent
+    loop:
+    - '{{ user0 }}'
+    - '{{ user1 }}'
+    - '{{ user2 }}'
+
+  - name: Drop roles
+    <<: *task_params
+    mysql_role:
+      <<: *mysql_params
+      name: '{{ item }}'
+      state: absent
+    loop:
+    - '{{ role0 }}'
+    - test
+    - '{{ role3 }}'

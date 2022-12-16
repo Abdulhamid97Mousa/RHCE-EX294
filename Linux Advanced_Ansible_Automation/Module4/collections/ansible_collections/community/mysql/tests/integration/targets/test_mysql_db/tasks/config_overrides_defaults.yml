@@ -1,0 +1,122 @@
+- set_fact:
+    db_to_create: testdb1
+    config_file: "/root/.my1.cnf"
+    fake_port: 9999
+    fake_host: "blahblah.local"
+    include_dir: "/root/mycnf.d"
+
+- name: Create custom config file
+  shell: 'echo "[client]" > {{ config_file }}'
+
+- name: Add fake port to config file
+  shell: 'echo "port = {{ fake_port }}" >> {{ config_file }}'
+
+- name: Add blank line
+  shell: 'echo "" >> {{ config_file }}'
+  when:
+    - >
+      connector_name is not search('pymysql')
+      or (
+        connector_name is search('pymysql')
+        and connector_ver is version('0.9.3', '>=')
+      )
+
+- name: Create include_dir
+  file:
+    path: '{{ include_dir }}'
+    state: directory
+    mode: '0777'
+  when:
+    - >
+      connector_name is not search('pymysql')
+      or (
+        connector_name is search('pymysql')
+        and connector_ver is version('0.9.3', '>=')
+      )
+
+- name: Add include_dir
+  lineinfile:
+    path: '{{ config_file }}'
+    line: '!includedir {{ include_dir }}'
+    insertafter: EOF
+  when:
+    - >
+      connector_name is not search('pymysql')
+      or (
+        connector_name is search('pymysql')
+        and connector_ver is version('0.9.3', '>=')
+      )
+
+- name: Create database using fake port to connect to, must fail
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_to_create }}'
+    state: present
+    check_implicit_admin: yes
+    config_file: '{{ config_file }}'
+    config_overrides_defaults: yes
+  ignore_errors: yes
+  register: result
+
+- name: Must fail because login_port default has beed overriden by wrong value from config file
+  assert:
+    that:
+    - result is failed
+    - result.msg is search("unable to connect to database")
+
+- name: Create database using default port
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_to_create }}'
+    state: present
+    check_implicit_admin: yes
+    config_file: '{{ config_file }}'
+    config_overrides_defaults: no
+  register: result
+
+- name: Must not fail because of the default of login_port is correct
+  assert:
+    that:
+    - result is changed
+
+- name: Reinit custom config file
+  shell: 'echo "[client]" > {{ config_file }}'
+
+- name: Add fake host to config file
+  shell: 'echo "host = {{ fake_host }}" >> {{ config_file }}'
+
+- name: Remove database using fake login_host
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_to_create }}'
+    state: absent
+    config_file: '{{ config_file }}'
+    config_overrides_defaults: yes
+  register: result
+  ignore_errors: yes
+
+- name: Must fail because login_host default has beed overriden by wrong value from config file
+  assert:
+    that:
+    - result is failed
+    - result.msg is search("Can't connect to MySQL server on '{{ fake_host }}'") or result.msg is search("Unknown MySQL server host '{{ fake_host }}'")
+
+# Clean up
+- name: Remove test db
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_to_create }}'
+    state: absent
+    check_implicit_admin: yes

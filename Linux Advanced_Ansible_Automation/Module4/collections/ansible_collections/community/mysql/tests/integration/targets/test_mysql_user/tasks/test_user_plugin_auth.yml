@@ -1,0 +1,420 @@
+# Test user plugin auth scenarios.
+
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+    test_user_name: 'test_user_plugin_auth'
+    test_plugin_type: 'mysql_native_password'
+    test_plugin_hash: '*0CB5B86F23FDC24DB19A29B8854EB860CBC47793'
+    test_plugin_auth_string: 'Fdt8fd^34ds'
+    test_plugin_new_hash: '*E74368AC90460FA669F6D41BFB7F2A877DB73745'
+    test_plugin_new_auth_string: 'c$K01LsmK7nJnIR4!h'
+    test_default_priv_type: 'SELECT'
+    test_default_priv: '*.*:{{ test_default_priv_type }}'
+
+  block:
+
+    # ============================================================
+    # Test plugin auth initially setting a hash and then changing to a different hash.
+    #
+
+    - name: Create user with plugin auth (with hash string)
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_hash_string: '{{ test_plugin_hash }}'
+        priv: '{{ test_default_priv }}'
+      register: result
+
+    - name: Get user information
+      command: "{{ mysql_command }} -e \"SELECT user, host, plugin FROM mysql.user WHERE user = '{{ test_user_name }}' and host = 'localhost'\""
+      register: show_create_user
+
+    - name: Check that the module made a change
+      assert:
+        that:
+          - result is changed
+
+    - name: Check that the expected plugin type is set
+      assert:
+        that:
+          - "'{{ test_plugin_type }}' in show_create_user.stdout"
+      when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Get the MySQL version using the newly created creds
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    - name: Update the user with a different hash
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_hash_string: '{{ test_plugin_new_hash }}'
+      register: result
+
+    - name: Check that the module makes the change because the hash changed
+      assert:
+        that:
+          - result is changed
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Getting the MySQL info with the new password should work
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_new_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    # Cleanup
+    - include: remove_user.yml user_name={{ test_user_name }} user_password={{ test_plugin_new_auth_string }}
+
+    # ============================================================
+    # Test plugin auth initially setting a hash and then switching to a plaintext auth string.
+    #
+
+    - name: Create user with plugin auth (with hash string)
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_hash_string: '{{ test_plugin_hash }}'
+        priv: '{{ test_default_priv }}'
+      register: result
+
+    - name: Get user information
+      command: "{{ mysql_command }} -e \"SELECT user, host, plugin FROM mysql.user WHERE user = '{{ test_user_name }}' and host = 'localhost'\""
+      register: show_create_user
+
+    - name: Check that the module made a change
+      assert:
+        that:
+          - result is changed
+
+    - name: Check that the expected plugin type is set
+      assert:
+        that:
+          - "'{{ test_plugin_type }}' in show_create_user.stdout"
+      when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Get the MySQL version using the newly created creds
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    - name: Update the user with the same hash (no change expected)
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_hash_string: '{{ test_plugin_hash }}'
+      register: result
+
+    # FIXME: on mariadb 10.2 there's always a change
+    - name: Check that the module doesn't make a change when the same hash is passed in
+      assert:
+        that:
+          - result is not changed
+      when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Change the user using the same plugin, but switch to the same auth string in plaintext form
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_auth_string: '{{ test_plugin_auth_string }}'
+      register: result
+
+    # Expecting a change is currently by design (see comment in source).
+    - name: Check that the module did not change the password
+      assert:
+        that:
+          - result is changed
+
+    - name: Getting the MySQL info should still work
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    # Cleanup
+    - include: remove_user.yml user_name={{ test_user_name }} user_password={{ test_plugin_auth_string }}
+
+    # ============================================================
+    # Test plugin auth initially setting a plaintext auth string and then switching to a hash.
+    #
+
+    - name: Create user with plugin auth (with auth string)
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_auth_string: '{{ test_plugin_auth_string }}'
+        priv: '{{ test_default_priv }}'
+      register: result
+
+    - name: Get user information
+      command: "{{ mysql_command }} -e \"SHOW CREATE USER '{{ test_user_name }}'@'localhost'\""
+      register: show_create_user
+
+    - name: Check that the module made a change
+      assert:
+        that:
+          - result is changed
+
+    - name: Check that the expected plugin type is set
+      assert:
+        that:
+          - "'{{ test_plugin_type }}' in show_create_user.stdout"
+      when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Get the MySQL version using the newly created creds
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    - name: Update the user with the same auth string
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_auth_string: '{{ test_plugin_auth_string }}'
+      register: result
+
+    # This is the current expected behavior because there isn't a reliable way to hash the password in the mysql_user
+    # module in order to be able to compare this password with the stored hash. See the source for more info.
+    - name: The module should detect a change even though the password is the same
+      assert:
+        that:
+          - result is changed
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Change the user using the same plugin, but switch to the same auth string in hash form
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        plugin_hash_string: '{{ test_plugin_hash }}'
+      register: result
+
+    - name: Check that the module did not change the password
+      assert:
+        that:
+          - result is not changed
+
+    - name: Get the MySQL version using the newly created creds
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: '{{ test_plugin_auth_string }}'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    # Cleanup
+    - include: remove_user.yml user_name={{ test_user_name }} user_password={{ test_plugin_auth_string }}
+
+    # ============================================================
+    # Test plugin auth with an empty auth string.
+    #
+
+    - name: Create user with plugin auth (empty auth string)
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        priv: '{{ test_default_priv }}'
+      register: result
+
+    - name: Get user information
+      command: "{{ mysql_command }} -e \"SHOW CREATE USER '{{ test_user_name }}'@'localhost'\""
+      register: show_create_user
+
+    - name: Check that the module made a change
+      assert:
+        that:
+          - result is changed
+
+    - name: Check that the expected plugin type is set
+      assert:
+        that:
+          - "'{{ test_plugin_type }}' in show_create_user.stdout"
+      when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+    - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+    - name: Get the MySQL version using an empty password for the newly created user
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: ''
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+      ignore_errors: true
+
+    - name: Assert that mysql_info was successful
+      assert:
+        that:
+          - result is succeeded
+
+    - name: Get the MySQL version using an non-empty password (should fail)
+      mysql_info:
+        login_user: '{{ test_user_name }}'
+        login_password: 'some_password'
+        login_host: '{{ mysql_host }}'
+        login_port: '{{ mysql_primary_port }}'
+        filter: version
+      register: result
+      ignore_errors: true
+
+    - name: Assert that mysql_info failed
+      assert:
+        that:
+          - result is failed
+
+    - name: Update the user without changing the auth mechanism
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ test_user_name }}'
+        plugin: '{{ test_plugin_type }}'
+        state: present
+      register: result
+
+    - name: Assert that the user wasn't changed because the auth string is still empty
+      assert:
+        that:
+          - result is not changed
+
+    # Cleanup
+    - include: remove_user.yml user_name={{ test_user_name }} user_password={{ test_plugin_auth_string }}
+
+    # ============================================================
+    # Test plugin auth switching from one type of plugin to another without an auth string or hash. The only other
+    # plugins that are loaded by default are sha2*, but these aren't compatible with pymysql < 0.9, so skip these tests
+    # for those versions.
+    #
+    - name: Test plugin auth switching which doesn't work on pymysql < 0.9
+      when:
+        - >
+          connector_name is not search('pymysql')
+          or (
+            connector_name is search('pymysql')
+            and connector_ver is version('0.9', '>=')
+          )
+      block:
+
+      - name: Create user with plugin auth (empty auth string)
+        mysql_user:
+          <<: *mysql_params
+          name: '{{ test_user_name }}'
+          plugin: '{{ test_plugin_type }}'
+          priv: '{{ test_default_priv }}'
+        register: result
+
+      - name: Get user information
+        command: "{{ mysql_command }} -e \"SHOW CREATE USER '{{ test_user_name }}'@'localhost'\""
+        register: show_create_user
+
+      - name: Check that the module made a change
+        assert:
+          that:
+            - result is changed
+
+      - name: Check that the expected plugin type is set
+        assert:
+          that:
+            - "'{{ test_plugin_type }}' in show_create_user.stdout"
+        when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+      - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+      - name: Switch user to sha256_password auth plugin
+        mysql_user:
+          <<: *mysql_params
+          name: '{{ test_user_name }}'
+          plugin: sha256_password
+          priv: '{{ test_default_priv }}'
+        register: result
+
+      - name: Get user information
+        command: "{{ mysql_command }} -e \"SHOW CREATE USER '{{ test_user_name }}'@'localhost'\""
+        register: show_create_user
+
+      - name: Check that the module made a change
+        assert:
+          that:
+            - result is changed
+
+      - name: Check that the expected plugin type is set
+        assert:
+          that:
+              - "'sha256_password' in show_create_user.stdout"
+        when: install_type == 'mysql' or (install_type == 'mariadb' and mariadb_version is version('10.3', '>='))
+
+      - include: assert_user.yml user_name={{ test_user_name }} priv={{ test_default_priv_type }}
+
+      # Cleanup
+      - include: remove_user.yml user_name={{ test_user_name }} user_password={{ test_plugin_auth_string }}

@@ -1,0 +1,152 @@
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+  block:
+
+    # Tests for priv parameter value passed as a dict
+    - name: Create test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+      - data3
+
+    - name: Create user with privileges
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        password: '{{ user_password_3 }}'
+        priv:
+          "data1.*": "SELECT"
+          "data2.*": "SELECT"
+        state: present
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_3 }}'@'localhost'\""
+      register: result
+
+    - name: Assert user has giving privileges
+      assert:
+        that:
+          - "'GRANT SELECT ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT ON `data2`.*' in result.stdout"
+
+    # Issue https://github.com/ansible-collections/community.mysql/issues/99
+    - name: Create test table test_table_issue99
+      mysql_query:
+        <<: *mysql_params
+        query: "CREATE TABLE IF NOT EXISTS data3.test_table_issue99 (a INT, b INT, c INT)"
+
+    - name: Grant select on a column
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a)'
+      register: result
+
+    - assert:
+        that:
+        - result is changed
+
+    - name: Grant select on the column again
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a)'
+      register: result
+
+    - assert:
+        that:
+        - result is not changed
+
+
+    - name: Grant select on columns
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a, b),INSERT'
+      register: result
+
+    - assert:
+        that:
+        - result is changed
+
+    - name: Grant select on columns again
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a, b),INSERT'
+      register: result
+
+    - assert:
+        that:
+        - result is not changed
+
+    - name: Grant privs on columns
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a, b), INSERT (a, b), UPDATE'
+      register: result
+
+    - assert:
+        that:
+        - result is changed
+
+    - name: Grant same privs on columns again, note that the column order is different
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          'data3.test_table_issue99': 'SELECT (a, b), UPDATE, INSERT (b, a)'
+      register: result
+
+    - assert:
+        that:
+        - result is not changed
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_3 }}'@'localhost'\""
+      register: result
+
+    - name: Assert user has giving privileges
+      assert:
+        that:
+          - "'GRANT SELECT (`A`, `B`), INSERT (`A`, `B`), UPDATE' in result.stdout"
+      when: "'(`A`, `B`)' in result.stdout"
+
+    - name: Assert user has giving privileges
+      assert:
+        that:
+          - "'GRANT SELECT (A, B), INSERT (A, B), UPDATE' in result.stdout"
+      when: "'(`A`, `B`)' not in result.stdout"
+
+    ##########
+    # Clean up
+    - name: Drop test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+      - data3
+
+    - name: Drop test user
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        state: absent

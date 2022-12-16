@@ -1,0 +1,12 @@
+-name: "Manage Local Account and generating a ssh key to our local user"
+  hosts: 'rhel'
+  become: true
+  gather_facts: false
+  tasks:
+    - name: "Manage a user account"
+      user:
+        name: "vagrant"
+        state: 'present'
+        generate_ssh_key: true
+        ssh_key_type: 'ecdsa'
+        ssh_key_file: '.ssh/id_ecdsa'

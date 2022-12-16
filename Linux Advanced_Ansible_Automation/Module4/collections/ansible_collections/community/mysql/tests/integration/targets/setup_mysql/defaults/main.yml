@@ -1,0 +1,18 @@
+dbdeployer_version: 1.64.0
+dbdeployer_home_dir: /opt/dbdeployer
+
+home_dir: /root
+
+mariadb_install: false
+
+mysql_version: 8.0.22
+mariadb_version: 10.5.4
+
+mysql_base_port: 3306
+
+percona_client_package: >-
+  {%- if mariadb_install -%}
+    mariadb-client
+  {%- else -%}
+    percona-server-client-5.7
+  {%- endif -%}

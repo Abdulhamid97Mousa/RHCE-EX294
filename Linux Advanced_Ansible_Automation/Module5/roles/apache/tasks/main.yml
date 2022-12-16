@@ -1,0 +1,48 @@
+---
+# tasks file for apache
+    - name: install apache
+      package:
+        name: 
+          - httpd
+          - httpd-tools
+        state: present
+        update_cache: true 
+
+    - name: install LAMP
+      yum:
+        name:
+          - php
+          - php-mysqlnd
+          - epel-release
+        state: present
+        update_cache: true 
+      notify: restart apache  
+
+    - name: start apache service
+      service:
+        name: 'httpd'
+        state: started
+        enabled: yes
+    
+    - name: deploy index.php
+      copy:
+        src: index.php
+        dest: "{{ apache_document_root_path }}"
+        mode: 0775
+      notify: restart apache
+
+    - name: copy vhost config
+      template:
+        src: site_config.j2
+        dest: "{{ apache_vhost_config_file }}"
+        mode: 0644
+        owner: root
+        group: root
+      notify: restart apache
+
+    - name: configure httpd.conf
+      lineinfile:
+        path: "{{ apache_apache_config_file }}"
+        regexp: "^Include"
+        line: "Include conf.d/*.conf"
+      notify: restart apache

@@ -1,0 +1,27 @@
+---
+- name: "{{ role_name }} | verify | confirm primary is running and get the port"
+  shell: "{{ dbdeployer_sandbox_home_dir }}/multi_msb_{{ install_version|replace('.','_') }}/n1 -BNe'select @@port'"
+  register: primary_port
+
+- name: "{{ role_name }} | verify | confirm replica1 is running and get the port"
+  shell: "{{ dbdeployer_sandbox_home_dir }}/multi_msb_{{ install_version|replace('.','_') }}/n2 -BNe'select @@port'"
+  register: replica1_port
+
+- name: "{{ role_name }} | verify | confirm replica2 is running and get the port"
+  shell: "{{ dbdeployer_sandbox_home_dir }}/multi_msb_{{ install_version|replace('.','_') }}/n3 -BNe'select @@port'"
+  register: replica2_port
+
+- name: "{{ role_name }} | verify | confirm primary is running on expected port"
+  assert:
+    that:
+      - primary_port.stdout|int == 3307
+
+- name: "{{ role_name }} | verify | confirm replica1 is running on expected port"
+  assert:
+    that:
+      - replica1_port.stdout|int == 3308
+
+- name: "{{ role_name }} | verify | confirm replica2 is running on expected port"
+  assert:
+    that:
+      - replica2_port.stdout|int == 3309

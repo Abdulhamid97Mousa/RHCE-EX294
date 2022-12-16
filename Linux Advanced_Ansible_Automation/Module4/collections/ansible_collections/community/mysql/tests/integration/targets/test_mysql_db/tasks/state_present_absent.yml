@@ -1,0 +1,300 @@
+# test code for mysql_db module with database name containing special chars
+
+# This file is part of Ansible
+#
+# Ansible is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Ansible is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+
+# ============================================================
+- name: remove database if it exists
+  command: >
+    "{{ mysql_command }} -sse 'DROP DATABASE IF EXISTS {{ db_name }}'"
+  ignore_errors: true
+
+- name: make sure the test database is not there
+  command: "{{ mysql_command }} {{ db_name }}"
+  register: mysql_db_check
+  failed_when: "'1049' not in mysql_db_check.stderr"
+
+- name: test state=present for a database name (expect changed=true)
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_name }}'
+    state: present
+  register: result
+
+- name: assert output message that database exist
+  assert:
+    that:
+      - result is changed
+      - result.db == '{{ db_name }}'
+      - result.executed_commands == ["CREATE DATABASE `{{ db_name }}`"]
+
+- name: run command to test state=present for a database name (expect db_name in stdout)
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_name | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database exist
+  assert:
+    that:
+      - "'{{ db_name }}' in result.stdout"
+
+# ============================================================
+- name: test state=absent for a database name (expect changed=true)
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_name }}'
+    state: absent
+  register: result
+
+- name: assert output message that database does not exist
+  assert:
+    that:
+      - result is changed
+      - result.db == '{{ db_name }}'
+      - result.executed_commands == ["DROP DATABASE `{{ db_name }}`"]
+
+- name: run command to test state=absent for a database name (expect db_name not in stdout)
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_name | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database does not exist
+  assert:
+    that:
+      - "'{{ db_name }}' not in result.stdout"
+
+# ============================================================
+- name: test mysql_db encoding param not valid - issue 8075
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: datanotvalid
+    state: present
+    encoding: notvalid
+  register: result
+  ignore_errors: true
+
+- name: assert test mysql_db encoding param not valid - issue 8075 (failed=true)
+  assert:
+    that:
+      - result is failed
+      - "'Traceback' not in result.msg"
+      - "'Unknown character set' in result.msg"
+
+# ============================================================
+- name: test mysql_db using a valid encoding utf8 (expect changed=true)
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: 'en{{ db_name }}'
+    state: present
+    encoding: utf8
+  register: result
+
+- name: assert output message created a database
+  assert:
+    that:
+      - result is changed
+      - result.executed_commands == ["CREATE DATABASE `en{{ db_name }}` CHARACTER SET 'utf8'"]
+
+- name: test database was created
+  command: "{{ mysql_command }} -e \"SHOW CREATE DATABASE `en{{ db_name }}`\""
+  register: result
+
+- name: assert created database is of encoding utf8
+  assert:
+    that:
+      - "'utf8' in result.stdout"
+
+- name: remove database
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: 'en{{ db_name }}'
+    state: absent
+
+# ============================================================
+- name: test mysql_db using valid encoding binary (expect changed=true)
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: 'en{{ db_name }}'
+    state: present
+    encoding: binary
+  register: result
+
+- name: assert output message that database was created
+  assert:
+    that:
+      - result is changed
+      - result.executed_commands == ["CREATE DATABASE `en{{ db_name }}` CHARACTER SET 'binary'"]
+
+- name: run command to test database was created
+  command: "{{ mysql_command }} -e \"SHOW CREATE DATABASE `en{{ db_name }}`\""
+  register: result
+
+- name: assert created database is of encoding binary
+  assert:
+    that:
+      - "'binary' in result.stdout"
+
+- name: remove database
+  mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: 'en{{ db_name }}'
+    state: absent
+
+# ============================================================
+- name: create user1 to access database dbuser1
+  mysql_user:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: user1
+    password: 'Hfd6fds^dfA8Ga'
+    priv: '*.*:ALL'
+    state: present
+
+- name: create database dbuser1 using user1
+  mysql_db:
+    login_user: user1
+    login_password: 'Hfd6fds^dfA8Ga'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_user1 }}'
+    state: present
+  register: result
+
+- name: assert output message that database was created
+  assert:
+    that:
+      - result is changed
+
+- name: run command to test database was created using user1
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_user1 | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database exist
+  assert:
+    that:
+      - "'{{ db_user1 }}' in result.stdout"
+
+# ============================================================
+- name: create user2 to access database with privilege select only
+  mysql_user:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: user2
+    password: 'kjsfd&F7safjad'
+    priv: '*.*:SELECT'
+    state: present
+
+- name: create database dbuser2 using user2 with no privilege to create (expect failed=true)
+  mysql_db:
+    login_user: user2
+    login_password: 'kjsfd&F7safjad'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_user2 }}'
+    state: present
+  register: result
+  ignore_errors: true
+
+- name: assert output message that database was not created using dbuser2
+  assert:
+    that:
+      - result is failed
+      - "'Access denied' in result.msg"
+
+- name: run command to test that database was not created
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_user2 | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database does not exist
+  assert:
+    that:
+      - "'{{ db_user2 }}' not in result.stdout"
+
+# ============================================================
+- name: delete database using user2 with no privilege to delete (expect failed=true)
+  mysql_db:
+    login_user: user2
+    login_password: 'kjsfd&F7safjad'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_user1 }}'
+    state: absent
+  register: result
+  ignore_errors: true
+
+- name: assert output message that database was not deleted using dbuser2
+  assert:
+    that:
+      - result is failed
+      - "'Access denied' in result.msg"
+
+- name: run command to test database was not deleted
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_user1 | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database still exist
+  assert:
+    that:
+      - "'{{ db_user1 }}' in result.stdout"
+
+# ============================================================
+- name: delete database using user1 with all privilege to delete a database (expect changed=true)
+  mysql_db:
+    login_user: user1
+    login_password: 'Hfd6fds^dfA8Ga'
+    login_host: 127.0.0.1
+    login_port: '{{ mysql_primary_port }}'
+    name: '{{ db_user1 }}'
+    state: absent
+  register: result
+  ignore_errors: true
+
+- name: assert output message that database was deleted using user1
+  assert:
+    that:
+      - result is changed
+      - result.executed_commands == ["DROP DATABASE `{{ db_user1 }}`"]
+
+- name: run command to test database was deleted using user1
+  command: "{{ mysql_command }} -e \"show databases like '{{ db_name | regex_replace(\"([%_\\\\])\", \"\\\\\\1\") }}'\""
+  register: result
+
+- name: assert database does not exist
+  assert:
+    that:
+      - "'{{ db_user1 }}' not in result.stdout"

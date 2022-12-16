@@ -1,0 +1,95 @@
+# https://github.com/ansible-collections/community.mysql/issues/231
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+  block:
+    - name: Get server version
+      mysql_info:
+        <<: *mysql_params
+      register: srv
+
+    # Skip unsupported versions
+    - meta: end_play
+      when: srv['version']['major'] < 8
+
+    - name: Create test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+
+    - name: Create user with privileges
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        password: '{{ user_password_3 }}'
+        priv:
+          "data1.*": "SELECT"
+          "data2.*": "SELECT"
+        state: present
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_3 }}'@'localhost'\""
+      register: result
+
+    - name: Assert user has giving privileges
+      assert:
+        that:
+          - "'GRANT SELECT ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT ON `data2`.*' in result.stdout"
+
+    - name: Create role
+      mysql_role:
+        <<: *mysql_params
+        name: test231
+        members:
+        - '{{ user_name_3 }}@localhost'
+
+    - name: Try to change privs
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        priv:
+          "data1.*": "INSERT"
+          "data2.*": "INSERT"
+        state: present
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_3 }}'@'localhost'\""
+      register: result
+
+    - name: Assert user has giving privileges
+      assert:
+        that:
+          - "'GRANT INSERT ON `data1`.*' in result.stdout"
+          - "'GRANT INSERT ON `data2`.*' in result.stdout"
+
+    ##########
+    # Clean up
+    - name: Drop test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+
+    - name: Drop test user
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_3 }}'
+        state: absent
+
+    - name: Drop test role
+      mysql_role:
+        <<: *mysql_params
+        name: test231
+        state: absent

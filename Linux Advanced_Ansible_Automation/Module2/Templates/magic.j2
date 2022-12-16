@@ -1,0 +1,10 @@
+{# Magic variable called groups #}
+{% for node in groups['test'] %}
+  {{ node }}:{{ hostvars[node].ansible_facts.eth1.ipv4.address }}
+{%- endfor %}
+
+
+
+
+
+

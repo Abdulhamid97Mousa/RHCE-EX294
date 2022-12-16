@@ -1,0 +1,168 @@
+# Test code to ensure that subtracting privileges will not result in unnecessary changes.
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+  block:
+
+    - name: Create test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+        - data1
+
+    - name: Create a role with an initial set of privileges
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        priv: 'data1.*:SELECT,INSERT'
+        state: present
+
+    - name: Run command to show privileges for role (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ role2 }}'\""
+      register: result
+
+    - name: Assert that the initial set of privileges matches what is expected
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+
+    - name: Subtract privileges that are not in the current privileges, which should be a no-op
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        priv: 'data1.*:DELETE'
+        subtract_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+
+    - name: Assert that there wasn't a change in permissions
+      assert:
+        that:
+          - result is not changed
+
+    - name: Run command to show privileges for role (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ role2 }}'\""
+      register: result
+
+    - name: Assert that the permissions still match what was originally granted
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+
+    - name: Subtract existing and not-existing privileges, but not all
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        priv: 'data1.*:INSERT,DELETE'
+        subtract_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+
+    - name: Assert that there was a change because permissions were/would be revoked on data1.*
+      assert:
+        that:
+          - result is changed
+
+    - name: Run command to show privileges for role (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ role2 }}'\""
+      register: result
+
+    - name: Assert that the permissions were not changed if check_mode is set to 'yes'
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'yes'
+
+    - name: Assert that only DELETE was revoked if check_mode is set to 'no'
+      assert:
+        that:
+          - "'GRANT SELECT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'no'
+
+    - name: Try to subtract invalid privileges
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        priv: 'data1.*:INVALID'
+        subtract_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+
+    - name: Assert that there was no change because invalid permissions are ignored
+      assert:
+        that:
+          - result is not changed
+
+    - name: Run command to show privileges for role (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ role2 }}'\""
+      register: result
+
+    - name: Assert that the permissions were not changed with check_mode=='yes'
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'yes'
+
+    - name: Assert that the permissions were not changed with check_mode=='no'
+      assert:
+        that:
+          - "'GRANT SELECT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'no'
+
+    - name: trigger failure by trying to subtract and append privileges at the same time
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        priv: 'data1.*:SELECT'
+        subtract_privs: yes
+        append_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+      ignore_errors: true
+
+    - name: Assert the previous execution failed
+      assert:
+        that:
+          - result is failed
+
+    - name: Run command to show privileges for role (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ role2 }}'\""
+      register: result
+
+    - name: Assert that the permissions stayed the same, with check_mode=='yes'
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'yes'
+
+    - name: Assert that the permissions stayed the same, with check_mode=='no'
+      assert:
+        that:
+          - "'GRANT SELECT ON `data1`.*' in result.stdout"
+      when: enable_check_mode == 'no'
+
+    ##########
+    # Clean up
+    - name: Drop test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+        - data1
+
+    - name: Drop test role
+      mysql_role:
+        <<: *mysql_params
+        name: '{{ role2 }}'
+        state: absent

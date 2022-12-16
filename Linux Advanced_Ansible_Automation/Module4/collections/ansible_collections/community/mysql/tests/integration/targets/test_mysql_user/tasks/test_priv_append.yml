@@ -1,0 +1,133 @@
+# Test code to ensure that appending privileges will not result in unnecessary changes when the current privileges
+# are a superset of the new privileges that have been defined.
+- vars:
+    mysql_parameters: &mysql_params
+      login_user: '{{ mysql_user }}'
+      login_password: '{{ mysql_password }}'
+      login_host: 127.0.0.1
+      login_port: '{{ mysql_primary_port }}'
+
+  block:
+
+    - name: Create test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+
+    - name: Create a user with an initial set of privileges
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_4 }}'
+        password: '{{ user_password_4 }}'
+        priv: 'data1.*:SELECT,INSERT/data2.*:SELECT,DELETE'
+        state: present
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_4 }}'@'localhost'\""
+      register: result
+
+    - name: Assert that the initial set of privileges matches what is expected
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT, DELETE ON `data2`.*' in result.stdout"
+
+    - name: Append privileges that are a subset of the current privileges, which should be a no-op
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_4 }}'
+        password: '{{ user_password_4 }}'
+        priv: 'data1.*:SELECT/data2.*:SELECT'
+        append_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+
+    - name: Assert that there wasn't a change in permissions
+      assert:
+        that:
+          - result is not changed
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_4 }}'@'localhost'\""
+      register: result
+
+    - name: Assert that the permissions still match what was originally granted
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT, DELETE ON `data2`.*' in result.stdout"
+
+    - name: Append privileges that are not included in the current set of privileges to test that privileges are updated
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_4 }}'
+        password: '{{ user_password_4 }}'
+        priv: 'data1.*:DELETE/data2.*:SELECT'
+        append_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+
+    - name: Assert that there was a change because permissions were added to data1.*
+      assert:
+        that:
+          - result is changed
+
+    - name: Run command to show privileges for user (expect privileges in stdout)
+      command: "{{ mysql_command }} -e \"SHOW GRANTS FOR '{{ user_name_4 }}'@'localhost'\""
+      register: result
+
+    - name: Assert that the permissions were changed as expected if check_mode is set to 'no'
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT, DELETE ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT, DELETE ON `data2`.*' in result.stdout"
+      when: enable_check_mode == 'no'
+
+    - name: Assert that the permissions were not actually changed if check_mode is set to 'yes'
+      assert:
+        that:
+          - "'GRANT SELECT, INSERT ON `data1`.*' in result.stdout"
+          - "'GRANT SELECT, DELETE ON `data2`.*' in result.stdout"
+      when: enable_check_mode == 'yes'
+
+    - name: Try to append invalid privileges
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_4 }}'
+        password: '{{ user_password_4 }}'
+        priv: 'data1.*:INVALID/data2.*:SELECT'
+        append_privs: yes
+        state: present
+      check_mode: '{{ enable_check_mode }}'
+      register: result
+      ignore_errors: true
+
+    - name: Assert that there wasn't a change in privileges if check_mode is set to 'no'
+      assert:
+        that:
+          - result is failed
+          - "'Error granting privileges' in result.msg"
+      when: enable_check_mode == 'no'
+
+    ##########
+    # Clean up
+    - name: Drop test databases
+      mysql_db:
+        <<: *mysql_params
+        name: '{{ item }}'
+        state: present
+      loop:
+      - data1
+      - data2
+
+    - name: Drop test user
+      mysql_user:
+        <<: *mysql_params
+        name: '{{ user_name_4 }}'
+        state: absent

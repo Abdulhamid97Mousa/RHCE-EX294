@@ -1,0 +1,6 @@
+#Configuration file for App Version 1.x
+{# This is a Jinja2 template representing an imaginary configuration file #}
+{{ section_header }}
+host_role={{ host_role }}
+max_connections={{ max_connections }}
+node_ip={{ ansible_facts.eth1.ipv4.address }}
