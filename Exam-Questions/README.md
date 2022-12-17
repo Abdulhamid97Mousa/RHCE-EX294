@@ -2333,7 +2333,7 @@ vim report.txt
 
 > next, write a playbook, but remember if you are looking for a certain ansible fact which you don't remember, a good way of finding the name is search through ansible_facts data structure, because if you use the debug module to print it, you'll see all facts printed, so look through it to find ansible_devices.vda.size for example.
 
-```
+```yaml
 - name: edit file
   hosts: all
   become: true
@@ -2344,34 +2344,34 @@ vim report.txt
         var: ansible_facts
     - name: copy file across
       copy:
-        src: '/home/sandy/ansible/report.txt'
-        dest: '/root/report.txt'
+        src: "/home/sandy/ansible/report.txt"
+        dest: "/root/report.txt"
     - name: alter a line in file in remote host
       lineinfile:
-        regex: '^HOST'
-        line: 'HOST={{ inventory_hostname }}'
+        regex: "^HOST"
+        line: "HOST={{ inventory_hostname }}"
         state: present
         path: /root/report.txt
     - name: alter another line in memory
       lineinfile:
-        path: '/root/report.txt'
-        regex: '^MEMORY'
-        line: 'MEMORY={{ ansible_memtotal_mb }}'
+        path: "/root/report.txt"
+        regex: "^MEMORY"
+        line: "MEMORY={{ ansible_memtotal_mb }}"
         state: present
     - name: alter BIOS
       lineinfile:
-        path: '/root/report.txt'
-        regex: '^BIOS'
-        line: 'BIOS={{ ansible_bios_version }}'
+        path: "/root/report.txt"
+        regex: "^BIOS"
+        line: "BIOS={{ ansible_bios_version }}"
         state: present
     - name: alter another line in VDA disk Size
       lineinfile:
-        line: 'VDA_DISK_SIZE={% if ansible_devices.vda is defined %}{{ ansible_devices.vda.size }} {% else %}NONE{% endif %}'
-        regex: '^VDA_DISK_SIZE'
-        path: '/root/report.txt'
+        line: "VDA_DISK_SIZE={% if ansible_devices.vda is defined %}{{ ansible_devices.vda.size }} {% else %}NONE{% endif %}"
+        regex: "^VDA_DISK_SIZE"
+        path: "/root/report.txt"
     - name: Alter another line in VDB disk Size
       lineinfile:
-        line: 'VDB_DISK_SIZE={% if ansible_devices.vdb is defined %}{{ ansible_devices.vdb.size }} {% else %}NONE{% endif %}'
-        regex: '^VDB_DISK_SIZE'
-        path: '/root/report.txt'
+        line: "VDB_DISK_SIZE={% if ansible_devices.vdb is defined %}{{ ansible_devices.vdb.size }} {% else %}NONE{% endif %}"
+        regex: "^VDB_DISK_SIZE"
+        path: "/root/report.txt"
 ```
