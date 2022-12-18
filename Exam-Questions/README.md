@@ -2413,7 +2413,7 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
 
 ## A33: Selinux and fcontext playbook
 
-```
+```yml
 - name: apache server
   hosts: dev
   become: true
@@ -2425,14 +2425,14 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
         state: present
     - name: Create a directory
       file:
-        path: '/webdev'
-        mode: '2755'
+        path: "/webdev"
+        mode: "2755"
         owner: webdev
         state: directory
     - name: Create a symbolic link
       file:
-        src: '/webdev'
-        dest: '/var/www/html/webdev'
+        src: "/webdev"
+        dest: "/var/www/html/webdev"
         state: link
     - name: Create index.html
       copy:
@@ -2463,7 +2463,7 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
       notify: restart-services
     - name: allow httpd from this directory
       sefcontext:
-        target: '/webdev(/.*)?'
+        target: "/webdev(/.*)?"
         setype: httpd_sys_content_t
         state: present
     - name: Restore the context
