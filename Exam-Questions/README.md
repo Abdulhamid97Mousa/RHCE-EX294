@@ -2409,7 +2409,7 @@ cat /usr/share/ansible/roles/rhel-system-roles.timesync/README.md
 
 ## Q33: Selinux and fcontext playbook
 
-Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will create a directory `Avcbdev` on dev host. The permission of the directory are `2755` and owner is `webdev`. Create a `symbolic link` from `/Webdev` to `/var/www/html/webdev`. Serve a file from `Avebdev7index.html` which displays the text "Development" Curl http://node1.example.com/webdev/index.html to test
+Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will create a directory `webdev` on dev host. The permission of the directory are `2755` and owner is `webdev`. Create a `symbolic link` from `/Webdev` to `/var/www/html/webdev`. Serve a file from `Avebdev7index.html` which displays the text "Development" Curl http://node1.example.com/webdev/index.html to test
 
 ## A33: Selinux and fcontext playbook
 
