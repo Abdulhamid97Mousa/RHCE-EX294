@@ -2375,3 +2375,106 @@ vim report.txt
         regex: "^VDB_DISK_SIZE"
         path: "/root/report.txt"
 ```
+
+## Q32: timesynce role using rhel-system-roles
+
+Create a playbook called timesvnc.yml in /home/sandy/ansible using rhel system role timesync. Set the time to use currently configured nip with the server 0.uk.pool.ntp.org. Enable burst. Do this on all hosts.
+
+## A32: timesynce role using rhel-system-roles
+
+> first, we need to install rhel-system-roles
+
+```
+sudo yum install rhel-system-roles
+```
+
+> second, we might need to take a look at the directory structure for roles, once rhel system roles is installed you'll be able traverse this directory below, and look for files, each file is full of explanation of how these roles work, i strongly advise you to take a look at it prior to writing your playbook
+
+```
+cat /usr/share/ansible/roles/rhel-system-roles.timesync/README.md
+```
+
+> write a playbook
+
+```
+---
+- hosts: hosts
+  vars:
+    timesync_ntp_servers:
+      - hostname: 0.uk.pool.ntp.org.
+        iburst: yes
+  roles:
+    - rhel-system-roles.timesync
+```
+
+## Q33: Selinux and fcontext playbook
+
+Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will create a directory `Avcbdev` on dev host. The permission of the directory are `2755` and owner is `webdev`. Create a `symbolic link` from `/Webdev` to `/var/www/html/webdev`. Serve a file from `Avebdev7index.html` which displays the text "Development" Curl http://node1.example.com/webdev/index.html to test
+
+## A33: Selinux and fcontext playbook
+
+```
+- name: apache server
+  hosts: dev
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Create webdev user
+      user:
+        name: webdev
+        state: present
+    - name: Create a directory
+      file:
+        path: '/webdev'
+        mode: '2755'
+        owner: webdev
+        state: directory
+    - name: Create a symbolic link
+      file:
+        src: '/webdev'
+        dest: '/var/www/html/webdev'
+        state: link
+    - name: Create index.html
+      copy:
+        content: "Development"
+        dest: /webdev/index.html
+    - name: Install selinux policies
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python3-policycoreutils
+        - setools-console
+        - httpd
+    - name: enable services
+      service:
+        name: httpd
+        enabled: yes
+        state: started
+    - name: open ports permanently
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      with_items:
+        - 80/tcp
+        - 443/tcp
+      notify: restart-services
+    - name: allow httpd from this directory
+      sefcontext:
+        target: '/webdev(/.*)?'
+        setype: httpd_sys_content_t
+        state: present
+    - name: Restore the context
+      command: "sudo restorecon -Rv /webdev"
+
+  handlers:
+    - name: restart-services
+      service:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+        - httpd
+        - firewalld
+```
