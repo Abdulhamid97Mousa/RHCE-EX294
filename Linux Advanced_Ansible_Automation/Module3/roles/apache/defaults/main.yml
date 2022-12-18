@@ -1,5 +1,0 @@
----
-# defaults file for apache
-apache_vhost_config_file: /etc/httpd/conf.d/demo.conf
-apache_apache_config_file: /etc/httpd/conf/httpd.conf
-apache_document_root_path: /var/www/demo/

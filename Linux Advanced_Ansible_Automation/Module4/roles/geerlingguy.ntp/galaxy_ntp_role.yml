@@ -1,6 +1,0 @@
----
-- name: deploy ntp on remote hosts
-  hosts: test
-  become: yes
-  roles:
-  - geerlingguy.ntp

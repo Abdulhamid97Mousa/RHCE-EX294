@@ -1,8 +1,0 @@
-# db_name: demo
-# db_user: demo
-# db_user_pass: demo
-# db_user_priv: '*.*:ALL'
-# db_allowed_hosts: '%'
-# vhost_config_file: /etc/httpd/conf.d/demo.conf
-# apache_config_file: /etc/httpd/conf/httpd.conf
-# document_root_path: /var/www/demo/

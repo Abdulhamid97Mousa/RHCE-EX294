@@ -1,6 +1,0 @@
-- hosts: all
-  tasks:
-    - name: "Check Operating system Distribution Version"
-      template:
-        src: Templates/version.j2
-        dest: /tmp/version.txt

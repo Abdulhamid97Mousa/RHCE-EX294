@@ -1,4 +1,0 @@
----
-- name: debug task
-  debug:
-    msg: "{{ output }}"
