@@ -250,32 +250,27 @@ Because you will have to install software on the managed hosts, you need to do t
         group: automation
         mode: 0755
 
-    - name: Archive config files
-      hosts: all
-      become: true
-      gather_facts: false
-      tasks:
-        - name: Create a folder for archive
-          file:
-            path: /backup
-            owner: automation
-            group: automation
-            state: directory
-            mode: 0755
+- name: Archive config files
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Create a folder for archive
+      file:
+        path: /backup
+        owner: automation
+        group: automation
+        state: directory
+        mode: 0755
 
     - name: create the archive
-      hosts: all
-      become: true
-      gather_facts: false
-      tasks:
-        - name: create the archive
-          archive:
-            path: /etc
-            dest: /backup/configuration.gz
-            format: gz
-            owner: automation
-            group: automation
-            mode: 0660
+      archive:
+        path: /etc
+        dest: /backup/configuration.gz
+        format: gz
+        owner: automation
+        group: automation
+        mode: 0660
 
     - name: fetch the archive
       hosts: all
@@ -381,6 +376,12 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
       copy:
         content: "[application]\nname=haproxy\n"
         dest: /etc/ansible/facts.d/environment.fact
+```
+
+> to check if the ansible facts has been added to ansible_facts
+
+```
+ansible ansible2 -m setup -a "filter=ansible_local"
 ```
 
 ## Q5: Work with Ansible Facts
