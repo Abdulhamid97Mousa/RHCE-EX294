@@ -1036,13 +1036,17 @@ pid-file=/var/run/mysqld/mysqld.pid
 #Both login_password and login_user are required when you are passing credentials. If none are present,
 #the module will attempt to read the credentials from ~/.my.cnf, and finally fall back to using the
 #MySQL default login of ‘root’ with no password.
-
-- name: My root user password
+- name: configure root user
   mysql_user:
+    check_implicit_admin: true
+    login_host: localhost
     login_user: root
-    login_password: "{{ database_password }}"
+    login_password: ""
     name: root
     password: "{{ database_password }}"
+    state: present
+    update_password: always
+  # no_log: true
 
 - name: Adding template to my.cnf
   template:
