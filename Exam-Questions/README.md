@@ -785,8 +785,7 @@ ansible-playbook users.yml --vault-id @vault_key
         update_password: on_create
       with_items: "{{ users }}"
       when:
-        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
-        - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" ) or ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
     - name: Set authorized key taken from file
       authorized_key:
         user: "{{ item.username }}"
@@ -794,8 +793,7 @@ ansible-playbook users.yml --vault-id @vault_key
         key: "{{ lookup('file', '/home/automation/.ssh/id_rsa.pub') }}"
       loop: "{{ users }}"
       when:
-        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" )
-        - ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
+        - ( inventory_hostname in groups['webservers'] and "item.uid|string|first == '2'" ) or ( inventory_hostname in groups['database'] and "item.uid|string|first == '3'" )
 ```
 
 ## Task 11: Scheduled Tasks
