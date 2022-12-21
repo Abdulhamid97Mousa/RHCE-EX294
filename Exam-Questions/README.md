@@ -2481,3 +2481,57 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
         - httpd
         - firewalld
 ```
+
+## Q34: Logical Volumes
+
+in `/home/automation/ansible` create a playbook called `logvol.yml`. in the playbook create a logical volume called `lv0` and make it of the size `1500MiB` on volume group `vgO` if there is not enough space in the volume group print a message "Not enough space for logical volume" and them make a 800MiB `lv0` instead. if the volume group still doesn't exist, create a message "Volume group doesn't exist" Create an `xfs` filesystem on all `lv0` logical volumes. Don't mount the logical volume.
+
+## A34: Logical Volume
+
+> the playbook `logvol.yml` may look like this
+
+```
+- name: configure a logical volume
+  hosts: all
+  become: true
+  tasks:
+  - name: Create a new primary partition with a size of 1GiB
+    community.general.parted:
+      device: /dev/sdb
+      number: 3
+      state: present
+      flags: [lvm]
+
+  - name: Create a volume group on top of /dev/sda1 with physical extent size = 32MB
+    community.general.lvg:
+      vg: vgO
+      pvs: /dev/sdb3
+      state: present
+    when: ansible_devices.sdb.partitions.sdb3 is defined
+
+  - name: Create a logical volume of 1500m with disks /dev/sdb3
+    community.general.lvol:
+      vg: vgO
+      lv: lv0
+      size: 1500m
+    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) > 1.5 )
+
+  - name: send message if volume group not large enough
+    debug:
+      msg: Not enough space for logical volume
+    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
+
+
+  - name: Create a logical volume of 512m with disks /dev/sda and /dev/sdb
+    community.general.lvol:
+      vg: vgO
+      lv: lv0
+      size: 800m
+    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
+
+  - name: Create a ext2 filesystem on /dev/sdb1
+    community.general.filesystem:
+      fstype: xfs
+      dev: /dev/vgO/lv0
+    when: ansible_lvm.vgs.vgO is defined
+```
