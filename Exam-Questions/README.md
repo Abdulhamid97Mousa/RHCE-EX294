@@ -2521,7 +2521,6 @@ in `/home/automation/ansible` create a playbook called `logvol.yml`. in the play
       msg: Not enough space for logical volume
     when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
 
-
   - name: Create a logical volume of 512m with disks /dev/sda and /dev/sdb
     community.general.lvol:
       vg: vgO
