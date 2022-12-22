@@ -2537,11 +2537,11 @@ in `/home/automation/ansible` create a playbook called `logvol.yml`. in the play
 
 ## Q35: Create users in file
 
-Create the users in the file `usersjist.yml` file provided. Do this in a playbook called `users.yml` located at
+Create the users in the file `users_list.yml` file provided. Do this in a playbook called `users-playbook.yml` located at
 `/home/sandy/ansible`.The passwords for these users should be set using the `lock.yml` file from `TASK7`. When running the playbook, the `lock.yml` file should be
 unlocked with `secret.txt` file from TASK 7.
 All users with the job of 'developer' should be created on `the dev hosts`, add them to the group `devops`, their password should be set using the `pw_dev` variable.
-Likewise create users with the job of 'manager' on `the proxy hosts` and add the users to the group 'managers', their password should be set using the `pw_mgr` variable.
+Likewise create users with the job of 'manager' on `the proxy hosts` and add the users to the group `managers`, their password should be set using the `pw_mgr` variable.
 
 > users_list.yml
 
@@ -2555,4 +2555,43 @@ users:
     job: test
   - username: ethan
     job: developer
+```
+
+## A35: Create users in file
+
+> the users-playbook.yml may look like this
+
+```
+- name: configure users
+  hosts: all
+  become: true
+  gather_facts: true
+  vars_files:
+  - users_list.yml
+  - lock.yml
+  tasks:
+    - name: Creating groups
+      group:
+        name: "{{ item }}"
+        state: present
+      loop:
+      - devops
+      - managers
+    - name: Creating users
+      user:
+        name: "{{ item.username }}"
+        state: present
+        groups: devops
+        password: "{{ pw_dev | password_hash('sha512') }}"
+      loop: "{{ users }}"
+      when: (inventory_hostname in groups['dev'] or inventory_hostname in groups['test']) and item.job== 'developer'
+
+    - name: Creating users
+      user:
+        name: "{{ item.username }}"
+        state: present
+        groups: managers
+        password: "{{ pw_mgr | password_hash('sha512') }}"
+      loop: "{{ users }}"
+      when: inventory_hostname in groups['prod'] and item.job== 'manager'
 ```
