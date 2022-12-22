@@ -2534,3 +2534,25 @@ in `/home/automation/ansible` create a playbook called `logvol.yml`. in the play
       dev: /dev/vgO/lv0
     when: ansible_lvm.vgs.vgO is defined
 ```
+
+## Q35: Create users in file
+
+Create the users in the file `usersjist.yml` file provided. Do this in a playbook called `users.yml` located at
+`/home/sandy/ansible`.The passwords for these users should be set using the `lock.yml` file from `TASK7`. When running the playbook, the `lock.yml` file should be
+unlocked with `secret.txt` file from TASK 7.
+All users with the job of 'developer' should be created on `the dev hosts`, add them to the group `devops`, their password should be set using the `pw_dev` variable.
+Likewise create users with the job of 'manager' on `the proxy hosts` and add the users to the group 'managers', their password should be set using the `pw_mgr` variable.
+
+> users_list.yml
+
+```
+users:
+  - username: bill
+    job: developer
+  - username: chris
+    job: manager
+  - username: dave
+    job: test
+  - username: ethan
+    job: developer
+```
