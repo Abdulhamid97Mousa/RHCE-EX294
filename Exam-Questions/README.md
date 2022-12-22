@@ -2595,3 +2595,25 @@ users:
       loop: "{{ users }}"
       when: inventory_hostname in groups['prod'] and item.job== 'manager'
 ```
+
+## Q36: Create a shell script
+
+Create a Shell script `/root/program`:
+The shell script will come back to ”user” parameter when you are entering ”kernel” parameter.
+The shell script will come back to ”kernel” when you are entering ”user” parameter.
+It will output the standard error when this script ”usage:/root/program kernel|user” don’t input any parameter or the parameter you inputted is entered as the
+requirements.
+
+## A36: Create a shell script
+
+```shell
+#!/bin/bash
+param1="$1"
+if [ "$param1" == "kernel" ]; then
+echo "user"
+elif [ "$param1" == "user" ]; then
+echo "kernel"
+else
+echo "usage:/root/program kernel|user"
+fi
+```
