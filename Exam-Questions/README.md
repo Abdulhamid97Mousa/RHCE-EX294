@@ -44,7 +44,7 @@ flowchart TD;
 
   - `managed1.example.com` should be a member of the `proxy` host group
   - `managed2.example.com` should be a member of the `webservers` host group
-  - `managed3.example.com` should be a member of the `webservers` and database host group
+  - `managed3.example.com` should be a member of the `webservers` and `database` host group
   - `managed4.example.com` should be a member of the `database` host group
   - `proxy` and `webservers` belong to group named `public`
 
@@ -1459,7 +1459,7 @@ Create a playbook named `hosts.yml` that meets following requirements:
 127.0.0.1 localhost {{ ansible_hostname }} {{ ansible_fqdn }}
 127.0.1.1 localhost
 {% for host in groups['all'] %}
-{{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} {{ hostvars[host]['ansible_hostname'] }} {{ hostvars[host]['ansible_fqdn'] }} {{ host }}
+{{ hostvars[host].ansible_eth1.ipv4.address }} {{ hostvars[host].ansible_hostname }} {{ hostvars[host].ansible_fqdn }} {{ hostvars[host] }}
 {% endfor %}
 ```
 
