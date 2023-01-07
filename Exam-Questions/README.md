@@ -2490,6 +2490,17 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
 
 in `/home/automation/ansible` create a playbook called `logvol.yml`. in the playbook create a logical volume called `lv0` and make it of the size `1500MiB` on volume group `vgO` if there is not enough space in the volume group print a message "Not enough space for logical volume" and them make a 800MiB `lv0` instead. if the volume group still doesn't exist, create a message "Volume group doesn't exist" Create an `xfs` filesystem on all `lv0` logical volumes. Don't mount the logical volume.
 
+> this is probably the most stupid exam question i ever saw in my life, so actually they don't test you on the ability of creating partition and then volume group and then a logical volume, they actually created the partition and volume group already, and just want you to create a logical volume with given parameters and if you encounter any problem doing so it should print out a message saying size is not enough, Redhat want you to follow the question steps regardless of how stupid they may seem to be.
+
+> my answer to the question is definitaly wrong because i'm a logical person and i like to create a partition and then volume group and then logical volume. but if you ever encounter such question justt do what the question says.
+
+> if you ever feel you can't find a way to create a `When: ` clause then you need to look for inside ansible_facts
+
+```shell
+# just be creative
+ansible ansible2 -m setup -a "filter=*lvm*"
+```
+
 ## A34: Logical Volume
 
 > the playbook `logvol.yml` may look like this
