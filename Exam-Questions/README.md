@@ -225,6 +225,19 @@ Because you will have to install software on the managed hosts, you need to do t
 
 - The repositories must be enabled with a gpgkey of `http://repo.ansi.example.com/RPM-GPG-KEY-redhat-release`
 
+## Answer
+
+> you can use Ansible-doc to help you convert a playbook into a bash file `ansible-doc yum_repository`
+
+```shell
+#!/bin/bash
+
+ansible all -m yum_repository -a "name=EX294_BASE description='EX294 base software' baseurl=http://content/rhel8.4/x86_64/dvd/BaseOS gpgcheck=yes gpgkey=http://content/rhel8.4/x86_64/dvd/RPM-GPG-KEY-redhat-release enabled=yes"
+
+ansible all -m yum_repository -a "name=EX294_STREAM description='EX294 stream software' baseurl=http://content/rhel8.4/x86_64/dvd/AppStream gpgcheck=yes gpgkey=http://content/rhel8.4/x86_64/dvd/RPM-GPG-KEY-redhat-release enabled=yes"
+
+```
+
 ## Q3. Archiving
 
 - Create a playbook that meets following requirements:
