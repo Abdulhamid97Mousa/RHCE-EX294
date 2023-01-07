@@ -1380,18 +1380,6 @@ ansible-galaxy role init apache
   dest: /var/www/html/index.html
 ```
 
-> Edit meta/main.yml as below
-
-```
-galaxy_info:
-author: Mateusz Stompór
-description: This role sets up webserver
-license: MIT
-min_ansible_version: 2.9
-galaxy_tags: []
-dependencies: []
-```
-
 > Finally create the playbook at `/home/automation/plays/apache.yml` with following content:
 
 ```
