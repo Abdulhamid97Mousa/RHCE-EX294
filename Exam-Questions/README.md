@@ -2640,6 +2640,8 @@ Install the RHEL system role package and create a playbook /home/greg/ansible/se
 - Use the selinux role
 - Configure this role and configure selinux of the managed node as `enforcing`.
 
+## A37: Use RHEL System Roles
+
 ```shell
 [greg@control ansible]$ yum search roles
 [greg@control ansible]$ sudo yum install -y rhel-system-roles.noarch
@@ -2666,3 +2668,165 @@ roles_path=/home/greg/ansible/roles:/usr/share/ansible/roles
     - role: rhel-system-roles.selinux
 
 ```
+
+## Q38: Create and use roles
+
+Create a role named apache in `/home/greg/ansible/roles` with the following requirements:
+
+- The httpd package is installed, enabled and started at system boot
+- Firewall is enabled and running with rules that allow access to the web server
+- The template file `index.html.j2` already exists to create the file `/var/www/html/index.html` with the following output:
+
+```
+### Welcome to HOSTNAME on IPADDRESS ###
+```
+
+- where HOSTNAME is the `fully qualified domain` name of the managed node and `IPADDRESS` is the IPaddress of the managed node.
+
+- Create a playbook called `/home/greg/ansible/apache.yml`:
+- The play runs on hosts in the webservers hostgroup and will use the apache role
+
+## A38: Create and use roles
+
+> first use ansible-galaxy to build a role abstraction
+
+```
+[greg@control roles]$ ansible-galaxy init apache
+```
+
+> edit the template file in the apache role
+
+```
+[greg@control roles]$ vim apache/templates/index.html.j2
+Welcome to {{ ansible_nodename }} on {{ ansible_default_ipv4.address }}
+```
+
+> check the tree
+
+```
+tree apache/
+apache/
+├── defaults
+│   └── main.yml
+├── files
+├── handlers
+│   └── main.yml
+├── meta
+│   └── main.yml
+├── README.md
+├── tasks
+│   └── main.yml
+├── templates
+├── tests
+│   ├── inventory
+│   └── test.yml
+└── vars
+    └── main.yml
+```
+
+> edit the tasks/main.yml and build a playbook
+
+```shell
+[greg@control roles]$ vim apache/tasks/main.yml
+```
+
+> the playbook may look like this
+
+```yml
+---
+# tasks file for apache
+- name: Start service httpd, if not started
+  service:
+    name: httpd
+    state: started
+    enabled: yes
+- name: Start service httpd, if not started
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+- firewalld:
+    service: http
+    permanent: yes
+    state: enabled
+    immediate: yes
+- name: Template a file to /etc/files.conf
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+```
+
+## Q39: Using roles from Ansible Galaxy
+
+Create a playbook named /home/greg/ansible/roles.yml with the following requirements:
+
+- The playbook contains a play that runs on hosts in the balancers hostgroup and will use the balancer role.
+- This role configures a service to balance the load of web server requests among the hosts inthe webservers host group.
+  Browsing to a host in the balancers hostgroup (for example http://172.25.250.13 ) producesthe following output:
+
+```shell
+Welcome to node3.lab.example.com on 172.25.250.11
+```
+
+Reloading the browser will generate output from another web server:
+
+```shell
+Welcome to node4.lab.example.com on 172.25.250.12
+```
+
+- The playbook contains a play that runs on hosts in the webservers hostgroup and will use the phpinfo role.
+  Browsing to a host in the webservers host group at the URL /hello.php will produce the following output:
+
+```shell
+Hello PHP World from FQDN
+```
+
+where FQDN is the fully qualified name of the host.
+
+```
+Hello PHP World from node3.lab.example.com
+```
+
+There are also various details of the PHP configuration, such as the version of PHP installed, etc.
+Similarly, browsing to http://172.25.250.12/hello.php produces the following output:
+
+```
+Hello PHP World from node4.lab.example.com
+```
+
+There are also various details of the PHP configuration, such as the version of PHP installed, etc.
+
+## A39: Using roles from Ansible Galaxy
+
+> the playbook may look like this
+
+```shell
+[greg@control ansible]$ vim /home/greg/ansible/roles.yml
+```
+
+```yml
+- name: use http role
+  hosts: webservers
+  roles:
+    - role: apache
+- name: Ansible Galaxy
+  hosts: webservers
+  roles:
+    - role: phpinfo
+- name: Ansible Galaxy
+  hosts: balancers
+  roles:
+    - role: balancer
+```
+
+> first you need to create a file in `files/hello.php` inside phpinfo role and add a line of code to hello.php
+
+```shell
+[greg@control ansible]$ vim /home/greg/ansible/roles/phpinfo/files/hello.php
+
+Hello PHP World from <?php gethostname(); ?>
+<?php phpinfo(); ?>
+
+```
+
+image.png
