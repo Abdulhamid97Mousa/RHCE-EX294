@@ -2762,16 +2762,16 @@ Create a playbook named /home/greg/ansible/roles.yml with the following requirem
 
 - The playbook contains a play that runs on hosts in the balancers hostgroup and will use the balancer role.
 - This role configures a service to balance the load of web server requests among the hosts inthe webservers host group.
-  Browsing to a host in the balancers hostgroup (for example http://172.25.250.13 ) producesthe following output:
+  Browsing to a host in the balancers hostgroup (for example `http://172.25.250.13` ) producesthe following output:
 
 ```shell
-Welcome to node3.lab.example.com on 172.25.250.11
+Welcome to node3.lab.example.com on `172.25.250.11`
 ```
 
 Reloading the browser will generate output from another web server:
 
 ```shell
-Welcome to node4.lab.example.com on 172.25.250.12
+Welcome to node4.lab.example.com on `172.25.250.12`.
 ```
 
 - The playbook contains a play that runs on hosts in the webservers hostgroup and will use the phpinfo role.
@@ -2788,7 +2788,7 @@ Hello PHP World from node3.lab.example.com
 ```
 
 There are also various details of the PHP configuration, such as the version of PHP installed, etc.
-Similarly, browsing to http://172.25.250.12/hello.php produces the following output:
+Similarly, browsing to `http://172.25.250.12/hello.php` produces the following output:
 
 ```
 Hello PHP World from node4.lab.example.com
@@ -2819,14 +2819,12 @@ There are also various details of the PHP configuration, such as the version of 
     - role: balancer
 ```
 
-> first you need to create a file in `files/hello.php` inside phpinfo role and add a line of code to hello.php
+> First, you need to create a file in `files/hello.php` inside phpinfo role and add a line of code to hello.php
 
 ```shell
 [greg@control ansible]$ vim /home/greg/ansible/roles/phpinfo/files/hello.php
-
 Hello PHP World from <?php gethostname(); ?>
 <?php phpinfo(); ?>
-
 ```
 
-image.png
+> make sure you see a website with a line of code `Hello PHP World from node4.lab.example.com` and underneath that you have a configuration parameter of the php server, to be honest this question has taught me a lot of stuff, if you are a fan of AWS you might remember something about a load balancer, on aws you have very fancy GUI and you do everything by clicking on this and that, but you can automate this whole process with ansible too.
