@@ -2596,24 +2596,73 @@ users:
       when: inventory_hostname in groups['prod'] and item.job== 'manager'
 ```
 
-## Q36: Create a shell script
+## Q36: Use Ansible Galaxy to install a role
 
-Create a Shell script `/root/program`:
-The shell script will come back to ”user” parameter when you are entering ”kernel” parameter.
-The shell script will come back to ”kernel” when you are entering ”user” parameter.
-It will output the standard error when this script ”usage:/root/program kernel|user” don’t input any parameter or the parameter you inputted is entered as the
-requirements.
+Use Ansible Galaxy with the requirements file `/home/greg/ansible/roles/requirements.yml` . Download the roles from the following URL and install to /home/greg/ansible/roles :
 
-## A36: Create a shell script
+- ` http://materials/haproxy.tar` The name of this role should be `balancer`.
+
+- `http://materials/phpinfo.tar` The name of this role should be `phpinfo`.
+
+## A36: Use Ansible Galaxy to install a role
 
 ```shell
-#!/bin/bash
-param1="$1"
-if [ "$param1" == "kernel" ]; then
-echo "user"
-elif [ "$param1" == "user" ]; then
-echo "kernel"
-else
-echo "usage:/root/program kernel|user"
-fi
+[greg@control ansible]$ vim /home/greg/ansible/roles/requirements.yml
+```
+
+> the requirement.yml file may look like this
+
+```yml
+ ---
+  2 - src: http://materials/haproxy.tar
+  3   name: balancer
+  4 - src: http://materials/phpinfo.tar
+  5   name: phpinfo
+```
+
+> Install the roles
+
+```shell
+[greg@control ansible]$ ansible-galaxy role install -r  /home/greg/ansible/roles/requirements.yml
+```
+
+> list down all roles that being install
+
+```shell
+[greg@control ansible]$ ansible-galaxy list
+```
+
+## Q37: Use RHEL System Roles
+
+Install the RHEL system role package and create a playbook /home/greg/ansible/selinux.yml with the following criteria:
+
+- run on all managed nodes
+- Use the selinux role
+- Configure this role and configure selinux of the managed node as `enforcing`.
+
+```shell
+[greg@control ansible]$ yum search roles
+[greg@control ansible]$ sudo yum install -y rhel-system-roles.noarch
+[greg@control ansible]$ rpm -ql rhel-system-roles.noarch
+
+[greg@control ansible]$ vim ansible.cfg
+# make sure the following line exist in the configuration file
+roles_path=/home/greg/ansible/roles:/usr/share/ansible/roles
+[greg@control ansible]$ ansible-galaxy list
+[greg@control ansible]$ rpm -ql rhel-system-roles.noarch | grep example
+[greg@control ansible]$ vim /home/greg/ansible/selinux.yml
+# the playbook may look like this
+
+- hosts: all
+  become: true
+  become_method: sudo
+  become_user: root
+  vars:
+    # Use "targeted" SELinux policy type
+    selinux_policy: targeted
+    # Set "enforcing" mode
+    selinux_state: enforcing
+  roles:
+    - role: rhel-system-roles.selinux
+
 ```
