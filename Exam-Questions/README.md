@@ -2505,49 +2505,49 @@ ansible ansible2 -m setup -a "filter=*lvm*"
 
 > the playbook `logvol.yml` may look like this
 
-```
+```yml
 - name: configure a logical volume
   hosts: all
   become: true
   tasks:
-  - name: Create a new primary partition with a size of 1GiB
-    community.general.parted:
-      device: /dev/sdb
-      number: 3
-      state: present
-      flags: [lvm]
+    - name: Create a new primary partition with a size of 1GiB
+      community.general.parted:
+        device: /dev/sdb
+        number: 3
+        state: present
+        flags: [lvm]
 
-  - name: Create a volume group on top of /dev/sda1 with physical extent size = 32MB
-    community.general.lvg:
-      vg: vgO
-      pvs: /dev/sdb3
-      state: present
-    when: ansible_devices.sdb.partitions.sdb3 is defined
+    - name: Create a volume group on top of /dev/sda1 with physical extent size = 32MB
+      community.general.lvg:
+        vg: vgO
+        pvs: /dev/sdb3
+        state: present
+      when: ansible_devices.sdb.partitions.sdb3 is defined
 
-  - name: Create a logical volume of 1500m with disks /dev/sdb3
-    community.general.lvol:
-      vg: vgO
-      lv: lv0
-      size: 1500m
-    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) > 1.5 )
+    - name: Create a logical volume of 1500m with disks /dev/sdb3
+      community.general.lvol:
+        vg: vgO
+        lv: lv0
+        size: 1500m
+      when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) > 1.5 )
 
-  - name: send message if volume group not large enough
-    debug:
-      msg: Not enough space for logical volume
-    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
+    - name: send message if volume group not large enough
+      debug:
+        msg: Not enough space for logical volume
+      when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
 
-  - name: Create a logical volume of 512m with disks /dev/sda and /dev/sdb
-    community.general.lvol:
-      vg: vgO
-      lv: lv0
-      size: 800m
-    when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
+    - name: Create a logical volume of 512m with disks /dev/sda and /dev/sdb
+      community.general.lvol:
+        vg: vgO
+        lv: lv0
+        size: 800m
+      when: ansible_lvm.vgs.vgO is defined and ((ansible_lvm.vgs.vgO.size_g | float ) < 1.5 )
 
-  - name: Create a ext2 filesystem on /dev/sdb1
-    community.general.filesystem:
-      fstype: xfs
-      dev: /dev/vgO/lv0
-    when: ansible_lvm.vgs.vgO is defined
+    - name: Create a ext2 filesystem on /dev/sdb1
+      community.general.filesystem:
+        fstype: xfs
+        dev: /dev/vgO/lv0
+      when: ansible_lvm.vgs.vgO is defined
 ```
 
 ## Q35: Create users in file
@@ -2576,22 +2576,22 @@ users:
 
 > the users-playbook.yml may look like this
 
-```
+```yaml
 - name: configure users
   hosts: all
   become: true
   gather_facts: true
   vars_files:
-  - users_list.yml
-  - lock.yml
+    - users_list.yml
+    - lock.yml
   tasks:
     - name: Creating groups
       group:
         name: "{{ item }}"
         state: present
       loop:
-      - devops
-      - managers
+        - devops
+        - managers
     - name: Creating users
       user:
         name: "{{ item.username }}"
