@@ -229,13 +229,14 @@ Because you will have to install software on the managed hosts, you need to do t
 
 > you can use Ansible-doc to help you convert a playbook into a bash file `ansible-doc yum_repository`
 
+> Remember even a single typo could cost you a full mark on this question, make sure you use quotation around your description parameter
+
 ```shell
 #!/bin/bash
 
 ansible all -m yum_repository -a "name=EX294_BASE description='EX294 base software' baseurl=http://content/rhel8.4/x86_64/dvd/BaseOS gpgcheck=yes gpgkey=http://content/rhel8.4/x86_64/dvd/RPM-GPG-KEY-redhat-release enabled=yes"
 
 ansible all -m yum_repository -a "name=EX294_STREAM description='EX294 stream software' baseurl=http://content/rhel8.4/x86_64/dvd/AppStream gpgcheck=yes gpgkey=http://content/rhel8.4/x86_64/dvd/RPM-GPG-KEY-redhat-release enabled=yes"
-
 ```
 
 ## Q3. Archiving
@@ -1471,9 +1472,11 @@ Create a playbook named `hosts.yml` that meets following requirements:
 ```
 127.0.0.1 localhost {{ ansible_hostname }} {{ ansible_fqdn }}
 127.0.1.1 localhost
+
 {% for host in groups['all'] %}
-{{ hostvars[host].ansible_eth1.ipv4.address }} {{ hostvars[host].ansible_hostname }} {{ hostvars[host].ansible_fqdn }} {{ hostvars[host] }}
+{{ hostvars[host].ansible_default_ipv4.address }} {{ hostvars[host].ansible_nodename }} {{ hostvars[host].ansible_hostname }}
 {% endfor %}
+
 ```
 
 > Playbook definition
