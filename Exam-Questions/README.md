@@ -2214,9 +2214,9 @@ following URLs:
 ```yaml
 ---
 - name: balancer
-  - src: http:// classroom.example.com /role1.tar.gz
+  src: http:// classroom.example.com /role1.tar.gz
 - name: phphello
-  - src: http:// classroom.example.com /role1.tar.gz
+  src: http:// classroom.example.com /role1.tar.gz
 ```
 
 > and simply run the following command
