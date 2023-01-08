@@ -2611,6 +2611,39 @@ users:
       when: inventory_hostname in groups['prod'] and item.job== 'manager'
 ```
 
+> Another solution to the problem, this solution might be more accurate than mine, again follow the question and don't try to make more sophisticated.
+
+> Note: you could group tasks via `Block` clause, and also use `rescue` as risk-recovery startegy, and finaly you could ensure that something is going to happen through `always` clause
+
+```yml
+---
+- name: Create logical volumes
+  hosts: all
+  tasks:
+    - block:
+        - name: Create a logical volume of 512m
+          lvol:
+            vg: research
+            lv: data
+            size: 1500
+        - name: Create a ext2 filesystem on /dev/sdb1
+          filesystem:
+            fstype: ext4
+            dev: /dev/research/data
+      rescue:
+        - debug:
+            msg: Could not create logical volume of that size
+        - name: Create a logical volume of 512m
+          lvol:
+            vg: research
+            lv: data
+            size: 800
+          when: ansible_lvm.vgs.research is defined
+    - debug:
+        msg: Volume group done not exist
+      when: ansible_lvm.vgs.research is not defined
+```
+
 ## Q36: Use Ansible Galaxy to install a role
 
 Use Ansible Galaxy with the requirements file `/home/greg/ansible/roles/requirements.yml` . Download the roles from the following URL and install to /home/greg/ansible/roles :
@@ -2843,3 +2876,55 @@ Hello PHP World from <?php gethostname(); ?>
 ```
 
 > make sure you see a website with a line of code `Hello PHP World from node4.lab.example.com` and underneath that you have a configuration parameter of the php server, to be honest this question has taught me a lot of stuff, if you are a fan of AWS you might remember something about a load balancer, on aws you have very fancy GUI and you do everything by clicking on this and that, but you can automate this whole process with ansible too.
+
+## Q40: Create and use partitions
+
+Create a playbook named `/home/greg/ansible/partition.yml` that will create partitions on all managed nodes:
+
+- Create a 1500M primary partition in vdb, partition number 1, and format `ext4`
+  - The prod group permanently mounts the partition to /data
+- If there is not enough disk space,
+  - Give a prompt message is: `Could not create partition of that size`
+  - Create 800MiB partition
+- If the vdb does not exist, the prompt message this: `disk does not exist will be given`
+
+## A40: Create and use partitions
+
+> this is a playbook that might be correct, remember block, always, and rescue are all clause that could be used to make your solution more
+
+```yml
+- name: Create partitions
+  hosts: all
+  tasks:
+    - block:
+        - name: Create a new primary partition
+          parted:
+            device: /dev/vdb
+            number: 1
+            state: present
+            part_end: 1500MiB
+        - name: Create a ext2 filesystem on /dev/sdb1
+          filesystem:
+            fstype: ext4
+            dev: /dev/vdb1
+        - name: Mount DVD read-only
+          mount:
+            path: /data
+            src: /dev/vdb1
+            fstype: ext4
+            state: mounted
+          when: inventory_hostname in groups.prod
+      rescue:
+        - debug:
+            msg: Could not create partition of that size
+        - name: Create a new primary partition
+          parted:
+            device: /dev/vdb
+            number: 1
+            state: present
+            part_end: 800MiB
+          when: ansible_devices.vdb is defined
+    - debug:
+        msg: this disk is not exist
+      when: ansible_devices.vdb is not defined
+```
