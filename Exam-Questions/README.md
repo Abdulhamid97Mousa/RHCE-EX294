@@ -178,7 +178,7 @@ proxy
 
 > you don't need to define `forks` or `log_path` i just included them anyway.
 
-> if you forgot how to write the `ansible.cfg` file you can always use this command
+> if you forgot how to write the `ansible.cfg` file you can always use this command to instantiate ansible.cfg file with all possible configuration but this file content will be commented. hence, --disabled.
 
 ```shell
 ansible-config init --disabled > ansible.commented
