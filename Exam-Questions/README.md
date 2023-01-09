@@ -2962,7 +2962,7 @@ Hello PHP World from <?php gethostname(); ?>
 
 > make sure you see a website with a line of code `Hello PHP World from node4.lab.example.com` and underneath that you have a configuration parameter of the php server, to be honest this question has taught me a lot of stuff, if you are a fan of AWS you might remember something about a load balancer, on aws you have very fancy GUI and you do everything by clicking on this and that, but you can automate this whole process with ansible too.
 
-image.png
+![image](https://user-images.githubusercontent.com/80536675/211269506-98f9220d-ad6c-4b3e-bf64-db5f74070a6b.png)
 
 ## Q40: Create and use partitions
 
