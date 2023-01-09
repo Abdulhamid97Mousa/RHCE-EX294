@@ -91,7 +91,7 @@ ssh matthew@control
 192.168.55.205 node4.ansi.example.com    managed5
 ```
 
-> As root generating ssh key and copy it to the managed hosts:
+> This step is not part of your RHCE exam, I just want to show you how you would actually copy your public key to managed nodes. As root generating ssh key and copy it to the managed hosts:
 
 ```
 [root@control ~]# ssh-keygen
@@ -102,13 +102,15 @@ ssh matthew@control
 [root@control ~]# ssh-copy-id managed5
 ```
 
-> Let’s check if we can connect to the remote hosts as root without password:
+> in the real exam you can connect to other nodes via ssh command, Let’s check if we can connect to the remote hosts as root without password:
 
 ```
 [root@control ~]# ssh managed1
 ```
 
 - step1: Installing the ansible
+
+> in the real exam you would need to install ansible if it's installed already.
 
 > remember in the real exam RHCE-294 you will be using ansible version 2.9 or 2.8 so you will not have to use `fully qualified collection name`, what i mean is, when you use ansible modules while writing ansible playbooks, you won't need to write a long name of the module `ansible.builtin.copy` but you could simply use `copy`.
 
@@ -120,13 +122,13 @@ ssh matthew@control
 
 - step2: Configuring the user account
 
-> Create an account
+> Create an account, note that in the real exam the user will be already created for you and it will be given proper privileges too visa `sudo` command
 
 ```
 [root@control ~]# useradd automation
 ```
 
-> Set password
+> Set password, in the real exam this step will also be done, you'll not need to create a password for the user, and please don't create a password for the already created user
 
 ```
 [root@control ~]# echo devops | passwd --stdin automation
@@ -134,13 +136,15 @@ ssh matthew@control
 
 - step3: Allow access to privileged commands
 
+> note that in the real exam the user will be already created for you and it will be given proper privileges too visa `sudo` command
+
 ```
 [root@control ~]# echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 ```
 
 - step4: Creating inventory
 
-> Create directory for the inventory
+> Create directory for the inventory, this step is part of your exam
 
 ```
 mkdir -p /home/automation/plays
@@ -150,7 +154,7 @@ sudo touch /var/log/ansible/execution.log
 vim /home/automation/plays/inventory
 ```
 
-> Create the inventory with following contents
+> Create the inventory with following contents, this step is part of your exam
 
 ```
 [proxy]
@@ -233,7 +237,7 @@ ansible all -m authorized_key -a "key={{ lookup('file', '/home/automation/.ssh/i
 ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/sudoers.d/automation"
 ```
 
-## Similar Question
+## Similar Question, this question is certainly coming in the exam.
 
 Because you will have to install software on the managed hosts, you need to do the following:
 
@@ -249,7 +253,7 @@ Because you will have to install software on the managed hosts, you need to do t
 
 ## Answer
 
-> you can use Ansible-doc to help you convert a playbook into a bash file `ansible-doc yum_repository`
+> you can use Ansible-doc to help you convert a task into a ad-hoc command that could be part of bash-script file `ansible-doc yum_repository`.
 
 > Remember even a single typo could cost you a full mark on this question, make sure you use quotation around your description parameters.
 
@@ -484,6 +488,8 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
   - Disables X11 forwarding
   - Sets maxminal number of auth tries to 3
 
+> note that in a real exam you could be asked to change a line in file, not necessarly in ssh but any file of your rhel machine, you could be asked to changed a line in `/etc/login.def` and include `PASS_MAX_DAYS=30`. so it's always good to review your basics from RHCSA before attempting RHCE exam.
+
 ## A6. Text Manipulation also called "Configure SSH Server"
 
 ```yaml
@@ -516,8 +522,8 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 - Create a playbook that meets following requirements:
   - Is placed at `/home/automation/plays/system_control.yml`
   - Runs against all hosts
-  - If a server has more than 1024MB of RAM, then use sysctl to set `vm.swappiness to 10`
-  - If a server has less or equal to 1024MB of RAM exist with error message Server has less than required 1024MB of RAM
+  - If a server has more than `1024MB` of `RAM`, then use `sysctl` module to set `vm.swappiness to 10`
+  - If a server has less or equal to `1024MB` of `RAM` exist with error message Server has less than required `1024MB of RAM`
   - Configuration change should survive server reboots
 
 ## A7. Use Conditionals to Control Play Execution "Conditionals"
@@ -629,30 +635,30 @@ A custom Ansible fact `server_role=mysql` is created that can be retrieved from 
 
 - Create a file that meets following requirements:
 
-  - Is placed at /home/automation/plays/vars/regular_users.yml
-  - Is encrypted by Vault with id set to users and password to eureka
+  - Is placed at `/home/automation/plays/vars/regular_users.yml`
+  - Is encrypted by Vault with id set to users and password to `eureka`
   - The file should contain a key `user_password`, its values should be set to `devops`
 
 - Create a file that meets following requirements:
 
-  - Is placed at /home/automation/plays/vars/database_users.yml
-  - Is encrypted by Vault with password to dbs-are-awesome
-  - The file should contain a key db_password, its values should be set to devops
+  - Is placed at `/home/automation/plays/vars/database_users.yml`
+  - Is encrypted by Vault with password to `dbs-are-awesome`
+  - The file should contain a key `db_password`, its values should be set to `devops`
 
 - Create a file that meets following requirements:
 
-  - Is placed at /home/automation/plays/secrets/regular_users_password
+  - Is placed at `/home/automation/plays/secrets/regular_users_password`
   - Contains eureka as the content
 
 - Create a file that meets following requirements:
-  - Is placed at /home/automation/plays/secrets/database_users_password
-  - Contains dbs-are-awesome as the content
+  - Is placed at `/home/automation/plays/secrets/database_users_password`
+  - Contains `dbs-are-awesome` as the content
 
 ## A9. Vault
 
 > Navigate to `/home/automation/plays` as `automation` user and create directories for the files
 
-> Part 1: you'll need to create a separate file that contains a password "eureka" this file is used as decryption tool, so we'll first encrypt a file which contains a sensitive key value pair `user_password: devops` > `"vars/regular_users.yml"` and the only way to decrypt it is to use another file, for simplicity i chose to create this file`/home/automation/plays/secrets/regular_users_password`
+> Part 1: you'll need to create a separate file that contains a password `eureka` this file is used as decryption tool, so we'll first encrypt a file which contains a sensitive key value pair `user_password: devops` > `"vars/regular_users.yml"` and the only way to decrypt it is to use another file, for simplicity i chose to create this file`/home/automation/plays/secrets/regular_users_password`
 
 ```
 mkdir secrets vars
@@ -723,6 +729,8 @@ ansible-vault encrypt --vault-id @vault_key secret.yml
 ```
 
 ## Q10. User Accounts
+
+> Note this question is most likly to come in a real exam, they will always change uid to job or role or even include other sub items. so make sure you understand it.
 
 You have been given defintions of variables for the task
 
@@ -1143,7 +1151,7 @@ pid-file=/var/run/mysqld/mysqld.pid
 
   - Is placed at `/home/automation/plays/swap.yml`
   - Runs against database group
-  - Creates a partition on sdb drive on the managed hosts of size between 1000MB-1100MB
+  - Creates a partition on sdb drive on the managed hosts of size between `1000MB-1100MB`
   - Uses this partition to extend available swap
   - Ensures that the partition is part of the swap pool on boot
 
@@ -1468,7 +1476,7 @@ Create a new folder named templates at `/home/automation/plays` and prepare ther
 [...]
 ```
 
-Set the name to hosts.j2
+- Set the name to `hosts.j2`
 
 Create a playbook named `hosts.yml` that meets following requirements:
 
@@ -1490,6 +1498,8 @@ Create a playbook named `hosts.yml` that meets following requirements:
 {% endfor %}
 
 ```
+
+> sometimes templating doesn't work for various reasons, my answer could be also misleading, you should check ansible documentations to make sure you are using jinja loop structure correctly and also the way you access hostvars[host] data structure correctly, note that this exam question is most likly to show up in the exam.
 
 > Playbook definition
 
@@ -1618,7 +1628,7 @@ Create a playbook named `ssh.yml` that meets following requirements:
 - Is executed against `webservers group`
 - Uses system role selinux to enable enforcing mode and allow connection on `port 20022`
 - Reboots machines as the last task that playbook executes
-- Ensure that during playbook execution at least one server is available, configure it to `run - sequentially` Ensure that after reboot firewalld service is running, selinux mode set to enforcing and the machine can be accessed by both ports
+- Ensure that during playbook execution at least one server is available, configure it to `run - sequentially` Ensure that after reboot firewalld - service is running, selinux mode set to `enforcing` and `the machine can be accessed by both ports`
 
 You can use below command to verify the result
 
@@ -1680,6 +1690,8 @@ ssh -p 22 managed4.example.com exit && ssh -p 20022 -o StrictHostKeyChecking=no 
 ```
 
 ## Q22. Networking
+
+> this question is less likly to show up in the exam, but it's good to know how to manage networking interfaces.
 
 Create a playbook named `network.yml` at `/home/automation/plays` that configures eth2 interface on `managed1.example.com` and `managed4.example.com`
 
@@ -1824,6 +1836,8 @@ ansible-playbook dynamic_facts.yml
 
 ## Q25. Reachable hosts
 
+> this question is less likely to show up in the real exam.
+
 Aim of this task is to write a dynamic inventory script that returns a given host only if it is reachable. The idea is to avoid attempts of interacting with a server that is shut off. Use script from 15th exercise as the base for development. Store the script at `/home/automation/plays/scripts/reachable_hosts`. You can use `ssh` or `ping` command to verify that a host responds. Meet the same requirements in terms of defined hosts' variables as in 15th exercise
 
 ## A25. Reachable hosts
@@ -1924,6 +1938,8 @@ if __name__ == '__main__':
 
 ## Q26. Prompt
 
+> this question is less likely to show up in the real exam.
+
 You were asked to write a playbook that creates account for new employees. The idea is to execute the playbook each time a new person joins the company. To ease the boarding process your playbook should ask the user for his username and password while executing. All the people that are going to execute the playbook are suppossed to be part of `networking team`. From time to time they will need to interact with nmcli tool but despite that they shouldn't have access to `privileged commands`.
 
 To achieve that create a playbook named `prompt.yml` at `/home/automation/plays` that meets following requirements:
@@ -1979,6 +1995,8 @@ ansible-playbook prompt.yml
 ```
 
 ## Q27. Create and Work with Roles (apache role)
+
+> this question is likely to show up in the real exam. pay great attention to details.
 
 Create a role called `sample-apache` and store it in /home/automation/plays/roles. The role should satisfy the following requirements:
 
@@ -2084,10 +2102,6 @@ the address of the server is : {{ ansible_default_ipv4.address }}
 ## Q28. Security
 
 Create a playbook `/home/automation/plays/selinux.yml` that runs on hosts in the webservers host group and does the following:
-
-Uses the selinux RHEL system role.
-Enables httpd_can_network_connect SELinux boolean.
-The change must survive system reboot
 
 - Uses the `selinux RHEL system role`.
 - Enables` httpd_can_network_connect` SELinux boolean.
@@ -2257,6 +2271,8 @@ If your playbook works, then doing `“curl http://ansible2.hl.local/”` should
 
 ## A30: Download Roles From Ansible Galaxy and Use Them
 
+> this question is probably part of another RedHat exam, but it's good to know, you will not be tested on roundrobin or backend stuff just know how it's done.
+
 > Installing geerlingguy.haproxy role:
 
 > while installing geerlingguy.haproxy, you might fail in downloading it, due to many reasons, but one way you can solve this problem is by editing your `Vagrantfile` and to include this line `config.vm.box_download_insecure = true` or for more information go to `https://github.com/hashicorp/vagrant/issues/5391`.
@@ -2333,6 +2349,8 @@ git clone https://github.com/geerlingguy/ansible-role-haproxy.git
 ```
 
 ## Q31: Copy file and modify it's content with the use of ansible facts
+
+> this question is most likely coming in RHCE exam, variables could be changed to increase difficulty but it's simple if you know how to access variables via setup module.
 
 Create a file in `/home/sandy/ansible/report.yml` called `report.yml`. Using this playbook, get a file called `report.txt` (make it look exactly as below). Copy this file over to all remote hosts at `/root/report.txt`. Then edit the lines in the file to provide the real information of the hosts. `If a disk does not exist` then write `NONE`.
 
