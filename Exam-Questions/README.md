@@ -338,14 +338,14 @@ ansible all -m yum_repository -a "name=EX294_STREAM description='EX294 stream so
 
 ## A4. Group differentiation "File Content"
 
-- **step1: **Create directories for groups
+- step1: Create directories for groups
 
 ```shell
 mkdir -p /home/automation/plays/group_vars
 mkdir -p /home/automation/plays/group_vars/{proxy,database,webservers}
 ```
 
-- **step2: **Populate yml for each group group
+- step2: Populate yml for each group group
 
 ```
 echo "motd: Welcome to HAProxy server" > /home/automation/plays/group_vars/proxy/motd.yml
@@ -353,7 +353,7 @@ echo "motd: Welcome to MySQL database" > /home/automation/plays/group_vars/datab
 echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webservers/motd.yml
 ```
 
-- **step3: **Create the `motd.yml` playbook
+- step3: Create the `motd.yml` playbook
 
 ```yaml
 - name: file content distributed on managed hosts
