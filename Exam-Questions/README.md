@@ -175,37 +175,32 @@ proxy
 
 > Create the ansible.cfg `ansible configuration file` with following contents
 
+> you don't need to define `forks` or `log_path` i just included them anyway.
+
+> if you forgot how to write the `ansible.cfg` file you can always use this command
+
+```shell
+ansible-config init --disabled > ansible.commented
+# then delete the unnecessary lines manually or use  /remote_user to quickly find what you need and delete the rest.
+```
+
 ```
 [defaults]
 remote_user=automation
 inventory=./inventory
 host_key_checking=false
-log_path=/var/log/ansible/execution.log
+#log_path=/var/log/ansible/execution.log
 roles_path=/home/automation/plays/roles
-forks=8
+#forks=8
 
 [privilege_escalation]
-become=false
+become=True
 become_ask_pass=false
 become_method=sudo
 become_user=root
 ```
 
 > Save it to `/home/automation/plays/ansible.cfg`
-
-General thoughts
-
-Ensure that you have proper ownership, to restore it call
-
-```shell
-chown -R automation:automation /home/automation
-```
-
-> Do the same for /var/log/ansible directory
-
-```shell
-sudo chown -R automation:automation /var/log/ansible
-```
 
 ## A2. Ad-Hoc Commands
 
