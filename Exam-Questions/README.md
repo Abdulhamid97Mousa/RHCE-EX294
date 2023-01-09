@@ -59,11 +59,12 @@ flowchart TD;
 
 ## A1. Ansible Installation and Configuration
 
-> Check your `/etc/hosts` file to resolve host ip address to FQDNs, in a real exam they will give you all the FQDN of managed nodes and you need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**, in my exam it was already created. what i mean is this file was created already `/etc/hosts` and hosts file was already being populated with ip addresses and hostnames along with FQDNs, and i didn't have to create them from scratch.
+> Before you actually start with installing it's better to Check your `/etc/hosts` file which resolves host ip address to FQDNs, in RHCE exam they will give you all the FQDN of managed nodes and you don't need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**, in my exam it was already created. what i mean is this file was created already `/etc/hosts` and hosts file was already being populated with ip addresses and hostnames along with FQDNs, and i didn't have to create them from scratch.
 
 > just an example so you know how they will provide you `/etc/hosts` file
 
 ```shell
+[root@control ~]# cat /etc/hosts
 127.0.0.1 localhost localhost.localdomain localhost4 localho    st4.localdomain4
 ::1 localhost localhost.localdomain localhost6 localhost6.lo    caldomain6
 172.25.250.9 node1.lab.example.com node1
@@ -71,11 +72,13 @@ flowchart TD;
 172.25.250.11 node3.lab.example.com node3
 172.25.250.12 node4.lab.example.com node4
 172.25.250.13 node5.lab.example.com node5
+# and you can access nodes via ssh command
+[root@control ~]# ssh node1
 ```
 
-> there could be 5 managed nodes or 4 managed nodes, it doesn't matter actually, in the real exam it will be clearly defined and you can always check via `cat /etc/hosts` from the control node.
+> There could be 5 managed nodes or 4 managed nodes, it doesn't matter actually, in the real exam it will be clearly defined and you can always check via `cat /etc/hosts` from the control node.
 
-> you will have to connect to control node via ssh, the examiner would tell you the user that you will connect as which could be `lisa` or `matthew` it doesn't matter, please don't be nervous hahaha ^^
+> you will have to connect to control node via ssh, the examiner would tell you the user that you will connect as to your control node which could be `lisa` or `matthew`, it doesn't matter, please don't be nervous.
 
 ```shell
 ssh matthew@control
@@ -102,12 +105,6 @@ ssh matthew@control
 [root@control ~]# ssh-copy-id managed5
 ```
 
-> in the real exam you can connect to other nodes via ssh command, Let’s check if we can connect to the remote hosts as root without password:
-
-```
-[root@control ~]# ssh managed1
-```
-
 - step1: Installing the ansible
 
 > in the real exam you would need to install ansible if it's installed already.
@@ -122,13 +119,13 @@ ssh matthew@control
 
 - step2: Configuring the user account
 
-> Create an account, note that in the real exam the user will be already created for you and it will be given proper privileges too visa `sudo` command
+> Create an account, note that in the real exam the user will be already created for you and it will be given proper privileges too via `sudo` command
 
 ```
 [root@control ~]# useradd automation
 ```
 
-> Set password, in the real exam this step will also be done, you'll not need to create a password for the user, and please don't create a password for the already created user
+> Set password, in the real exam this step will also be done for you by default and you will not need to configure a password, and please don't create a password for the already created user.
 
 ```
 [root@control ~]# echo devops | passwd --stdin automation
@@ -146,7 +143,7 @@ ssh matthew@control
 
 > Create directory for the inventory, this step is part of your exam
 
-```
+```shell
 mkdir -p /home/automation/plays
 mkdir -p /home/automation/plays/roles
 sudo mkdir -p /var/log/ansible/
@@ -219,7 +216,9 @@ Generate an SSH keypair on the control node. You can perform this step manually.
 
 ## Q2. Ad-Hoc Commands
 
-- \*\*step1: you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
+> this question helps you in setting up ansible lab but not necessarly part of your exam. this question regarding configuring ssh key and public key and copy the key to managed nodes, will not part of your exam because they already configured the root access to all managed nodes, but instead a similar question about configuring local repository using ad-hoc commands and bash-scripting could be asked. Please go to the following exam question for clarity.
+
+- step1: you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
 
 - step2: you should read and understand the inventory file, if you haven't wrote your inventory by yourself, then you can check the inventory file in this repository.
 
