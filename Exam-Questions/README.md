@@ -2221,9 +2221,9 @@ Use Ansible Galaxy with a requirements file called `/home/admin/ansible/roles/in
 
 following URLs:
 
-`http://classroom.example.com/role1.tar.gz`The name of this role should be balancer
+`http://classroom.example.com/role1.tar.gz`The name of this role should be `balancer`
 
-`http://classroom.example.com/role2.tar.gz` The name of this role should be phphello
+`http://classroom.example.com/role2.tar.gz` The name of this role should be `phphello`
 
 ## A29. Requirements file
 
