@@ -59,9 +59,21 @@ flowchart TD;
 
 ## A1. Ansible Installation and Configuration
 
-> Manage your `/etc/hosts` file to resolve host ip address to FQDNs, in a real exam they will give you a FQDN and you need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**.
+> Check your `/etc/hosts` file to resolve host ip address to FQDNs, in a real exam they will give you all the FQDN of managed nodes and you need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**, in my exam it was already created. what i mean is this file was created already `/etc/hosts` and hosts file was already being populated with ip addresses and hostnames along with FQDNs, and i didn't have to create them from scratch.
 
-> you could be 5 managed nodes or 4 managed nodes, it doesn't matter actually, in the real exam it will be clearly defined and you can always check via `cat /etc/hosts` from the control node.
+> just an example so you know how they will provide you `/etc/hosts` file
+
+```shell
+127.0.0.1 localhost localhost.localdomain localhost4 localho    st4.localdomain4
+::1 localhost localhost.localdomain localhost6 localhost6.lo    caldomain6
+172.25.250.9 node1.lab.example.com node1
+172.25.250.10 node2.lab.example.com node2
+172.25.250.11 node3.lab.example.com node3
+172.25.250.12 node4.lab.example.com node4
+172.25.250.13 node5.lab.example.com node5
+```
+
+> there could be 5 managed nodes or 4 managed nodes, it doesn't matter actually, in the real exam it will be clearly defined and you can always check via `cat /etc/hosts` from the control node.
 
 > you will have to connect to control node via ssh, the examiner would tell you the user that you will connect as which could be `lisa` or `matthew` it doesn't matter, please don't be nervous hahaha ^^
 
