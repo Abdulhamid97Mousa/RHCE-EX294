@@ -86,13 +86,13 @@ flowchart TD;
 [root@control ~]# ssh managed1
 ```
 
-- **step1:** Installing the ansible
+- step1: Installing the ansible
 
 ```
 [root@control ~]# yum install -y ansible
 ```
 
-- **step2:** Configuring the user account
+- step2: Configuring the user account
 
 > Create an account
 
@@ -106,13 +106,13 @@ flowchart TD;
 [root@control ~]# echo devops | passwd --stdin automation
 ```
 
-- **step3:** Allow access to privileged commands
+- step3: Allow access to privileged commands
 
 ```
 [root@control ~]# echo "automation ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/automation
 ```
 
-- **step4:** Creating inventory
+- step4: Creating inventory
 
 > Create directory for the inventory
 
@@ -143,9 +143,9 @@ webservers
 proxy
 ```
 
-> Save it to /home/automation/plays/inventory
+> Save it to `/home/automation/plays/inventory`
 
-- **step5:** Create the config file with following content
+- step5: Create the config file with following content
 
 > Create the ansible.cfg `ansible configuration file` with following contents
 
@@ -165,19 +165,19 @@ become_method=sudo
 become_user=root
 ```
 
-> Save it to /home/automation/plays/ansible.cfg
+> Save it to `/home/automation/plays/ansible.cfg`
 
 General thoughts
 
 Ensure that you have proper ownership, to restore it call
 
-```
+```shell
 chown -R automation:automation /home/automation
 ```
 
 > Do the same for /var/log/ansible directory
 
-```
+```shell
 sudo chown -R automation:automation /var/log/ansible
 ```
 
@@ -194,9 +194,9 @@ Generate an SSH keypair on the control node. You can perform this step manually.
 
 ## Q2. Ad-Hoc Commands
 
-- **step1:** you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
+- \*\*step1: you should test ansible adhoc commands before writing the bash script, the command `ansible localhost -m ping` is usefull, use it few times against target hosts to verify connectivity
 
-- **step2:** you should read and understand the inventory file, if you haven't wrote your inventory by yourself, then you can check the inventory file in this repository.
+- step2: you should read and understand the inventory file, if you haven't wrote your inventory by yourself, then you can check the inventory file in this repository.
 
 ```shell
 #!/bin/bash
@@ -215,7 +215,8 @@ ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/s
 ## Similar Question
 
 Because you will have to install software on the managed hosts, you need to do the following:
-\*Create a shell script with the name `packages.sh` that runs an Ansible ad-hoc command to create a yum repository on all managed hosts using the information as below:
+
+- Create a shell script with the name `packages.sh` that runs an Ansible ad-hoc command to create a yum repository on all managed hosts using the information as below:
 
 - The Appstream base URL and BaseOS URL are `http://repo.ansi.example.com/AppStream` and `http://repo.ansi.example.com/BaseOS`
 
@@ -229,7 +230,7 @@ Because you will have to install software on the managed hosts, you need to do t
 
 > you can use Ansible-doc to help you convert a playbook into a bash file `ansible-doc yum_repository`
 
-> Remember even a single typo could cost you a full mark on this question, make sure you use quotation around your description parameter
+> Remember even a single typo could cost you a full mark on this question, make sure you use quotation around your description parameters.
 
 ```shell
 #!/bin/bash
@@ -313,7 +314,7 @@ ansible all -m yum_repository -a "name=EX294_STREAM description='EX294 stream so
 
 - **step1: **Create directories for groups
 
-```
+```shell
 mkdir -p /home/automation/plays/group_vars
 mkdir -p /home/automation/plays/group_vars/{proxy,database,webservers}
 ```
@@ -374,6 +375,8 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
   - Runs against proxy group
   - Results in possiblity of getting a pair `name=haproxy` from ansible facts path `ansible_local.environment.application` after calling setup module
 
+> This question less likely to show up in the exam, but it's always good to know how to add facts to ansible_facts.
+
 ## A5. Ansible Facts
 
 ```yaml
@@ -394,7 +397,7 @@ echo "motd: Welcome to Apache server" > /home/automation/plays/group_vars/webser
 
 > to check if the ansible facts has been added to ansible_facts
 
-```
+```shell
 ansible ansible2 -m setup -a "filter=ansible_local"
 ```
 
@@ -814,7 +817,7 @@ ansible-playbook users.yml --vault-id @vault_key
 
 Create a playbook `/home/automation/plays/regular_tasks.yml` that runs on servers in the `proxy host group` and does the following:
 
-- A root crontab record is created that runs every hour.
+- A `root` crontab record is created that runs every hour.
 - The cron job appends the file `/var/log/time.log` with the output from the date command.
 
 ## Solution 11: Scheduled Tasks
@@ -896,8 +899,8 @@ Create a playbook /home/automation/plays/repository.yml that runs on servers in 
 - A YUM repository file is created.
   - The name of the repository is mysql56-community.
   - The description of the repository is “MySQL 5.6 YUM Repo”.
-  - Repository baseurl is http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/.
-  - Repository GPG key is at http://repo.mysql.com/RPM-GPG-KEY-mysql.
+  - Repository baseurl is `http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/`.
+  - Repository GPG key is at `http://repo.mysql.com/RPM-GPG-KEY-mysql`.
   - Repository GPG check is enabled.
   - Repository is enabled.
 
@@ -930,16 +933,16 @@ ansible database -a "yum repolist"
 
 Create a role called sample-mysql and store it in `/home/automation/plays/roles`. The role should satisfy the following requirements:
 
-- A primary partition number 1 of size 800MB on device /dev/sdb is created.
+- A primary partition number 1 of size 800MB on device `/dev/sdb` is created.
 - An LVM volume group called vg_database is created that uses the primary partition created above.
 - An LVM logical volume called lv_mysql is created of size 512MB in the volume group vg_database.
 - An XFS filesystem on the logical volume lv_mysql is created.
-- Logical volume lv_mysql is permanently mounted on /mnt/mysql_backups.
-- mysql-community-server package is installed.
-- Firewall is configured to allow all incoming traffic on MySQL port TCP 3306.
+- Logical volume `lv_mysql` is permanently mounted on `/mnt/mysql_backups`.
+- `mysql-community-server` package is installed.
+- Firewall is configured to allow all incoming traffic on MySQL port `TCP 3306`.
 - MySQL root user password should be set from the variable database_password (see task #5).
 - MySQL server should be started and enabled on boot.
-- MySQL server configuration file is generated from the my.cnf.j2 Jinja2 template with the following content:
+- MySQL server configuration file is generated from the `my.cnf.j2` Jinja2 template with the following content:
 
 ```
 [mysqld]
@@ -1073,12 +1076,12 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 > Solution, you need to ssh hosts in database, and then use this command
 
-```
+```shell
 # this would give you access to mysql database
 mysql -u root
 ```
 
-```
+```shell
 # and now you can make the root user have a password "devops", and do the same thing to managed4 and managed3
 mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'password';
 ```
@@ -1113,11 +1116,11 @@ log-error=/var/log/mysqld.log
 pid-file=/var/run/mysqld/mysqld.pid
 ```
 
-## 14. SWAP
+## Q14. SWAP
 
 - Create a playbook that meets following requirements:
 
-  - Is placed at /home/automation/plays/swap.yml
+  - Is placed at `/home/automation/plays/swap.yml`
   - Runs against database group
   - Creates a partition on sdb drive on the managed hosts of size between 1000MB-1100MB
   - Uses this partition to extend available swap
@@ -1186,9 +1189,9 @@ pid-file=/var/run/mysqld/mysqld.pid
 
 - Create a playbook that meets following requirements:
 
-  - Is placed at /home/automation/plays/system_target.yml
+  - Is placed at `/home/automation/plays/system_target.yml`
   - Runs against all managed hosts
-  - Sets target to multi-user.target
+  - Sets target to `multi-user.target`
   - Must be idempotent - subsequent execution of playbook shouldn't result in changed state
 
 ```yaml
@@ -1324,7 +1327,7 @@ ansible-inventory --list -i dynamic_inventory
 - Create a role called apache that meets following requirements:
   - Is placed at `/home/automation/plays/roles/apache`.
   - Installs httpd and firewalld packages
-  - Allows ports 80 and 443 to be accessible through firewall
+  - Allows ports `80` and `443` to be accessible through firewall
   - Ensures that httpd and firewalld services are started at boot time
   - Deploys an index page that presents following message: `Welcome, you have conntected to <fqdn>`
 - Create a playbook that meets following requirements:
@@ -1335,7 +1338,7 @@ ansible-inventory --list -i dynamic_inventory
 
 > Go to the /home/automation/plays and create a folder for roles
 
-```
+```shell
 mkdir roles
 ```
 
@@ -1343,11 +1346,11 @@ If you configured ansible correctly while solving the first exercise role that y
 
 > Change CWD to newly created directory and initate skeleton for the role
 
-```
+```shell
 ansible-galaxy role init apache
 ```
 
-> Edit tasks/main.yml to look as follows
+> Edit `tasks/main.yml` to look as follows
 
 ```yaml
 # tasks file for apache
@@ -1382,11 +1385,11 @@ ansible-galaxy role init apache
 
 > Finally create the playbook at `/home/automation/plays/apache.yml` with following content:
 
-```
+```yml
 - hosts: webservers
   roles:
-  - role: apache
-    become: true
+    - role: apache
+      become: true
 ```
 
 > To run the playbook go to `/home/automation/plays` and call
@@ -1428,7 +1431,7 @@ sudo yum install -y git
 
 > Go to `/home/automation/plays` and execute
 
-```
+```shell
 ansible-galaxy install -r requirements.yml -p roles
 ```
 
@@ -1457,7 +1460,7 @@ Create a playbook named `hosts.yml` that meets following requirements:
 
 > The template might look as follows
 
-```
+```shell
 127.0.0.1 localhost {{ ansible_hostname }} {{ ansible_fqdn }}
 127.0.1.1 localhost
 
@@ -1499,7 +1502,7 @@ Use NTP system role to configure all hosts time synchronization. To achieve that
 
 > Install system roles first
 
-```
+```shell
 yum install -y rhel-system-roles
 ```
 
@@ -1528,14 +1531,14 @@ yum install -y rhel-system-roles
 
 > Another way you can do the same thing, you can grab the content of your local ntp config file and then use it to send it over to managed nodes, here i try to only use regular expression -E and invert it using -v and i want to grap lines that don't start with # or empty lines $
 
-```
+```shell
 grep -Ev '^(#|$)' /etc/chron.conf > <where you want the file to be created>
 grep -Ev '^(#|$)' /etc/chron.conf > chron_config
 ```
 
 > edit the content of the `chron_config`, in the beginning it looks like this
 
-```
+```shell
 pool 2.rhel.pool.ntp.org iburst
 driftfile /var/lib/chrony/drift
 makestep 1.0 3
@@ -1547,7 +1550,7 @@ logdir /var/log/chrony
 
 > i will change the content slightly
 
-```
+```shell
 server 1.pl.pool.ntp.org iburst
 server 2.pl.pool.ntp.org iburst
 driftfile /var/lib/chrony/drift
@@ -1680,7 +1683,7 @@ Meet following objectives:
     - name: rhel-system-roles.network
 ```
 
-> To differentiate hosts config separte vars definition should be placed at `host_vars` directory in `/home/automation/plays/host_vars/managed1/connections.yml`, remember if you are setting this on your home lab make sure you turn of your managed1 and managed4 machinese and then add host-only adapters because by default you only have Nat networking adapter `eth0` and host-only adapter `eth1`, and you don't have any other adapters. therefore, make sure to manually add adapters.
+> To differentiate hosts configuration you need to separte vars definition should be placed at `host_vars` directory in `/home/automation/plays/host_vars/managed1/connections.yml`, remember if you are setting this on your home lab make sure you turn of your managed1 and managed4 machinese and then add host-only adapters because by default you only have Nat networking adapter `eth0` and host-only adapter `eth1`, and you don't have any other adapters. therefore, make sure to manually add adapters.
 
 ```yaml
 - name: Internal
@@ -1707,7 +1710,7 @@ network_connections:
 
 > To run the playbook go to `/home/automation/plays` and execute
 
-```
+```shell
 ansible-playbook network.yml
 ```
 
@@ -1963,7 +1966,7 @@ _ Firewall is configured to allow all `incoming traffic on HTTP port TCP 80 and 
 _ Apache service should be `restarted every time the file /var/www/html/index.html is modified`.
 _ A Jinja2 template file `index.html.j2` is used to create the file `/var/www/html/index.html` with the \_ following content:
 
-```
+```shell
 The address of the server is: IPV4ADDRESS
 ```
 
@@ -1975,7 +1978,7 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
 
 > the playbook may look like this, remember to include roles: - role: sample-apache
 
-```
+```shell
 [automation@control roles]$ ansible-galaxy init sample-apache
 ```
 
@@ -2033,7 +2036,7 @@ Welcome to {{ hostvars[host]['ansible_fqdn'] }} {{ hostvars[host]['ansible_eth1'
 {% endfor %}
 ```
 
-> or
+> or you can do this
 
 ```
 the address of the server is : {{ ansible_default_ipv4.address }}
@@ -2071,34 +2074,34 @@ Uses the selinux RHEL system role.
 Enables httpd_can_network_connect SELinux boolean.
 The change must survive system reboot
 
-- Uses the selinux RHEL system role.
-- Enables httpd_can_network_connect SELinux boolean.
+- Uses the `selinux RHEL system role`.
+- Enables` httpd_can_network_connect` SELinux boolean.
 - The change must survive system reboot.
 
 ## A28. Security
 
 > firstly, you need to install rhel-system-rols
 
-```
+```shell
 sudo yum -y install rhel-system-roles
 ```
 
 > Now you can search through ansible galaxy to find a role that modify your selinux configuration
 
-```
+```shell
 ansible-galaxy search selinux | grep roles
 ```
 
 > now you can install the role `linux-system-roles.selinux`
 
-```
+```shell
 ansible-galaxy install linux-system-roles.selinux
 ansible-galaxy list
 ```
 
 > Preinstalled example of playbook with selinux role:
 
-```
+```shell
 cat /usr/share/doc/rhel
 ```
 
@@ -2235,7 +2238,7 @@ Use `geerlingguy.haproxy` role to load balance request between hosts in the webs
 Use `roundrobin load balancing method`.
 HAProxy backend servers should be configured for HTTP only (port 80).
 Firewall is configured to allow all incoming traffic on port TCP 80.
-If your playbook works, then doing “curl http://ansible2.hl.local/” should return output from the web server (see task #10). Running the command again should return output from the other web server.
+If your playbook works, then doing `“curl http://ansible2.hl.local/”` should return output from the web server (see task #10). Running the command again should return output from the other web server.
 
 ## A30: Download Roles From Ansible Galaxy and Use Them
 
@@ -2340,6 +2343,13 @@ vim report.txt
 
 > next, write a playbook, but remember if you are looking for a certain ansible fact which you don't remember, a good way of finding the name is search through ansible_facts data structure, because if you use the debug module to print it, you'll see all facts printed, so look through it to find ansible_devices.vda.size for example.
 
+> use the following ansible module to look for specific facts
+
+```shell
+ansible ansible2 -m setup -a "filter=*bios*"
+ansible ansible2 -m setup -a "filter=*lvm*"
+```
+
 ```yaml
 - name: edit file
   hosts: all
@@ -2391,7 +2401,7 @@ Create a playbook called timesvnc.yml in /home/sandy/ansible using rhel system r
 
 > first, we need to install rhel-system-roles
 
-```
+```shell
 sudo yum install rhel-system-roles
 ```
 
@@ -2494,7 +2504,7 @@ in `/home/automation/ansible` create a playbook called `logvol.yml`. in the play
 
 > my answer to the question is definitaly wrong because i'm a logical person and i like to create a partition and then volume group and then logical volume. but if you ever encounter such question justt do what the question says.
 
-> if you ever feel you can't find a way to create a `When: ` clause then you need to look for inside ansible_facts
+> if you ever feel you can't find a way to create a `When: ` clause then you need to look inside ansible_facts
 
 ```shell
 # just be creative
@@ -2846,6 +2856,8 @@ There are also various details of the PHP configuration, such as the version of 
 
 ## A39: Using roles from Ansible Galaxy
 
+> this question depends on other questions that you must solve first, please go to question 38 to instantiate apache role, then you need to solve question 18 which you need to install other roles via `requirement.yml` which would install `phpinfo` and `balancers` roles.
+
 > the playbook may look like this
 
 ```shell
@@ -2890,7 +2902,7 @@ Create a playbook named `/home/greg/ansible/partition.yml` that will create part
 
 ## A40: Create and use partitions
 
-> this is a playbook that might be correct, remember block, always, and rescue are all clause that could be used to make your solution more
+> this is a playbook that might be correct, remember `block`, `always`, and `rescue` are all ansible way of combining tasks and failure recovery mechanisms that could be used to make your solution more elegant.
 
 ```yml
 - name: Create partitions
@@ -2928,3 +2940,9 @@ Create a playbook named `/home/greg/ansible/partition.yml` that will create part
         msg: this disk is not exist
       when: ansible_devices.vdb is not defined
 ```
+
+> Please if you have reached this far, now that you are awesome and please star my repository as token of appreciation and support.
+
+> all the question listed in this repo is nothing but a collection of what i've personally encountered during my own exam as well as what i've seen on the internet. never the less, all my solutions are good but not super accurate because no one knows the model answer of the exam. but i've tried my best to bring as many questions as possible which could help you ace your exam, Please Don't try to memorize them but think of them as tool which could help you prepare for the real exam, remember if you are not prepared a slight change in the question could really make you nervous and clueless so you need to make sure you know ansible very well before attempting RHCE-294 exam, i wish you all the very best ^^.
+
+> Please if you find any issues with the questions presented feel free to ask me or send me an email: abdulhamid97mousa@163.com
