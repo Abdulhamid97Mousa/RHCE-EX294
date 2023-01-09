@@ -2936,6 +2936,24 @@ There are also various details of the PHP configuration, such as the version of 
 
 > First, you need to create a file in `files/hello.php` inside phpinfo role and add a line of code to hello.php
 
+> Second, you need to go to phpinfo role and go to `tasks/main.yml` and include some tasks.
+
+```yml
+# the first task is necessary because the role installed might use different version on php and could not display the index.php as desired during the exam. therefore, you should always make sure php package is being installed and it's also the latest version of php.
+- name: install latest php
+  package:
+    name: php
+    state: latest
+
+# the task below may or may not be necessary, just try
+- name: template a file
+  template:
+    src: /home/greg/ansible/roles/phpinfo/files/hello.php
+    dest: /var/www/html/hello.php
+```
+
+> edit the file `hello.php`
+
 ```shell
 [greg@control ansible]$ vim /home/greg/ansible/roles/phpinfo/files/hello.php
 Hello PHP World from <?php gethostname(); ?>
@@ -2943,6 +2961,8 @@ Hello PHP World from <?php gethostname(); ?>
 ```
 
 > make sure you see a website with a line of code `Hello PHP World from node4.lab.example.com` and underneath that you have a configuration parameter of the php server, to be honest this question has taught me a lot of stuff, if you are a fan of AWS you might remember something about a load balancer, on aws you have very fancy GUI and you do everything by clicking on this and that, but you can automate this whole process with ansible too.
+
+image.png
 
 ## Q40: Create and use partitions
 
