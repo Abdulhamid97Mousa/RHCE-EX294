@@ -61,6 +61,14 @@ flowchart TD;
 
 > Manage your `/etc/hosts` file to resolve host ip address to FQDNs, in a real exam they will give you a FQDN and you need to create an entry in `/etc/hosts` file, Remember that **You have root access to all five servers**.
 
+> you could be 5 managed nodes or 4 managed nodes, it doesn't matter actually, in the real exam it will be clearly defined and you can always check via `cat /etc/hosts` from the control node.
+
+> you will have to connect to control node via ssh, the examiner would tell you the user that you will connect as which could be `lisa` or `matthew` it doesn't matter, please don't be nervous hahaha ^^
+
+```shell
+ssh matthew@control
+```
+
 ```
 192.168.55.199 repo.ansi.example.com     repo
 192.168.55.200 control.ansi.example.com  control
@@ -68,6 +76,7 @@ flowchart TD;
 192.168.55.202 node2.ansi.example.com    managed2
 192.168.55.203 node3.ansi.example.com    managed3
 192.168.55.204 node4.ansi.example.com    managed4
+192.168.55.205 node4.ansi.example.com    managed5
 ```
 
 > As root generating ssh key and copy it to the managed hosts:
@@ -78,6 +87,7 @@ flowchart TD;
 [root@control ~]# ssh-copy-id managed2
 [root@control ~]# ssh-copy-id managed3
 [root@control ~]# ssh-copy-id managed4
+[root@control ~]# ssh-copy-id managed5
 ```
 
 > Let’s check if we can connect to the remote hosts as root without password:
@@ -87,6 +97,10 @@ flowchart TD;
 ```
 
 - step1: Installing the ansible
+
+> remember in the real exam RHCE-294 you will be using ansible version 2.9 or 2.8 so you will not have to use `fully qualified collection name`, what i mean is, when you use ansible modules while writing ansible playbooks, you won't need to write a long name of the module `ansible.builtin.copy` but you could simply use `copy`.
+
+> besides, you need to know that, while studying for exam you could be using ansible 2.13 version from `ansible-core` and it could be difficult for you to install the right version of ansible. so, using ansible 2.13 version which is a little complicated due to `fQCN`, you need to make sure you install additional collections as well because you won't find modules like `parted` or `firewalld` installed by default as in the case of ansible 2.9. so, to have these modules `parted` and `firewalld` you need to install them via `ansible-galaxy collection install community.general`. remember from ansible 2.9 onwards redhat decided to decouple ansible modules, meaning in the past everything used to be placed inside one package or repository. and after that, ansible 2.10 where you find modules are being separated inside different packages, and the only way to bring them to your workspace is to install them via `ansible-galaxy` command. i think it's a good decision because now you only install the necessary packages to get the job done, instead of installing everything and you may not need to use some unnecessary modules.
 
 ```
 [root@control ~]# yum install -y ansible
