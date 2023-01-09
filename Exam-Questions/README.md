@@ -2051,13 +2051,7 @@ Create a playbook `/home/automation/plays/apache.yml` that uses the role and run
 
 > the `templates/index.html.j2` in sub folder of `sample-apache/templates/index.html.j2` may look like this
 
-```
-{% for host in groups['webservers'] %}
-Welcome to {{ hostvars[host]['ansible_fqdn'] }} {{ hostvars[host]['ansible_eth1']['ipv4']['address'] }} \n
-{% endfor %}
-```
-
-> or you can do this
+> you can do this
 
 ```
 the address of the server is : {{ ansible_default_ipv4.address }}
