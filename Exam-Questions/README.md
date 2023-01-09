@@ -2447,9 +2447,16 @@ cat /usr/share/ansible/roles/rhel-system-roles.timesync/README.md
 
 ## Q33: Selinux and fcontext playbook
 
-Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will create a directory `webdev` on dev host. The permission of the directory are `2755` and owner is `webdev`. Create a `symbolic link` from `/Webdev` to `/var/www/html/webdev`. Serve a file from `Avebdev7index.html` which displays the text "Development" Curl http://node1.example.com/webdev/index.html to test
+Create a playbook called `webdev.yml` in `home/sandy/ansible`.
+
+- The playbook will create a directory `webdev` on dev host.
+- The permission of the directory are `2775` and owner is `webdev`.
+- Create a `symbolic link` from `/Webdev` to `/var/www/html/webdev`.
+- Serve a file from `Avebdev7index.html` which displays the text "Development" Curl http://node1.example.com/webdev/index.html to test
 
 ## A33: Selinux and fcontext playbook
+
+> this question is a bit tricky, you need to think of selinux because when you create a file and you want this file to be displayed as part of httpd service this file need to have the same selinux context as `/var/www/html/` files.
 
 ```yml
 - name: apache server
@@ -2464,7 +2471,7 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
     - name: Create a directory
       file:
         path: "/webdev"
-        mode: "2755"
+        mode: "2775"
         owner: webdev
         state: directory
     - name: Create a symbolic link
@@ -2521,9 +2528,11 @@ Create a playbook called `webdev.yml` in `home/sandy/ansible`. The playbook will
 
 in `/home/automation/ansible` create a playbook called `logvol.yml`. in the playbook create a logical volume called `lv0` and make it of the size `1500MiB` on volume group `vgO` if there is not enough space in the volume group print a message "Not enough space for logical volume" and them make a 800MiB `lv0` instead. if the volume group still doesn't exist, create a message "Volume group doesn't exist" Create an `xfs` filesystem on all `lv0` logical volumes. Don't mount the logical volume.
 
-> this is probably the most stupid exam question i ever saw in my life, so actually they don't test you on the ability of creating partition and then volume group and then a logical volume, they actually created the partition and volume group already, and just want you to create a logical volume with given parameters and if you encounter any problem doing so it should print out a message saying size is not enough, Redhat want you to follow the question steps regardless of how stupid they may seem to be.
+> this is probably the most stupid exam question i ever saw in my life, so actually they don't test you on the ability of creating partition and then volume group and then a logical volume, they actually created the partition and volume group already, and just want you to create a logical volume with given parameters and if you encounter any problem doing so it should print out a message saying `size is not enough`, Redhat want you to follow the question steps regardless of how stupid they may seem to be.
 
-> my answer to the question is definitaly wrong because i'm a logical person and i like to create a partition and then volume group and then logical volume. but if you ever encounter such question justt do what the question says.
+> my answer to the question is definitaly wrong because i'm a logical person and i like to create a partition and then volume group and then logical volume. but if you ever encounter such question just do what the question says.
+
+> please check the second solution because i think it's what the exam is all about.
 
 > if you ever feel you can't find a way to create a `When: ` clause then you need to look inside ansible_facts
 
@@ -2579,6 +2588,37 @@ ansible ansible2 -m setup -a "filter=*lvm*"
         fstype: xfs
         dev: /dev/vgO/lv0
       when: ansible_lvm.vgs.vgO is defined
+```
+
+> or
+
+```yml
+---
+- name: Create logical volumes
+  hosts: all
+  tasks:
+    - block:
+        - name: Create a logical volume of 512m
+          lvol:
+            vg: research
+            lv: data
+            size: 1500
+        - name: Create a ext2 filesystem on /dev/sdb1
+          filesystem:
+            fstype: ext4
+            dev: /dev/research/data
+      rescue:
+        - debug:
+            msg: Could not create logical volume of that size
+        - name: Create a logical volume of 512m
+          lvol:
+            vg: research
+            lv: data
+            size: 800
+          when: ansible_lvm.vgs.research is defined
+    - debug:
+        msg: Volume group done not exist
+      when: ansible_lvm.vgs.research is not defined
 ```
 
 ## Q35: Create users in file
