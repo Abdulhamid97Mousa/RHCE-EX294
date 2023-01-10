@@ -107,11 +107,16 @@ ssh matthew@control
 
 - step1: Installing the ansible
 
-> in the real exam you would need to install ansible if it's installed already.
+> In the real exam you would need to install ansible if it's installed already.
 
-> remember in the real exam RHCE-294 you will be using ansible version 2.9 or 2.8 so you will not have to use `fully qualified collection name`, what i mean is, when you use ansible modules while writing ansible playbooks, you won't need to write a long name of the module `ansible.builtin.copy` but you could simply use `copy`.
+> Remember, in the real exam RHCE-294 you will be using `ansible version 2.9` or `2.8` so you will not have to use `fully qualified collection name`. in simple words, what i mean is, when you use ansible modules while writing ansible playbooks, you won't need to write a long name of the module `ansible.builtin.copy` but you could simply use `copy`.
 
-> besides, you need to know that, while studying for exam you could be using ansible 2.13 version from `ansible-core` and it could be difficult for you to install the right version of ansible. so, using ansible 2.13 version which is a little complicated due to `fQCN`, you need to make sure you install additional collections as well because you won't find modules like `parted` or `firewalld` installed by default as in the case of ansible 2.9. so, to have these modules `parted` and `firewalld` you need to install them via `ansible-galaxy collection install community.general`. remember from ansible 2.9 onwards redhat decided to decouple ansible modules, meaning in the past everything used to be placed inside one package or repository. and after that, ansible 2.10 where you find modules are being separated inside different packages, and the only way to bring them to your workspace is to install them via `ansible-galaxy` command. i think it's a good decision because now you only install the necessary packages to get the job done, instead of installing everything and you may not need to use some unnecessary modules.
+> besides, you need to know that, while studying for exam, you could be using `ansible 2.13 version` from `ansible-core` and it could be difficult for you to install the right version of ansible. so, using `ansible 2.13 version` which is a little complicated due to `fQCN`.
+> you need to make sure you install additional collections as well because you won't find modules like `parted` or `firewalld` installed by default as in the case of `ansible 2.9`. furthermore, to have these modules `parted` and `firewalld` while using `ansible 2.13` you need to install them via `ansible-galaxy collection install community.general`. moreover, in `ansible 2.9` modules were all in one package, i.e. all modules like `firewalld`, `parted`, and `networking modules` were all part of one package which is not good for long term development plan, these modules are being developed constantly and more modules were added and ansible package was getting larger and larger and clearly Redhat had to decide to keep everything in one package or decouple modules.
+
+> Remember, Redhat acquaired ansible long ago and so they have full right to ansible and they can change how ansible is being configured and distributed and they're free to do whatever they want with ansible, and so from `ansible 2.10` onwards Redhat decided to decouple ansible modules, meaning in the past everything used to be placed inside one package or repository. `just remember that RHCE-294 exam is testing you in ansible 2.9` . and after that, `ansible 2.10` where you find modules are being separated inside different packages, and the only way to bring them to your workspace is to install them via `ansible-galaxy` command.
+
+> general thought, i think Redhat has made a good decision because now you only install the necessary packages to get the job done, instead of installing everything and you may not need to use some unnecessary modules.
 
 ```
 [root@control ~]# yum install -y ansible
@@ -236,7 +241,9 @@ ansible all -m authorized_key -a "key={{ lookup('file', '/home/automation/.ssh/i
 ansible all -m copy -a "content='automation ALL=(root) NOPASSWD:ALL' dest=/etc/sudoers.d/automation"
 ```
 
-## Similar Question, this question is certainly coming in the exam.
+## Similar Question
+
+> this question is certainly coming in the exam.
 
 Because you will have to install software on the managed hosts, you need to do the following:
 
