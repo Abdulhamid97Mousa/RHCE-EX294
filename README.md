@@ -1,3 +1,6 @@
+![Red Hat® Certified Engineer (RHCE®)](https://user-images.githubusercontent.com/80536675/222508546-2d8b92cb-78d6-4a02-95ce-a203370d636a.jpg)
+
+
 # RHCE_EX294 Study Guide & Exam Prep
 This repository is built to help you as beginner to Understand Ansible, And
 walk you through RHCE_EX294 study Topics from setting up a lab to mastry in Ansible, and ensure that you're ready for the RHCE EX294 exam.
